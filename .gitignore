@@ -1,0 +1,20 @@
+# Dépendances
+node_modules/
+
+# Données générées (base SQLite, caches de sources, exports) — reconstruites par `npm run collect`
+data/
+!data/.gitkeep
+
+# Build
+dist/
+
+# Fichiers locaux
+*.pid
+*.log
+.DS_Store
+Thumbs.db
+
+# Éditeurs / OS
+.idea/
+.vscode/
+*.swp

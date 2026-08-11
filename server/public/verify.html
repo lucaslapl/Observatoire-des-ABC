@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Observatoire des ABC — Vérification des projets</title>
+  <style>
+    :root { --ok:#2e7d32; --debut:#ef6c00; --fini:#1565c0; --inconnu:#9e9e9e; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f1f5f9; color:#0f172a; }
+
+    header {
+      background:#14532d; color:#fff; padding:10px 14px;
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+      position:sticky; top:0; z-index:50;
+    }
+    header h1 { font-size:17px; margin:0; white-space:nowrap; }
+    header a { color:#fff; text-decoration:none; font-size:13px; background:rgba(255,255,255,.16);
+      padding:5px 10px; border-radius:5px; white-space:nowrap; }
+    header a:hover { background:rgba(255,255,255,.28); }
+    #progress { font-size:13px; font-weight:600; background:rgba(255,255,255,.14); padding:4px 10px;
+      border-radius:999px; margin-left:auto; white-space:nowrap; }
+
+    .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px 14px;
+      background:#fff; border-bottom:1px solid #e2e8f0; position:sticky; top:53px; z-index:40; }
+    .toolbar label { display:flex; align-items:center; gap:6px; font-size:13px; }
+    select, input[type=text] { padding:5px 8px; border-radius:5px; border:1px solid #94a3b8; font-size:13px; color:#0f172a; background:#fff; }
+    #q { width:200px; }
+    .badges { display:flex; gap:8px; flex-wrap:wrap; }
+    .badge { font-size:11px; padding:2px 8px; border-radius:999px; background:#e2e8f0; color:#334155; white-space:nowrap; }
+    .badge.termine { background:#e3f2fd; color:#1565c0; }
+    .badge.en_cours { background:#fff3e0; color:#b45309; }
+    .badge.archives { background:#fde8e8; color:#7f1d1d; }
+    .badge.anomalie { background:#fde8e8; color:#b91c1c; }
+    .badge.confirme_termine { background:#e8f5e9; color:#1b5e20; }
+    .badge.confirme_en_cours { background:#fff3e0; color:#b45309; }
+    .badge.toujours_a_venir { background:#fef9c3; color:#854d0e; }
+    .badge.introuvable { background:#e2e8f0; color:#475569; }
+    .badge.douteux { background:#fde8e8; color:#7f1d1d; }
+
+    main { padding:0 14px 40px; max-width:1100px; margin:0 auto; }
+    table { width:100%; border-collapse:collapse; background:#fff; margin-top:14px;
+      box-shadow:0 1px 3px rgba(0,0,0,.08); border-radius:8px; overflow:hidden; }
+    thead th { background:#f8fafc; font-size:12px; text-transform:uppercase; letter-spacing:.04em;
+      color:#64748b; padding:8px 10px; text-align:left; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+    tbody td { padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:13px; vertical-align:top; }
+    tbody tr:hover { background:#f8fafc; }
+    tbody tr.verifie { background:#f0fdf4; }
+    tbody tr.douteux { background:#fef2f2; }
+    .nom { font-weight:600; }
+    .sub { color:#64748b; font-size:12px; }
+    .communes { max-width:240px; white-space:normal; word-break:break-word; }
+    .btn { display:inline-block; padding:4px 9px; border-radius:5px; font-size:12px; cursor:pointer;
+      border:1px solid #94a3b8; background:#fff; color:#0f172a; text-decoration:none; }
+    .btn:hover { background:#f1f5f9; }
+    .btn.search { border-color:#2563eb; color:#2563eb; }
+    .btn.save { background:#14532d; border-color:#14532d; color:#fff; }
+    .btn.save:hover { background:#166534; }
+    .form select, .form input[type=text] { font-size:12px; padding:3px 6px; }
+    .form { display:flex; gap:5px; align-items:center; flex-wrap:wrap; }
+    .form input[type=text] { width:110px; }
+    .saved { font-size:11px; color:#1b5e20; white-space:nowrap; }
+    .empty { padding:30px; text-align:center; color:#64748b; }
+    @media (max-width:760px) {
+      header h1 { width:100%; } .toolbar { top:0; }
+      table, thead { display:none; }
+      tbody td { display:block; border:none; }
+      tbody tr { display:block; border:1px solid #e2e8f0; border-radius:8px; margin-top:10px; padding:6px; }
+      tbody tr.verifie { background:#f0fdf4; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛠 Vérification des ABC</h1>
+    <a href="/">← Retour à la carte</a>
+    <div id="progress">chargement…</div>
+  </header>
+
+  <div class="toolbar">
+    <label>Motif
+      <select id="motif">
+        <option value="">Tous</option>
+        <option value="termine">Potentiellement terminé</option>
+        <option value="en_cours">Potentiellement en cours</option>
+        <option value="archives">Archives 2022</option>
+        <option value="anomalie">Commune incohérente</option>
+      </select>
+    </label>
+    <label>État
+      <select id="etat">
+        <option value="a_verifier">À vérifier</option>
+        <option value="">Tous</option>
+        <option value="confirme_termine">Confirmé terminé</option>
+        <option value="confirme_en_cours">Confirmé en cours</option>
+        <option value="toujours_a_venir">Toujours à venir</option>
+        <option value="introuvable">Introuvable</option>
+        <option value="douteux">Incertain</option>
+      </select>
+    </label>
+    <label>Recherche
+      <input type="text" id="q" placeholder="Nom, commune, structure…" />
+    </label>
+    <div class="badges" id="compteurs"></div>
+  </div>
+
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>Projet</th>
+          <th>Communes</th>
+          <th>Début</th>
+          <th>Motif</th>
+          <th>Recherche</th>
+          <th style="min-width:290px">Verdict</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="empty" class="empty" hidden>Aucun projet ne correspond aux filtres.</div>
+  </main>
+
+  <script>
+    const ETATS = {
+      a_verifier: { label: 'À vérifier', cls: '' },
+      confirme_termine: { label: '✓ Confirmé terminé', cls: 'confirme_termine' },
+      confirme_en_cours: { label: 'Confirmé en cours', cls: 'confirme_en_cours' },
+      toujours_a_venir: { label: 'Toujours à venir', cls: 'toujours_a_venir' },
+      introuvable: { label: 'Introuvable', cls: 'introuvable' },
+      douteux: { label: 'Incertain', cls: 'douteux' },
+    };
+    const MOTIFS = { termine: 'Potentiellement terminé', en_cours: 'Potentiellement en cours', archives: 'Archives 2022', anomalie: 'Commune incohérente' };
+    let data = { projets: [], compteurs: {} };
+
+    function badgesHtml(badges, extra) {
+      const list = extra.map(e => `<span class="badge ${e.cls}">${e.label}</span>`);
+      for (const b of badges) list.push(`<span class="badge ${b}">${MOTIFS[b]}</span>`);
+      return list.join(' ');
+    }
+
+    function render() {
+      const sMotif = document.getElementById('motif').value;
+      const sEtat = document.getElementById('etat').value;
+      const sQ = document.getElementById('q').value.trim().toLowerCase();
+      const rows = document.getElementById('rows');
+      const empty = document.getElementById('empty');
+      rows.innerHTML = '';
+      let shown = 0;
+      for (const p of data.projets) {
+        if (sMotif && !p.motifs.includes(sMotif)) continue;
+        if (sEtat && p.etat !== sEtat) continue;
+        if (sQ) {
+          const hay = `${p.nom} ${p.communes||''} ${p.structure_porteuse||''} ${p.departements||''}`.toLowerCase();
+          if (!hay.includes(sQ)) continue;
+        }
+        shown++;
+        const etat = ETATS[p.etat] || ETATS.a_verifier;
+        const url = 'https://duckduckgo.com/?q=' + encodeURIComponent(p.requete);
+        const lienHref = p.lien ? `href="${p.lien.replace(/"/g, '&quot;')}" target="_blank" rel="noopener"` : '';
+        const tr = document.createElement('tr');
+        if (p.etat === 'confirme_termine') tr.className = 'verifie';
+        if (p.etat === 'douteux') tr.className = 'douteux';
+        tr.innerHTML =
+          `<td><div class="nom">${p.nom}</div>` +
+          `<div class="sub">${p.structure_porteuse || '—'}${p.departements ? ' · ' + p.departements : ''}</div></td>` +
+          `<td class="communes" title="${(p.communes||'').replace(/"/g,'&quot;')}">${p.communes || '—'}</td>` +
+          `<td>${p.annee_debut || '—'}</td>` +
+          `<td>${badgesHtml(p.motifs, p.etat !== 'a_verifier' ? [{ label: etat.label, cls: etat.cls }] : [])}</td>` +
+          `<td>
+            <a class="btn search" target="_blank" rel="noopener" href="${url}">🔍 Rechercher</a>
+            ${p.lien ? `<a class="btn" ${lienHref}>🌐 Lien</a>` : ''}
+           </td>` +
+          `<td>
+            <div class="form">
+              <select data-f="etat">
+                ${Object.entries(ETATS).map(([k,v]) => `<option value="${k}" ${p.etat===k?'selected':''}>${v.label}</option>`).join('')}
+              </select>
+              <input type="text" data-f="note" placeholder="Note" value="${(p.note||'').replace(/"/g,'&quot;')}" />
+              <input type="text" data-f="lien" placeholder="Lien trouvé" value="${(p.lien||'').replace(/"/g,'&quot;')}" />
+              <button class="btn save" data-id="${p.id}">Sauver</button>
+              <span class="saved" id="saved-${p.id}">${p.etat !== 'a_verifier' && p.verifie_le ? '✓ ' + new Date(p.verifie_le).toLocaleDateString('fr-FR') : ''}</span>
+            </div>
+          </td>`;
+        tr.querySelector('button.save').addEventListener('click', async (e) => {
+          const form = tr.querySelector('.form');
+          const etat = form.querySelector('[data-f=etat]').value;
+          const note = form.querySelector('[data-f=note]').value;
+          const lien = form.querySelector('[data-f=lien]').value;
+          const btn = e.currentTarget;
+          btn.disabled = true;
+          btn.textContent = '…';
+          try {
+            const r = await fetch('/api/verifications', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ projet_id: p.id, etat, note, lien }),
+            });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            p.etat = etat;
+            p.note = note;
+            p.lien = lien;
+            p.verifie_le = new Date().toISOString();
+            loadCounters();
+            render();
+          } catch (err) {
+            alert('Erreur : ' + err.message);
+            btn.disabled = false;
+            btn.textContent = 'Sauver';
+          }
+        });
+        rows.appendChild(tr);
+      }
+      empty.hidden = shown !== 0;
+    }
+
+    function loadCounters() {
+      const box = document.getElementById('compteurs');
+      const c = data.compteurs;
+      box.innerHTML = [
+        `<span class="badge">${data.projets.length} à vérifier</span>`,
+        c.confirme_termine ? `<span class="badge confirme_termine">${c.confirme_termine} ✓ terminés</span>` : '',
+        c.confirme_en_cours ? `<span class="badge confirme_en_cours">${c.confirme_en_cours} en cours</span>` : '',
+        c.toujours_a_venir ? `<span class="badge toujours_a_venir">${c.toujours_a_venir} à venir</span>` : '',
+        c.introuvable ? `<span class="badge introuvable">${c.introuvable} introuvables</span>` : '',
+        c.douteux ? `<span class="badge douteux">${c.douteux} incertains</span>` : '',
+      ].join('');
+      const faits = (c.confirme_termine||0)+(c.confirme_en_cours||0)+(c.toujours_a_venir||0)+(c.introuvable||0)+(c.douteux||0);
+      document.getElementById('progress').textContent = `${faits}/${data.projets.length} vérifiés`;
+    }
+
+    document.getElementById('motif').addEventListener('change', render);
+    document.getElementById('etat').addEventListener('change', render);
+    let debounce;
+    document.getElementById('q').addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(render, 200);
+    });
+
+    fetch('/api/verifications').then(r => r.json()).then(d => {
+      data = d;
+      loadCounters();
+      render();
+    }).catch(e => {
+      document.getElementById('progress').textContent = 'Erreur de chargement';
+      console.error(e);
+    });
+  </script>
+</body>
+</html>

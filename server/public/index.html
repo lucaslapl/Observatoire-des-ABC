@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Observatoire des ABC — Atlas de la Biodiversité Communale</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root { --ok:#2e7d32; --debut:#ef6c00; --fini:#1565c0; --inconnu:#9e9e9e; }
+    * { box-sizing:border-box; }
+    html, body { height:100%; }
+    body { margin:0; font-family:system-ui, -apple-system, sans-serif; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+    header {
+      background:#14532d; color:#fff; padding:10px 14px;
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+      flex-shrink:0; z-index:1100; position:relative;
+    }
+    header h1 { font-size:17px; margin:0; white-space:nowrap; }
+    .filters { display:flex; gap:10px; align-items:center; flex-wrap:wrap; color:#fff; flex:1 1 auto; min-width:0; }
+    .filters label { display:flex; align-items:center; gap:6px; font-size:13px; white-space:nowrap; }
+    .filters label span { opacity:.9; }
+    select, input[type=text] {
+      padding:5px 8px; border-radius:5px; border:1px solid #94a3b8; font-size:13px;
+      color:#0f172a; background:#fff; max-width:220px;
+    }
+    #connect { width:auto; }
+    #q { width:190px; }
+    .count { font-size:13px; font-weight:600; background:rgba(255,255,255,.14); padding:4px 10px; border-radius:999px; white-space:nowrap; margin-left:auto; }
+    #fit {
+      background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.4); color:#fff;
+      padding:5px 10px; border-radius:5px; cursor:pointer; font-size:13px;
+    }
+    #fit:hover { background:rgba(255,255,255,.28); }
+    #verifyLink {
+      background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.4); color:#fff;
+      padding:5px 10px; border-radius:5px; font-size:13px; text-decoration:none; white-space:nowrap;
+    }
+    #verifyLink:hover { background:rgba(255,255,255,.28); }
+
+    #map { flex:1 1 auto; position:relative; min-height:0; }
+
+    .legend {
+      position:absolute; z-index:1000; bottom:16px; left:10px;
+      background:#fff; padding:8px 12px; border-radius:8px;
+      box-shadow:0 1px 5px rgba(0,0,0,.35); font-size:12.5px; line-height:1.7;
+    }
+    .chip { width:11px; height:11px; border-radius:50%; display:inline-block; margin-right:6px; }
+
+    @media (max-width:720px) {
+      header h1 { width:100%; }
+      .count { margin-left:0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌿 Observatoire des ABC</h1>
+    <div class="filters">
+      <label><span>Statut</span>
+        <select id="statut">
+          <option value="">Tous</option>
+          <option value="en_cours">En cours</option>
+          <option value="a_venir">Va débuter</option>
+          <option value="termine">Terminé</option>
+          <option value="inconnu">Statut inconnu</option>
+        </select>
+      </label>
+      <label><span>Région</span>
+        <select id="region"><option value="">Toutes</option></select>
+      </label>
+      <label><span>Commune</span>
+        <input type="text" id="q" placeholder="Rechercher…" />
+      </label>
+      <label title="Relier les communes d'un même ABC"><span>Connexions</span>
+        <input type="checkbox" id="connect" />
+      </label>
+    </div>
+    <button id="fit" title="Ajuster la vue aux points affichés">📍 Recentrer</button>
+    <a id="verifyLink" href="/verify" title="Liste des projets à vérifier">🛠 Vérifier</a>
+    <div class="count" id="count">chargement…</div>
+  </header>
+  <div id="map">
+    <div class="legend">
+      <div><span class="chip" style="background:var(--ok)"></span>En cours</div>
+      <div><span class="chip" style="background:var(--debut)"></span>Va débuter</div>
+      <div><span class="chip" style="background:var(--fini)"></span>Terminé</div>
+      <div><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu</div>
+      <div id="meta" style="margin-top:8px;border-top:1px solid #ddd;padding-top:6px;color:#555;max-width:230px"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([46.5, 2.5], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const COLOR = { en_cours:'#2e7d32', a_venir:'#ef6c00', termine:'#1565c0', inconnu:'#9e9e9e' };
+    // Cadre de la France métropolitaine (utilisé quand l'étendue visible inclut
+    // l'outre-mer et qu'un fitBounds engloberait quasiment tout le globe).
+    const METRO = [[41.0, -5.6], [51.5, 10.0]];
+    const layer = L.layerGroup().addTo(map);
+    const lineLayer = L.layerGroup().addTo(map);
+    let all = [];
+    let groups = new Map();
+
+    const state = () => ({
+      statut: document.getElementById('statut').value,
+      region: document.getElementById('region').value,
+      q: document.getElementById('q').value.trim().toLowerCase(),
+      connect: document.getElementById('connect').checked,
+    });
+
+    const dStatut = p => p.statut_affichage || p.statut;
+
+    function visible(f, s) {
+      const p = f.properties;
+      if (s.statut && dStatut(p) !== s.statut) return false;
+      if (s.region && p.region !== s.region) return false;
+      if (s.q) {
+        const hay = `${p.nom||''} ${p.commune||''} ${p.structure_porteuse||''} ${p.departement||''}`.toLowerCase();
+        if (!hay.includes(s.q)) return false;
+      }
+      return true;
+    }
+
+    const VERDICT = {
+      confirme_termine: { label: '✓ Vérifié : Terminé', color: '#1b5e20' },
+      confirme_en_cours: { label: '✓ Vérifié : En cours', color: '#2e7d32' },
+      toujours_a_venir: { label: '✓ Vérifié : Va débuter', color: '#b45309' },
+      introuvable: { label: '⚠ Vérifié : introuvable', color: '#7f1d1d' },
+      douteux: { label: '⚠ Vérifié : incertain', color: '#7f1d1d' },
+    };
+
+    function apply() {
+      const s = state();
+      layer.clearLayers();
+      lineLayer.clearLayers();
+      const shown = [];
+      for (const f of all) {
+        const p = f.properties;
+        if (!visible(f, s)) continue;
+        const [lon, lat] = f.geometry.coordinates;
+        const src = p.source || '';
+        const srcFr = { 'data.gouv':'Registre OFB', 'wayback':'Registre OFB (archives 2022)',
+          'fondsvert-p113-2024':'Fonds vert 2024', 'fondsvert-p113-2025':'Fonds vert 2025' }[src] || src;
+        const v = VERDICT[p.verif_etat];
+        // Une vérification concluante remplace les alertes spéculatives.
+        const confirme = v && ['confirme_termine','confirme_en_cours','toujours_a_venir'].includes(p.verif_etat);
+        const verifNote = v
+          ? `<br><b style="color:${v.color}">${v.label}</b>` +
+            (p.verif_note ? `<br><small>${p.verif_note}</small>` : '') +
+            (p.verif_lien ? `<br><small><a href="${p.verif_lien.replace(/"/g,'&quot;')}" target="_blank" rel="noopener">Lien source</a></small>` : '')
+          : '';
+        const ptNote = !confirme && p.potentiellement_termine
+          ? `<br><b style="color:#8d6e63">⚠ Potentiellement terminé</b><br><small>Début ${p.annee_debut}, durée d'un ABC ≈ 3 ans</small>`
+          : '';
+        const pecNote = !confirme && p.potentiellement_en_cours
+          ? `<br><b style="color:#b45309">⏳ Potentiellement en cours</b><br><small>Début annoncé ${p.annee_debut}, toujours « va débuter »</small>`
+          : '';
+        const staleNote = !confirme && p.donnees_2022
+          ? `<br><b style="color:#7f1d1d">🕓 Statut issu des archives 2022</b><br><small>À vérifier — site officiel hors ligne</small>`
+          : '';
+        const estimeNote = !confirme && p.estime_termine
+          ? `<br><b style="color:#1b5e20">✓ Terminé (estimation)</b><br><small>Statut officiel inconnu, projet débuté en ${p.annee_debut} (> 5 ans)</small>`
+          : '';
+        const anomalieNote = p.anomalie
+          ? `<br><b style="color:#b91c1c">⚠ Commune incohérente</b><br><small>À ${Math.round(p.distance_km)} km de son groupe — non reliée, à vérifier</small>`
+          : '';
+        L.circleMarker([lat, lon], {
+          radius: 6,
+          color: p.anomalie ? '#b91c1c' : p.verifie ? '#14532d' : '#fff',
+          weight: p.anomalie || p.verifie ? 2 : 1,
+          fillColor: COLOR[dStatut(p)] || COLOR.inconnu, fillOpacity: 0.9
+        })
+          .bindPopup(
+            `<b>${p.nom}</b><br>${p.commune}${p.departement ? ' (' + p.departement + ')' : ''}<br>` +
+            `Structure : ${p.structure_porteuse || '—'}<br>Année : ${p.annee_debut || '—'}<br>` +
+            `<b>${p.categorie}</b>${anomalieNote}${verifNote}${estimeNote}${ptNote}${pecNote}${staleNote}<br><small>Source : ${srcFr}</small>`
+          )
+          .addTo(layer);
+        shown.push([lat, lon]);
+      }
+      if (s.connect) {
+        for (const [pid, feats] of groups) {
+          const valides = feats.filter(f => !f.properties.anomalie && visible(f, s));
+          if (valides.length < 2) continue;
+          // Étoile : un point central (centroïde) relie chaque commune.
+          const clat = valides.reduce((sum, f) => sum + f.geometry.coordinates[1], 0) / valides.length;
+          const clon = valides.reduce((sum, f) => sum + f.geometry.coordinates[0], 0) / valides.length;
+          const st = dStatut(valides[0].properties);
+          const lineColor = COLOR[st] || COLOR.inconnu;
+          for (const f of valides) {
+            const [lon, lat] = f.geometry.coordinates;
+            L.polyline([[clat, clon], [lat, lon]], { color: lineColor, weight: 2, opacity: 0.65 })
+              .addTo(lineLayer);
+          }
+          L.circleMarker([clat, clon], { radius: 3, color: '#fff', weight: 1.5, fillColor: lineColor, fillOpacity: 0.9 })
+            .bindPopup(`<b>${valides[0].properties.nom}</b><br><small>${valides.length} communes reliées</small>`)
+            .addTo(lineLayer);
+        }
+      }
+      document.getElementById('count').textContent =
+        shown.length + ' point' + (shown.length > 1 ? 's' : '') + ' / ' + all.length;
+      return shown;
+    }
+
+    document.getElementById('fit').addEventListener('click', () => {
+      const pts = apply();
+      if (pts.length === 0) return;
+      const lats = pts.map(p => p[0]);
+      const lons = pts.map(p => p[1]);
+      const spanLon = Math.max(...lons) - Math.min(...lons);
+      const spanLat = Math.max(...lats) - Math.min(...lats);
+      // Étendue mondiale (outre-mer inclus) → on recentre sur la métropole.
+      if (spanLon > 20 || spanLat > 15) {
+        map.fitBounds(METRO, { padding: [20, 20] });
+        return;
+      }
+      if (pts.length === 1) map.setView(pts[0], 12);
+      else map.fitBounds(pts, { padding: [30, 30] });
+    });
+
+    fetch('/api/abc.geojson').then(r => r.json()).then(data => {
+      all = data.features;
+      groups = new Map();
+      for (const f of all) {
+        const pid = f.properties.projet_id;
+        if (!groups.has(pid)) groups.set(pid, []);
+        groups.get(pid).push(f);
+      }
+      const regions = [...new Set(data.features.map(f => f.properties.region).filter(Boolean))].sort();
+      const regionSel = document.getElementById('region');
+      regions.forEach(r => regionSel.add(new Option(r, r)));
+      apply();
+    }).catch(e => {
+      document.getElementById('count').textContent = 'Erreur de chargement';
+      console.error(e);
+    });
+
+    fetch('/api/meta').then(r => r.json()).then(m => {
+      const fmt = d => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+      const total = m.countProjets;
+      const pt = m.countPotentiellementTermines || 0;
+      const pec = m.countPotentiellementEnCours || 0;
+      const stale = m.countDonnees2022 || 0;
+      const estime = m.countEstimes || 0;
+      const verif = m.countVerifies || 0;
+      const anomalies = m.countAnomalies || 0;
+      document.getElementById('meta').innerHTML =
+        `<b>${total} projets</b>` +
+        (verif ? `<br><span style="color:#14532d">✓ ${verif} vérifiés manuellement</span>` : '') +
+        (anomalies ? `<br><span style="color:#b91c1c">⚠ ${anomalies} communes incohérentes écartées</span>` : '') +
+        (estime ? `<br><span style="color:#1b5e20">✓ ${estime} inconnus > 5 ans reclassés Terminé</span>` : '') +
+        (pt ? `<br><span style="color:#8d6e63">⚠ ${pt} en cours potentiellement terminés</span>` : '') +
+        (pec ? `<br><span style="color:#b45309">⏳ ${pec} « va débuter » potentiellement en cours</span>` : '') +
+        (stale ? `<br><span style="color:#7f1d1d">🕓 ${stale} projets figés aux archives 2022</span>` : '') +
+        `<br>Registre OFB : maj ${fmt(m.sources['data.gouv'])}<br>` +
+        `Archives 2022 : ${fmt(m.sources.wayback)}<br>` +
+        `Fonds vert 2024 : ${fmt(m.sources['fondsvert-p113-2024'])}<br>` +
+        `Fonds vert 2025 : ${fmt(m.sources['fondsvert-p113-2025'])}`;
+    }).catch(() => {});
+
+    document.getElementById('statut').addEventListener('change', apply);
+    document.getElementById('region').addEventListener('change', apply);
+    document.getElementById('connect').addEventListener('change', apply);
+    let debounce;
+    document.getElementById('q').addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(apply, 200);
+    });
+  </script>
+</body>
+</html>
