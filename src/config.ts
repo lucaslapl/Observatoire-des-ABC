@@ -1,10 +1,23 @@
+import "dotenv/config";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import fs from "node:fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const ROOT = path.resolve(__dirname, "..");
-export const DATA_DIR = path.join(ROOT, "data");
+// Racine du dépôt. En source (tsx) `__dirname` = src/, en build (dist) il
+// pointerait vers dist/src : on préfère le répertoire courant si c'est bien le
+// projet (présence de package.json), sinon on retombe sur le répertoire parent.
+function resolveRoot(): string {
+  const cwd = process.cwd();
+  if (fs.existsSync(path.join(cwd, "package.json"))) return cwd;
+  return path.resolve(__dirname, "..");
+}
+
+export const ROOT = resolveRoot();
+export const DATA_DIR = process.env.ABC_DATA_DIR
+  ? path.resolve(process.env.ABC_DATA_DIR)
+  : path.join(ROOT, "data");
 export const CACHE_DIR = path.join(DATA_DIR, "cache");
 export const DB_PATH = path.join(DATA_DIR, "abc.db");
 export const EXPORT_DIR = path.join(DATA_DIR, "exports");
@@ -24,7 +37,7 @@ export const SOURCES = {
 };
 
 export const USER_AGENT =
-  "observatoire-des-abc/0.1 (recherche ouverte sur les Atlas de la Biodiversité Communale)";
+  "observatoire-des-abc/0.2 (recherche ouverte sur les Atlas de la Biodiversité Communale)";
 
 export const REQUEST_DELAY_MS = 500;
 

@@ -15,7 +15,10 @@ Recensement des **Atlas de la Biodiversité Communale (ABC)** de France métropo
 | `npm run export:csv` | Exporte `data/exports/abc-projets.csv` (1 ligne/projet, colonne `note`) |
 | `npm run export:geojson` | Exporte `data/exports/abc.geojson` (1 point/commune) |
 | `npm run verify` | Génère `data/exports/verification-worklist.csv` (projets à vérifier + requêtes) |
+| `npm run backup` | Sauvegarde la base (`data/backups/abc-<horodatage>.db`, rotation sur 14) |
 | `npm run serve` | Lance la mini-app web sur `http://localhost:4000` (variable `PORT` pour changer) |
+| `npm run build` | Compile TypeScript vers `dist/` (production) |
+| `npm run start` | Démarre le build (`node dist/server/index.js`) |
 | `npm run start:server` / `stop:server` | **Aide dev Windows uniquement** (démarre/arrête via netstat.exe + taskkill) |
 | `npm run typecheck` | `npx tsc --noEmit` |
 
@@ -24,6 +27,7 @@ Recensement des **Atlas de la Biodiversité Communale (ABC)** de France métropo
 - **Node.js ≥ 24** (le projet utilise le module natif expérimental `node:sqlite`, stable à partir de Node 24).
 - `npm ci` puis `npm run collect` pour construire la base (le géocodage initial interroge `geo.api.gouv.fr` sur ~5 000 communes, quelques minutes).
 - `npm run serve` → http://localhost:4000.
+- Pour le panneau admin, définir `ADMIN_USERNAME` et `ADMIN_PASSWORD` (voir [Variables d'environnement](#variables-denvironnement)).
 
 Fonctionnement sous Windows (développement) : Node est appelé via `node.exe` (symlinks dans `~/bin`), la base est `data/abc.db` (SQLite natif `node:sqlite`).
 
@@ -35,17 +39,41 @@ Serveur Linux (ou tout hébergeur Node) :
 git clone <votre-depot> observatoire-des-abc && cd observatoire-des-abc
 npm ci
 npm run collect      # premier remplissage (réseau requis)
-PORT=8080 npm run serve
+PORT=8080 npm run serve   # ou : npm run build && npm start
 ```
 
 - La variable d'environnement `PORT` est lue par le serveur (défaut : 4000).
 - Mettre en place un **reverse proxy** (nginx ou Caddy) vers le port Node pour exposer
   le domaine et terminer le **HTTPS**. Les réponses du serveur sont déjà servies avec
   `Cache-Control: no-store` (aucun risque de données périmées).
-- `data/` est régénéré à la main via `npm run collect` (pas de tâche planifiée fournie —
-  prévoir un cron si vous voulez rafraîchir les sources périodiquement).
+- Derrière un proxy, activer `TRUST_PROXY=1` (IP correcte des contributeurs) et
+  `COOKIE_SECURE=1` (cookie de session en `Secure`).
+- `data/` est régénéré via `npm run collect` (prévoir un **CRON** mensuel pour rafraîchir
+  les sources, et un CRON quotidien pour `npm run backup` : la base contient les
+  vérifications et les contributions — elle n'est **pas** dans git).
 - Les scripts `start:server` / `stop:server` sont spécifiques à Windows (dev) : sous Linux,
   utilisez `npm run serve` et votre propre gestionnaire de processus (systemd, PM2…).
+
+### Déploiement sur PulseHeberg (Plesk)
+
+1. **Créer le domaine** (ou sous-domaine, ex. `abc.votre-domaine.fr`) dans Plesk.
+2. **Cloner le dépôt** : Plesk → « Git » (ou FTP/SSH) → cloner
+   `https://github.com/lucas_lapl/Observatoire-des-ABC` dans le répertoire du domaine.
+3. **Configurer l'app NodeJS** : Outils Développement → **NodeJS** :
+   - Version de Node.js : **24.x** (≥ 24, exigée par `node:sqlite`) ;
+   - Root d'application : le répertoire du dépôt ;
+   - Cliquer **« Installer NPM »** (`npm ci`) ;
+   - Variables d'environnement : `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `PORT`,
+     `TRUST_PROXY=1`, `COOKIE_SECURE=1` ;
+   - Démarrer le script : `scripts/start-prod.sh` (compile `tsc` puis lance `dist/`).
+4. **SSL** : Plesk → certificat Let's Encrypt (gratuit, renouvellement automatique). Le
+   reverse proxy nginx de Plesk expose le domaine en HTTPS vers le port de l'app.
+5. **CRON** : Plesk → Tâches planifiées → `npm run backup` quotidien (et optionnellement
+   `npm run collect` mensuel).
+
+> ℹ️ La base `data/abc.db` vit sur le disque SSD persistant de l'hébergement : les
+> vérifications et contributions **survivent aux redéploiements**. Pour repartir de zéro
+> (ou migrer de serveur), il suffit de copier `data/abc.db`.
 
 ---
 
@@ -96,13 +124,48 @@ Détection automatique lors du géocodage :
 
 ## Vérification manuelle — page `/verify`
 
-Accessible via le bouton « 🛠 Vérifier » de la carte. Liste les ~390 projets à vérifier (potentiellement terminé / potentiellement en cours / archives 2022 / commune incohérente) avec une **requête pré-construite** (DuckDuckGo) ciblée. Pour chaque projet :
+Accessible via le bouton « 🛠 Vérifier » de la carte. Liste les ~390 projets à vérifier (potentiellement terminé / potentiellement en cours / archives 2022 / commune incohérente) avec une **requête pré-construite** (DuckDuckGo) ciblée.
 
-- verdict : `✓ Confirmé terminé` / `Confirmé en cours` / `Toujours à venir` / `Introuvable` / `Incertain`
-- champ note + champ lien source
-- sauvegarde en base (`table verifications`) — **survit aux `npm run collect`** (slugs stables)
+**Contribution ouverte** : tout visiteur peut, pour chaque projet, signaler une correction
+(statut, note, lien ou autre information). La suggestion reçoit le statut `en_attente` et
+n'a **aucun effet sur la carte** tant qu'un admin ne l'a pas validée.
 
 Un verdict concluant **remplace les alertes spéculatives** sur la carte (couleur du point + badge « ✓ Vérifié », légende « N vérifiés manuellement »).
+
+---
+
+## Administration — page `/admin`
+
+Panneau réservé à l'admin (authentifié par mot de passe) :
+
+- **À modérer** : suggestions en attente avec **adresse IP**, user-agent et horodatage ;
+  actions **✓ valider** (applique le verdict à la carte), **✗ refuser** (avec note facultative) ;
+- **Appliquées** : suggestions validées, avec action **↩ retirer** (rollback : restaure l'état
+  précédent de la vérification) ;
+- **Refusées / retirées** : historique.
+- Chaque action admin est tracée dans la table `audit_log` (état avant/après).
+
+Les **verdicts directs** de l'admin (les mêmes champs qu'avant : confirmé terminé/en cours,
+toujours à venir, introuvable, incertain) se font sur la page `/verify` une fois connecté.
+
+---
+
+## Variables d'environnement
+
+| Variable | Rôle | Défaut |
+|---|---|---|
+| `PORT` | Port HTTP du serveur | `4000` |
+| `ADMIN_USERNAME` | Identifiant admin | `admin` |
+| `ADMIN_PASSWORD` | **Mot de passe admin** (si absent, le panneau est inaccessible) | *(aucun)* |
+| `TRUST_PROXY` | `1` si le serveur est derrière un reverse proxy (lecture de `X-Forwarded-For` pour l'IP) | désactivé |
+| `COOKIE_SECURE` | `1` pour marquer le cookie de session `Secure` (HTTPS) | désactivé |
+| `ABC_DATA_DIR` | Dossier des données (utile pour les tests) | `data/` |
+
+En développement, copier `.env.example` en `.env` (non commité) ; en production, les
+définir dans Plesk (section NodeJS → Variables d'environnement).
+
+**RGPD** : l'adresse IP des contributeurs est conservée uniquement pour la modération des
+corrections. Aucun autre traitement n'en est fait.
 
 ---
 

@@ -14,6 +14,13 @@ dist/
 .DS_Store
 Thumbs.db
 
+# Secrets locaux
+.env
+.env.local
+
+# Données de test temporaires
+data-test/
+
 # Éditeurs / OS
 .idea/
 .vscode/

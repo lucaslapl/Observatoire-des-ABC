@@ -9,7 +9,47 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ### À venir
 - En réflexion.
 
-## [0.1.0] — 2026-08-11
+## [0.2.0] — 2026-08-11
+
+### Ajouté
+- Renommage en **Observatoire des ABC** (interface, package npm `observatoire-des-abc`,
+  user-agent, docs).
+- **Contributions ouvertes** : la page `/verify` est lisible par tous, avec un bouton
+  « 💡 Signaler une correction » (statut / note / lien / autre info). Chaque suggestion
+  reçoit un statut `en_attente` et n'est appliquée qu'après validation par un admin.
+- **Panneau d'administration `/admin`** protégé par mot de passe (scrypt + sel, sessions
+  en base) : liste des contributions avec **adresse IP conservée**, user-agent et
+  horodatage ; actions **valider** (→ applique le verdict sur la carte), **refuser**,
+  **retirer (rollback)**.
+- Table d'**audit** (`audit_log`) : chaque action admin est tracée avec l'état avant/après
+  → retour en arrière fiable.
+- Les **verdicts directs** de l'admin (`POST /api/verifications`) passent derrière la
+  session admin (plus de modification par des visiteurs anonymes).
+- Badge « 📥 N suggestions » sur la carte (via `/api/meta`).
+- Sauvegardes : `npm run backup` (checkpoint WAL + copie horodatée de la base, rotation
+  sur 14 exemplaires) — à planifier en CRON.
+- Build de production : `npm run build` (TypeScript → `dist/`), `npm run start`,
+  `scripts/start-prod.sh`.
+- Chargement de l'environnement via `.env` (dotenv) + modèle `.env.example`.
+
+### Corrigé
+- Résolution de la racine du projet en build : `ROOT = process.cwd()` au lieu de
+  `__dirname` (les fichiers statiques et `data/` étaient cherchés dans `dist/` après
+  compilation).
+
+### Sécurité
+- Login admin rate-limité (5 tentatives / 15 min / IP) ; contributions rate-limitées
+  (10 / heure / IP).
+- Mot de passe admin jamais stocké en clair : uniquement en variable d'environnement,
+  comparé via scrypt.
+- Cookies de session `HttpOnly` + `SameSite=Lax` (+ `Secure` en production).
+- Validation des entrées (zod), taille de corps limitée à 64 Ko.
+- RGPD : l'adresse IP est conservée à des fins de modération uniquement (mention dans
+  les pages).
+
+[Unreleased]: https://github.com/lucas_lapl/Observatoire-des-ABC/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/lucas_lapl/Observatoire-des-ABC/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/lucas_lapl/Observatoire-des-ABC/releases/tag/v0.1.0
 
 ### Ajouté
 - Référencement des Atlas de la Biodiversité Communale (ABC) à partir de 4 sources officielles :

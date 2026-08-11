@@ -61,6 +61,12 @@
     .form input[type=text] { width:110px; }
     .saved { font-size:11px; color:#1b5e20; white-space:nowrap; }
     .empty { padding:30px; text-align:center; color:#64748b; }
+    .sugg { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+    .suggform { display:flex; flex-direction:column; gap:5px; width:100%; }
+    .suggform select, .suggform input[type=text] { font-size:12px; padding:3px 6px; width:100%; }
+    .btn.suggest { border-color:#7c3aed; color:#7c3aed; }
+    .foot { font-size:12px; color:#64748b; margin-top:16px; line-height:1.6; }
+    .badge.suggestion { background:#ede9fe; color:#6d28d9; }
     @media (max-width:760px) {
       header h1 { width:100%; } .toolbar { top:0; }
       table, thead { display:none; }
@@ -74,6 +80,7 @@
   <header>
     <h1>🛠 Vérification des ABC</h1>
     <a href="/">← Retour à la carte</a>
+    <a id="adminLink" href="/admin" hidden>🛡 Admin</a>
     <div id="progress">chargement…</div>
   </header>
 
@@ -113,12 +120,17 @@
           <th>Début</th>
           <th>Motif</th>
           <th>Recherche</th>
-          <th style="min-width:290px">Verdict</th>
+          <th style="min-width:290px">Verdict / Suggestion</th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>
     </table>
     <div id="empty" class="empty" hidden>Aucun projet ne correspond aux filtres.</div>
+    <p class="foot">
+      💡 Une information erronée ou non vérifiée ? Signalez une correction : elle sera
+      étudiée par un modérateur avant d'être appliquée. Votre adresse IP est conservée
+      uniquement à des fins de modération (RGPD).
+    </p>
   </main>
 
   <script>
@@ -131,7 +143,11 @@
       douteux: { label: 'Incertain', cls: 'douteux' },
     };
     const MOTIFS = { termine: 'Potentiellement terminé', en_cours: 'Potentiellement en cours', archives: 'Archives 2022', anomalie: 'Commune incohérente' };
+    const STATUT_SUGG = { termine: 'Terminé', en_cours: 'En cours', va_debuter: 'Va débuter' };
+    const SUGG_STATUT_LABEL = { en_attente: 'suggestion en attente', validee: 'suggestion validée', refusee: 'suggestion refusée', retiree: 'suggestion retirée' };
     let data = { projets: [], compteurs: {} };
+    let isAdmin = false;
+    let contributionsByProjet = new Map();
 
     function badgesHtml(badges, extra) {
       const list = extra.map(e => `<span class="badge ${e.cls}">${e.label}</span>`);
@@ -171,7 +187,7 @@
             <a class="btn search" target="_blank" rel="noopener" href="${url}">🔍 Rechercher</a>
             ${p.lien ? `<a class="btn" ${lienHref}>🌐 Lien</a>` : ''}
            </td>` +
-          `<td>
+          `<td>${isAdmin ? `
             <div class="form">
               <select data-f="etat">
                 ${Object.entries(ETATS).map(([k,v]) => `<option value="${k}" ${p.etat===k?'selected':''}>${v.label}</option>`).join('')}
@@ -180,9 +196,28 @@
               <input type="text" data-f="lien" placeholder="Lien trouvé" value="${(p.lien||'').replace(/"/g,'&quot;')}" />
               <button class="btn save" data-id="${p.id}">Sauver</button>
               <span class="saved" id="saved-${p.id}">${p.etat !== 'a_verifier' && p.verifie_le ? '✓ ' + new Date(p.verifie_le).toLocaleDateString('fr-FR') : ''}</span>
-            </div>
-          </td>`;
-        tr.querySelector('button.save').addEventListener('click', async (e) => {
+            </div>` : `
+            <div class="sugg">
+              <button class="btn suggest" data-suggest="${p.id}">💡 Signaler une correction</button>
+              <div class="suggform" data-sform="${p.id}" hidden>
+                <select data-s-type>
+                  <option value="statut">Statut</option>
+                  <option value="note">Note</option>
+                  <option value="lien">Lien</option>
+                  <option value="autre">Autre info</option>
+                </select>
+                <select data-s-statut hidden>${Object.entries(STATUT_SUGG).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+                <input type="text" data-s-note placeholder="Note" hidden />
+                <input type="text" data-s-lien placeholder="Lien (URL)" hidden />
+                <input type="text" data-s-texte placeholder="Votre information" hidden />
+                <input type="text" data-s-commentaire placeholder="Commentaire (optionnel)" />
+                <button class="btn save" data-send="${p.id}">Envoyer la suggestion</button>
+                <span class="saved" data-sresult="${p.id}"></span>
+              </div>
+              ${suggBadge(p.id)}
+            </div>`}</td>`;
+        const saveBtn = tr.querySelector('button.save');
+        if (saveBtn) saveBtn.addEventListener('click', async (e) => {
           const form = tr.querySelector('.form');
           const etat = form.querySelector('[data-f=etat]').value;
           const note = form.querySelector('[data-f=note]').value;
@@ -209,6 +244,45 @@
             btn.textContent = 'Sauver';
           }
         });
+        tr.querySelector('[data-suggest]')?.addEventListener('click', (e) => {
+          const form = tr.querySelector('[data-sform]');
+          form.hidden = !form.hidden;
+          const t = form.querySelector('[data-s-type]').value;
+          showSuggFields(form, t);
+        });
+        tr.querySelector('[data-s-type]')?.addEventListener('change', (e) => {
+          showSuggFields(tr.querySelector('[data-sform]'), e.target.value);
+        });
+        tr.querySelector('[data-send]')?.addEventListener('click', async (e) => {
+          const form = tr.querySelector('[data-sform]');
+          const t = form.querySelector('[data-s-type]').value;
+          const body = { projet_id: p.id, type: t, commentaire: form.querySelector('[data-s-commentaire]').value || undefined };
+          if (t === 'statut') body.statut_suggere = form.querySelector('[data-s-statut]').value;
+          if (t === 'note') body.note = form.querySelector('[data-s-note]').value;
+          if (t === 'lien') body.lien = form.querySelector('[data-s-lien]').value;
+          if (t === 'autre') body.texte = form.querySelector('[data-s-texte]').value;
+          const btn = e.currentTarget;
+          btn.disabled = true;
+          btn.textContent = '…';
+          try {
+            const r = await fetch('/api/contributions', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+            if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || ('HTTP ' + r.status)); }
+            form.hidden = true;
+            btn.disabled = false;
+            btn.textContent = 'Envoyer la suggestion';
+            form.querySelector('[data-sresult]').textContent = '✓ Merci, suggestion envoyée (en attente de modération)';
+            await loadContributions();
+            render();
+          } catch (err) {
+            alert('Erreur : ' + err.message);
+            btn.disabled = false;
+            btn.textContent = 'Envoyer la suggestion';
+          }
+        });
         rows.appendChild(tr);
       }
       empty.hidden = shown !== 0;
@@ -229,6 +303,25 @@
       document.getElementById('progress').textContent = `${faits}/${data.projets.length} vérifiés`;
     }
 
+    function suggBadge(pid) {
+      const s = contributionsByProjet.get(pid);
+      if (!s) return '';
+      return `<span class="badge suggestion">💬 ${SUGG_STATUT_LABEL[s.statut] || s.statut}</span>`;
+    }
+
+    function showSuggFields(form, t) {
+      form.querySelector('[data-s-statut]').hidden = t !== 'statut';
+      form.querySelector('[data-s-note]').hidden = t !== 'note';
+      form.querySelector('[data-s-lien]').hidden = t !== 'lien';
+      form.querySelector('[data-s-texte]').hidden = t !== 'autre';
+    }
+
+    function loadContributions() {
+      return fetch('/api/contributions').then(r => r.json()).then(d => {
+        contributionsByProjet = new Map(d.contributions.map(c => [c.projet_id, c]));
+      }).catch(() => { contributionsByProjet = new Map(); });
+    }
+
     document.getElementById('motif').addEventListener('change', render);
     document.getElementById('etat').addEventListener('change', render);
     let debounce;
@@ -237,8 +330,14 @@
       debounce = setTimeout(render, 200);
     });
 
-    fetch('/api/verifications').then(r => r.json()).then(d => {
-      data = d;
+    Promise.all([
+      fetch('/api/verifications').then(r => r.json()),
+      fetch('/api/admin/me').then(r => r.json()).catch(() => ({ admin: false })),
+      loadContributions(),
+    ]).then(([v, me]) => {
+      data = v;
+      isAdmin = Boolean(me.admin);
+      if (isAdmin) document.getElementById('adminLink').hidden = false;
       loadCounters();
       render();
     }).catch(e => {

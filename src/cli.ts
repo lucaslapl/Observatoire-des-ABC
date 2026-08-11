@@ -5,7 +5,7 @@ import { collectFondsVert } from "./sources/fondsvert.js";
 import { enrichGeocoding } from "./geocode.js";
 import { computeAnomalies } from "./anomalies.js";
 import { buildGeoJson } from "./geojson.js";
-import { EXPORT_DIR } from "./config.js";
+import { EXPORT_DIR, DATA_DIR, DB_PATH } from "./config.js";
 import fs from "node:fs";
 import path from "node:path";
 import { statutLabel, estPotentiellementTermine } from "./status.js";
@@ -67,11 +67,40 @@ async function main() {
       break;
     }
 
+    case "backup": {
+      backupDb();
+      break;
+    }
+
     default:
       console.log(
         `Usage: npm run collect [--geocode] | npm run status | npm run export:csv | npm run export:geojson | npm run verify | npm run serve`,
       );
   }
+}
+
+function backupDb() {
+  const backups = path.join(DATA_DIR, "backups");
+  fs.mkdirSync(backups, { recursive: true });
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, "").replace("T", "-");
+  const dest = path.join(backups, `abc-${stamp}.db`);
+
+  // Checkpoint WAL pour copier un fichier cohérent.
+  const db = openDb();
+  db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+  db.close();
+  fs.copyFileSync(DB_PATH, dest);
+
+  // Rotation : on garde les 14 plus récents.
+  const existing = fs
+    .readdirSync(backups)
+    .filter((f) => f.startsWith("abc-") && f.endsWith(".db"))
+    .sort();
+  while (existing.length > 14) {
+    const old = existing.shift()!;
+    fs.unlinkSync(path.join(backups, old));
+  }
+  console.log(`Sauvegarde : ${dest}`);
 }
 
 function verifyWorklist(db: import("node:sqlite").DatabaseSync) {

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Observatoire des ABC — Administration</title>
+  <style>
+    :root { --ok:#2e7d32; --debut:#ef6c00; --fini:#1565c0; --inconnu:#9e9e9e; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f1f5f9; color:#0f172a; }
+    header { background:#14532d; color:#fff; padding:10px 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    header h1 { font-size:17px; margin:0; white-space:nowrap; }
+    header a { color:#fff; text-decoration:none; font-size:13px; background:rgba(255,255,255,.16); padding:5px 10px; border-radius:5px; }
+    #user { font-size:13px; margin-left:auto; opacity:.9; }
+
+    .tabs { display:flex; gap:6px; padding:10px 14px; background:#fff; border-bottom:1px solid #e2e8f0; }
+    .tab { padding:6px 12px; border-radius:6px; border:1px solid #94a3b8; background:#fff; cursor:pointer; font-size:13px; }
+    .tab.active { background:#14532d; color:#fff; border-color:#14532d; }
+
+    main { padding:0 14px 40px; max-width:1100px; margin:0 auto; }
+    .card { background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:12px 14px; margin-top:12px; }
+    .meta { color:#64748b; font-size:12px; }
+    .payload { margin-top:6px; font-size:13px; background:#f8fafc; border-radius:6px; padding:8px 10px; white-space:pre-wrap; word-break:break-word; }
+    .payload b { color:#0f172a; }
+    .proj { font-weight:600; }
+    .actions { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+    .btn { padding:5px 12px; border-radius:6px; border:1px solid #94a3b8; background:#fff; cursor:pointer; font-size:13px; }
+    .btn.ok { background:#2e7d32; border-color:#2e7d32; color:#fff; }
+    .btn.no { background:#b91c1c; border-color:#b91c1c; color:#fff; }
+    .btn.undo { background:#b45309; border-color:#b45309; color:#fff; }
+    .chip { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; background:#e2e8f0; color:#334155; }
+    .chip.en_attente { background:#fef9c3; color:#854d0e; }
+    .chip.validee { background:#e8f5e9; color:#1b5e20; }
+    .chip.refusee { background:#fde8e8; color:#7f1d1d; }
+    .chip.retiree { background:#e2e8f0; color:#475569; }
+    .empty { padding:30px; text-align:center; color:#64748b; }
+
+    .login { max-width:340px; margin:60px auto; background:#fff; border-radius:10px; box-shadow:0 1px 5px rgba(0,0,0,.1); padding:24px; }
+    .login h2 { margin-top:0; font-size:18px; }
+    .login label { display:block; font-size:13px; margin:10px 0 4px; }
+    .login input { width:100%; padding:8px; border-radius:6px; border:1px solid #94a3b8; font-size:14px; }
+    .login button { margin-top:14px; width:100%; padding:9px; border-radius:6px; border:none; background:#14532d; color:#fff; font-size:14px; cursor:pointer; }
+    #loginErr { color:#b91c1c; font-size:13px; margin-top:8px; }
+    #panel { display:none; }
+    .foot { margin-top:20px; font-size:12px; color:#64748b; line-height:1.6; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛡 Observatoire des ABC — Administration</h1>
+    <a href="/">← Carte</a>
+    <a href="/verify">Vérification</a>
+    <span id="user"></span>
+  </header>
+
+  <div id="login" class="login">
+    <h2>Connexion admin</h2>
+    <label>Identifiant</label>
+    <input type="text" id="username" autocomplete="username" />
+    <label>Mot de passe</label>
+    <input type="password" id="password" autocomplete="current-password" />
+    <button id="loginBtn">Se connecter</button>
+    <div id="loginErr"></div>
+  </div>
+
+  <div id="panel">
+    <div class="tabs">
+      <button class="tab active" data-tab="en_attente">À modérer</button>
+      <button class="tab" data-tab="validee">Appliquées</button>
+      <button class="tab" data-tab="historique">Refusées / retirées</button>
+      <button class="tab" data-tab="toutes">Toutes</button>
+    </div>
+    <main>
+      <div id="content"></div>
+      <p class="foot">
+        RGPD : l'adresse IP des contributeurs est conservée uniquement pour la modération des
+        corrections et ne sert à aucun autre traitement. Pensez à effectuer régulièrement
+        <code>npm run backup</code> (ou un CRON) pour sauvegarder la base et ses contributions.
+      </p>
+    </main>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const ETAT_LABEL = { en_attente: 'en attente', validee: 'validée', refusee: 'refusée', retiree: 'retirée' };
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function payloadLines(payload) {
+      const p = payload || {};
+      const out = [];
+      if (p.statut_suggere) {
+        const labels = { termine: 'Terminé', en_cours: 'En cours', va_debuter: 'Va débuter' };
+        out.push(`<b>Statut suggéré :</b> ${labels[p.statut_suggere] || p.statut_suggere}`);
+      }
+      if (p.note) out.push(`<b>Note :</b> ${esc(p.note)}`);
+      if (p.lien) out.push(`<b>Lien :</b> <a href="${esc(p.lien)}" target="_blank" rel="noopener">${esc(p.lien)}</a>`);
+      if (p.texte) out.push(`<b>Texte :</b> ${esc(p.texte)}`);
+      return out.join('\n');
+    }
+
+    async function api(url, opts) {
+      const r = await fetch(url, opts);
+      if (r.status === 401) { showLogin(); throw new Error('Non autorisé'); }
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+      return j;
+    }
+
+    function showLogin() {
+      $('login').style.display = '';
+      $('panel').style.display = 'none';
+    }
+
+    function showPanel(username) {
+      $('login').style.display = 'none';
+      $('panel').style.display = '';
+      $('user').textContent = 'Connecté : ' + username;
+      load('en_attente');
+    }
+
+    $('loginBtn').addEventListener('click', async () => {
+      const err = $('loginErr');
+      err.textContent = '';
+      try {
+        const j = await api('/api/admin/login', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ username: $('username').value, password: $('password').value }),
+        });
+        showPanel(j.username);
+      } catch (e) {
+        err.textContent = e.message;
+      }
+    });
+    $('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loginBtn').click(); });
+
+    function card(c, actions) {
+      const payload = JSON.parse(c.payload_json || '{}');
+      const commune = (c.communes || '').split(',')[0];
+      return `<div class="card">
+        <div><span class="chip ${c.statut}">${ETAT_LABEL[c.statut] || c.statut}</span>
+          <span class="proj">${esc(c.projet_nom || c.projet_id)}</span>
+          <span class="meta"> · ${esc(c.type)}</span></div>
+        <div class="meta">${esc(commune || '')}${c.structure_porteuse ? ' · ' + esc(c.structure_porteuse) : ''} · IP ${esc(c.ip)} · ${esc(c.created_at)}${c.user_agent ? ' · ' + esc(c.user_agent.slice(0, 60)) : ''}</div>
+        ${c.commentaire ? `<div class="meta">💬 ${esc(c.commentaire)}</div>` : ''}
+        <div class="payload">${payloadLines(payload)}</div>
+        ${c.note_admin ? `<div class="meta">Note admin : ${esc(c.note_admin)}</div>` : ''}
+        ${c.traite_par ? `<div class="meta">Traité par ${esc(c.traite_par)} le ${esc(c.traite_le)}</div>` : ''}
+        ${c.verif_etat && c.verif_etat !== 'a_verifier' ? `<div class="meta">Verdict actuel : ${esc(c.verif_etat)}</div>` : ''}
+        <div class="actions">${actions}</div>
+      </div>`;
+    }
+
+    function render(cs, tab) {
+      const box = $('content');
+      const list = tab === 'en_attente' ? cs.filter((c) => c.statut === 'en_attente')
+        : tab === 'validee' ? cs.filter((c) => c.statut === 'validee')
+        : tab === 'historique' ? cs.filter((c) => c.statut === 'refusee' || c.statut === 'retiree')
+        : cs;
+      if (list.length === 0) { box.innerHTML = '<div class="empty">Aucune contribution.</div>'; return; }
+      box.innerHTML = list.map((c) => {
+        const valider = c.statut === 'en_attente'
+          ? `<button class="btn ok" data-act="valider" data-id="${c.id}">✓ Valider</button>
+             <button class="btn no" data-act="refuser" data-id="${c.id}">✗ Refuser</button>`
+          : '';
+        const retirer = c.statut === 'validee'
+          ? `<button class="btn undo" data-act="retirer" data-id="${c.id}">↩ Retirer (rollback)</button>`
+          : '';
+        return card(c, valider + retirer);
+      }).join('');
+    }
+
+    async function load(tab) {
+      try {
+        const j = await api('/api/admin/contributions');
+        render(j.contributions, tab);
+      } catch (e) {
+        $('content').innerHTML = '<div class="empty">Erreur : ' + esc(e.message) + '</div>';
+      }
+    }
+
+    document.querySelectorAll('.tab').forEach((b) => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        load(b.dataset.tab);
+      });
+    });
+
+    $('content').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const act = btn.dataset.act;
+      const id = btn.dataset.id;
+      let body = undefined;
+      if (act === 'refuser') {
+        const note = prompt('Note de refus (optionnelle) :');
+        if (note === null) return;
+        body = JSON.stringify({ note_admin: note });
+      }
+      try {
+        await api(`/api/admin/contributions/${id}/${act}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body });
+        const active = document.querySelector('.tab.active').dataset.tab;
+        load(active);
+      } catch (err) { alert(err.message); }
+    });
+
+    $('user').addEventListener('click', async () => {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      showLogin();
+    });
+
+    fetch('/api/admin/me').then((r) => r.json()).then((j) => {
+      if (j.admin) {
+        showPanel(j.username || 'admin');
+      } else {
+        showLogin();
+      }
+    });
+  </script>
+</body>
+</html>

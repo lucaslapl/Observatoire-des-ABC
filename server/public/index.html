@@ -37,6 +37,11 @@
       padding:5px 10px; border-radius:5px; font-size:13px; text-decoration:none; white-space:nowrap;
     }
     #verifyLink:hover { background:rgba(255,255,255,.28); }
+    #suggLink {
+      background:rgba(167,139,250,.3); border:1px solid rgba(196,181,253,.6); color:#fff;
+      padding:5px 10px; border-radius:5px; font-size:13px; text-decoration:none; white-space:nowrap;
+    }
+    #suggLink:hover { background:rgba(167,139,250,.45); }
 
     #map { flex:1 1 auto; position:relative; min-height:0; }
 
@@ -78,6 +83,7 @@
     </div>
     <button id="fit" title="Ajuster la vue aux points affichés">📍 Recentrer</button>
     <a id="verifyLink" href="/verify" title="Liste des projets à vérifier">🛠 Vérifier</a>
+    <a id="suggLink" href="/verify" title="Suggestions en attente de modération" hidden>📥</a>
     <div class="count" id="count">chargement…</div>
   </header>
   <div id="map">
@@ -250,6 +256,12 @@
       const estime = m.countEstimes || 0;
       const verif = m.countVerifies || 0;
       const anomalies = m.countAnomalies || 0;
+      const sugg = m.countContributionsEnAttente || 0;
+      if (sugg > 0) {
+        const el = document.getElementById('suggLink');
+        el.hidden = false;
+        el.textContent = '📥 ' + sugg + (sugg > 1 ? ' suggestions' : ' suggestion');
+      }
       document.getElementById('meta').innerHTML =
         `<b>${total} projets</b>` +
         (verif ? `<br><span style="color:#14532d">✓ ${verif} vérifiés manuellement</span>` : '') +

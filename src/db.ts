@@ -80,8 +80,43 @@ function migrate(db: DatabaseSync) {
       FOREIGN KEY (projet_id) REFERENCES projets(id)
     );
 
+    CREATE TABLE IF NOT EXISTS admin_sessions (
+      token_hash TEXT PRIMARY KEY,
+      username TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS contributions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      projet_id TEXT NOT NULL,
+      type TEXT NOT NULL CHECK (type IN ('statut','note','lien','autre')),
+      payload_json TEXT NOT NULL,
+      commentaire TEXT,
+      ip TEXT,
+      user_agent TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      statut TEXT NOT NULL DEFAULT 'en_attente' CHECK (statut IN ('en_attente','validee','refusee','retiree')),
+      traite_par TEXT,
+      traite_le TEXT,
+      note_admin TEXT,
+      FOREIGN KEY (projet_id) REFERENCES projets(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      contribution_id INTEGER NOT NULL REFERENCES contributions(id),
+      action TEXT NOT NULL CHECK (action IN ('validee','refusee','retiree')),
+      avant TEXT,
+      apres TEXT,
+      par_admin TEXT,
+      le TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_communes_dept ON communes(libelle_departement);
     CREATE INDEX IF NOT EXISTS idx_communes_region ON communes(region);
+    CREATE INDEX IF NOT EXISTS idx_contributions_projet ON contributions(projet_id);
+    CREATE INDEX IF NOT EXISTS idx_contributions_statut ON contributions(statut);
   `);
 
   // Migration : ajout des flags pour les bases déjà créées
@@ -193,7 +228,7 @@ export function recordSnapshot(
 
 export function saveVerification(
   db: DatabaseSync,
-  v: { projet_id: string; etat: string; note?: string; lien?: string },
+  v: { projet_id: string; etat: string; note?: string | null; lien?: string | null },
 ) {
   db.prepare(
     `INSERT INTO verifications (projet_id, etat, note, lien, verifie_le)
@@ -204,6 +239,106 @@ export function saveVerification(
        lien=excluded.lien,
        verifie_le=excluded.verifie_le`,
   ).run(v.projet_id, v.etat, v.note ?? null, v.lien ?? null);
+}
+
+export interface ContributionRow {
+  id: number;
+  projet_id: string;
+  type: string;
+  payload_json: string;
+  commentaire: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  created_at: string;
+  statut: string;
+  traite_par: string | null;
+  traite_le: string | null;
+  note_admin: string | null;
+}
+
+export function insertContribution(
+  db: DatabaseSync,
+  c: {
+    projet_id: string;
+    type: string;
+    payload_json: string;
+    commentaire?: string;
+    ip?: string;
+    user_agent?: string;
+  },
+): number {
+  const r = db
+    .prepare(
+      `INSERT INTO contributions (projet_id, type, payload_json, commentaire, ip, user_agent)
+       VALUES (?,?,?,?,?,?)`,
+    )
+    .run(
+      c.projet_id,
+      c.type,
+      c.payload_json,
+      c.commentaire ?? null,
+      c.ip ?? null,
+      c.user_agent ?? null,
+    );
+  return Number(r.lastInsertRowid);
+}
+
+export function getContribution(db: DatabaseSync, id: number): ContributionRow | undefined {
+  return db
+    .prepare("SELECT * FROM contributions WHERE id = ?")
+    .get(id) as ContributionRow | undefined;
+}
+
+export function setContributionStatut(
+  db: DatabaseSync,
+  id: number,
+  statut: string,
+  traitePar: string,
+  noteAdmin?: string,
+) {
+  db.prepare(
+    `UPDATE contributions SET statut = ?, traite_par = ?, traite_le = datetime('now'), note_admin = COALESCE(?, note_admin)
+     WHERE id = ?`,
+  ).run(statut, traitePar, noteAdmin ?? null, id);
+}
+
+export function insertAudit(
+  db: DatabaseSync,
+  a: {
+    contribution_id: number;
+    action: string;
+    avant?: string | null;
+    apres?: string | null;
+    par_admin: string;
+  },
+) {
+  db.prepare(
+    `INSERT INTO audit_log (contribution_id, action, avant, apres, par_admin)
+     VALUES (?,?,?,?,?)`,
+  ).run(a.contribution_id, a.action, a.avant ?? null, a.apres ?? null, a.par_admin);
+}
+
+export function getVerification(
+  db: DatabaseSync,
+  projetId: string,
+): { etat: string; note: string | null; lien: string | null } | undefined {
+  return db
+    .prepare("SELECT etat, note, lien FROM verifications WHERE projet_id = ?")
+    .get(projetId) as { etat: string; note: string | null; lien: string | null } | undefined;
+}
+
+export function deleteVerification(db: DatabaseSync, projetId: string) {
+  db.prepare("DELETE FROM verifications WHERE projet_id = ?").run(projetId);
+}
+
+export function getLastAppliedAudit(db: DatabaseSync, contributionId: number): {
+  avant: string | null;
+} | undefined {
+  return db
+    .prepare(
+      "SELECT avant FROM audit_log WHERE contribution_id = ? AND action = 'validee' ORDER BY id DESC LIMIT 1",
+    )
+    .get(contributionId) as { avant: string | null } | undefined;
 }
 
 export function statistic(db: DatabaseSync, sql: string): number {
