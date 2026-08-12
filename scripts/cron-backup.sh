@@ -96,6 +96,17 @@ fi
 
 if [ -z "$NODE" ]; then
   log "ERREUR: aucun binaire Node >= 24 trouve"
+  if [ -x /opt/plesk/node/24/bin/node ]; then
+    log "note: /opt/plesk/node/24/bin/node existe et est executable; --version ->"
+    /opt/plesk/node/24/bin/node --version >> "$LOG_FILE" 2>&1
+    log "statut de --version: $?"
+  elif [ -e /opt/plesk/node/24/bin/node ]; then
+    log "note: /opt/plesk/node/24/bin/node existe mais n'est PAS executable"
+    ls -l /opt/plesk/node/24/bin/node >> "$LOG_FILE" 2>&1
+  else
+    log "note: /opt/plesk/node/24/bin/node absent sur ce serveur"
+    ls -d /opt/plesk/node 2>&1 | head -1 >> "$LOG_FILE"
+  fi
   log " -> definissez NODE_BIN=/chemin/vers/node dans la tache planifiee"
   exit 1
 fi
