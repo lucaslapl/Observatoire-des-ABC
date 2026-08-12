@@ -77,7 +77,18 @@ if [ -z "$NODE" ]; then
 fi
 
 log "node: $NODE $("$NODE" --version)"
-"$NODE" dist/src/cli.js backup >> "$LOG_FILE" 2>&1
+log "lancement du backup (delai max 180 s)"
+if command -v timeout >/dev/null 2>&1; then
+  timeout 180 "$NODE" dist/src/cli.js backup >> "$LOG_FILE" 2>&1
+else
+  "$NODE" dist/src/cli.js backup >> "$LOG_FILE" 2>&1
+fi
 rc=$?
-log "backup termine (code $rc)"
+if [ "$rc" -eq 124 ]; then
+  log "ERREUR: delai de 180 s depasse (backup bloque ?). La base reste coherente (WAL)."
+elif [ "$rc" -ne 0 ]; then
+  log "ERREUR: backup en echec (code $rc) - voir les lignes au-dessus"
+else
+  log "backup termine (code 0)"
+fi
 exit "$rc"
