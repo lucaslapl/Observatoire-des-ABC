@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { openDb, saveVerification, insertContribution } from "../src/db.js";
+import { backupDb } from "../src/backup.js";
 import { buildGeoJson } from "../src/geojson.js";
 import { EXPORT_DIR, ROOT, SOURCE_DATES } from "../src/config.js";
 import { statutLabel } from "../src/status.js";
@@ -264,6 +265,18 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === "/api/admin/backup" && req.method === "POST") {
+    const token = parseCookies(req.headers.cookie)[SESSION_COOKIE];
+    if (!getSession(openDb(), token)) return sendJson(res, 401, { error: "Non autorisé" });
+    try {
+      const r = backupDb();
+      sendJson(res, 200, { ok: true, path: r.path, kept: r.kept });
+    } catch (e) {
+      sendJson(res, 500, { error: String(e) });
+    }
+    return;
+  }
+
   if (urlPath === "/api/admin/contributions") {
     const auth = requireAdmin(req, res);
     if (!auth.ok) return;
@@ -451,3 +464,39 @@ server.listen(PORT, () => {
     console.warn("⚠ ADMIN_PASSWORD non défini : le panneau admin est inaccessible.");
   }
 });
+
+// --- Sauvegarde quotidienne automatique (sans CRON) ---
+function msUntilNextDaily(hourUtc: number): number {
+  const now = new Date();
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hourUtc, 0, 0, 0));
+  if (next.getTime() <= now.getTime()) next.setUTCDate(next.getUTCDate() + 1);
+  return next.getTime() - now.getTime();
+}
+
+const BACKUP_DAILY = process.env.BACKUP_DAILY !== "0";
+const BACKUP_HOUR_UTC = Number(process.env.BACKUP_HOUR_UTC ?? 4);
+
+function runBackup(tag: string) {
+  try {
+    const r = backupDb();
+    console.log(`[backup:${tag}] OK ${r.path} (${r.kept} gardées)`);
+  } catch (e) {
+    console.error(`[backup:${tag}] ECHEC`, e);
+  }
+}
+
+if (BACKUP_DAILY) {
+  // Sauvegarde immédiate au démarrage (permet de vérifier que ça fonctionne).
+  setTimeout(() => runBackup("init"), 5000);
+  const schedule = () => {
+    const t = msUntilNextDaily(BACKUP_HOUR_UTC);
+    console.log(`Prochaine sauvegarde auto dans ${Math.round(t / 3600000)} h (${BACKUP_HOUR_UTC}:00 UTC)`);
+    setTimeout(() => {
+      runBackup("auto");
+      schedule();
+    }, t);
+  };
+  schedule();
+} else {
+  console.log("Sauvegarde quotidienne désactivée (BACKUP_DAILY=0)");
+}

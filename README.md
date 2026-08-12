@@ -49,11 +49,16 @@ PORT=8080 npm run serve   # ou : npm run build && npm start
 - Derrière un proxy, activer `TRUST_PROXY=1` (IP correcte des contributeurs) et
   `COOKIE_SECURE=1` (cookie de session en `Secure`).
 - `data/` est régénéré via `npm run collect` (prévoir un **CRON** mensuel pour rafraîchir
-  les sources, et un CRON quotidien pour `npm run backup` : la base contient les
-  vérifications et les contributions — elle n'est **pas** dans git).
-- Sous Plesk (shell CRON minimal, `node` hors PATH), utiliser `bash scripts/cron-backup.sh` :
-  le script localise lui-même un Node ≥ 24 (ou utilise `NODE_BIN` si défini) avant de lancer
-  le backup, et journalise dans `data/backups/cron.log`.
+  les sources. La base contient les vérifications et les contributions — elle n'est **pas**
+  dans git).
+- Pour un backup hors-serveur, voir `scripts/cron-backup.sh` (base locale, rotation sur 14) :
+  en Plesk, il doit tourner avec un utilisateur ayant accès au binaire Node (root, sinon
+  indiquer `NODE_BIN=/opt/plesk/node/24/bin/node` dans la tâche). Le CRON Plesk a un PATH
+  minimal : le script rétablit un PATH standard et utilise des builtins bash.
+- L'app sauvegarde aussi **automatiquement** son propre `data/abc.db` chaque jour sans CRON :
+  le processus Node lance une sauvegarde quotidienne (heure UTC réglable via `BACKUP_HOUR_UTC`,
+  désactivable avec `BACKUP_DAILY=0`). Un backup « init » est fait ~5 s après le démarrage,
+  et un endpoint admin `POST /api/admin/backup` permet un backup à la demande.
 - Les scripts `start:server` / `stop:server` sont spécifiques à Windows (dev) : sous Linux,
   utilisez `npm run serve` et votre propre gestionnaire de processus (systemd, PM2…).
 
@@ -79,11 +84,12 @@ shell (`scripts/start-prod.sh` n'est utile qu'en VPS/manuel).
 4. **Vérifier l'URL de l'application** générée par Plesk (elle doit afficher la carte).
 5. **SSL** : Plesk → certificat Let's Encrypt (gratuit, renouvellement automatique). Le
    reverse proxy nginx de Plesk expose le domaine en HTTPS vers l'app.
-6. **CRON** : Plesk → Tâches planifiées → commande `bash /abc-obs.lucaslaplanche.fr/scripts/cron-backup.sh`
-   en quotidien (le script trouve seul le Node ≥ 24, sauvegarde dans `data/backups/` avec
-   rotation sur 14, et journalise dans `data/backups/cron.log`) ; optionnellement un CRON
-   mensuel pour `npm run collect`. En cas d'échec de détection de Node, définir la variable
-   d'environnement `NODE_BIN=/chemin/vers/node` dans la tâche.
+6. **CRON** : pour la sauvegarde, plus besoin de CRON — l'app sauvegarde automatiquement
+   `data/abc.db` chaque jour (`data/backups/abc-<horodatage>.db`, rotation sur 14 ; voir
+   `BACKUP_DAILY` / `BACKUP_HOUR_UTC`, contrôle du log au redémarrage de l'app).
+   Optionnellement, un CRON mensuel pour `npm run collect` (à exécuter, selon l'hébergement,
+   avec un utilisateur ayant accès à Node). Le `scripts/cron-backup.sh` reste disponible
+   pour un backup hors-serveur à la demande.
 
 > ⚠️ **Symptôme « page par défaut Plesk »** : le plus souvent l'app NodeJS n'est pas
 > activée, ou le fichier de démarrage/root d'application est incorrect (ex. un `.sh`,
