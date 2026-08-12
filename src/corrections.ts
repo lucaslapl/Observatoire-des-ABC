@@ -31,6 +31,17 @@ export const CORRECTIONS_COMMUNES: Record<string, Partial<CommuneBrute>> = {
     libelle_departement: "Loir-et-Cher",
     region: "24",
   },
+  // Chelles (60, Oise) → Chelles (77, Seine-et-Marne) — Communauté
+  // d'agglomération Paris - Vallée de la Marne. L'instantané Wayback 2022
+  // utilise par erreur le code INSEE 60145 (Chelles dans l'Oise) au lieu de
+  // 77108 (Chelles en Seine-et-Marne). Le registre data.gouv est correct.
+  "60145": {
+    code_geographique: "77108",
+    libelle_geographique: "Chelles",
+    departement: "77",
+    libelle_departement: "Seine-et-Marne",
+    region: "11",
+  },
 };
 
 export function corrigerCommune(c: CommuneBrute): CommuneBrute {
