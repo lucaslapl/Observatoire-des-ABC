@@ -6,6 +6,11 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Changé
+- Licence du projet : passage de MIT à « **Tous droits réservés** » (propriétaire).
+  Aucune réutilisation autorisée tant que le projet n'est pas viable et autonome
+  (`LICENSE`, `package.json`, `README`).
+
 ### À venir
 - En réflexion.
 

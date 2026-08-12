@@ -243,8 +243,10 @@ Les corrections sont dans **`src/corrections.ts`** (clé : code INSEE erroné), 
   sous [licence Ouverte / Open Licence 2.0 (Etalab)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/).
 - **Géocodage** : [geo.api.gouv.fr](https://geo.api.gouv.fr/) (données ouvertes).
 - **Carte** : [Leaflet](https://leafletjs.com/) (BSD-2-Clause), tuiles © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).
-- Code du projet : MIT — voir [LICENSE](LICENSE).
+- Code du projet : Tous droits réservés — voir [LICENSE](LICENSE).
 
 ## Licence
 
-Voir [LICENSE](LICENSE) (MIT).
+Projet propriétaire : **tous droits réservés**. Aucune réutilisation ou copie du
+code, des données ou de la documentation n'est autorisée sans l'autorisation
+écrite préalable de l'auteur. Voir [LICENSE](LICENSE).
