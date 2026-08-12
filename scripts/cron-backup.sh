@@ -1,16 +1,34 @@
 #!/bin/bash
 set -u
 
-SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-ROOT_DIR="$(dirname -- "$SCRIPT_DIR")"
-cd "$ROOT_DIR" || exit 1
+# Le CRON de Plesk a un PATH minimal : on rétablit les répertoires standards.
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin${PATH:+:$PATH}"
 
+self="$0"
+DIR="${self%/*}"
+if [ "$DIR" = "$self" ]; then DIR="."; fi
+cd "$DIR/.." 2>/dev/null || exit 1
+ROOT_DIR="$PWD"
+
+# Journal : data/backups si créable, sinon racine de l'app.
 LOG_DIR="$ROOT_DIR/data/backups"
-mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/cron.log"
+LOG_FILE="$ROOT_DIR/cron-backup.log"
+if mkdir -p "$LOG_DIR" >/dev/null 2>&1; then
+  LOG_FILE="$LOG_DIR/cron.log"
+fi
 
 log() {
-  printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" | tee -a "$LOG_FILE"
+  # %T est un builtin bash (pas besoin de `date`).
+  local msg
+  msg="$(printf '%(%Y-%m-%d %H:%M:%S)T %s' -1 "$*")"
+  printf '%s\n' "$msg" >> "$LOG_FILE"
+  printf '%s\n' "$msg"
+}
+
+node_major() {
+  local v="$1"
+  v="${v#v}"
+  printf '%s' "${v%%.*}"
 }
 
 log "=== backup ==="
@@ -36,37 +54,28 @@ if [ -n "${NODE_BIN:-}" ] && [ -x "$NODE_BIN" ]; then
 fi
 
 if [ -z "$NODE" ]; then
-  for cand in \
-    "$(command -v node 2>/dev/null)" \
+  for p in "$(command -v node 2>/dev/null)" \
+    "$ROOT_DIR/node" \
     /opt/plesk/nodejs/*/bin/node \
     /opt/plesk/node/*/bin/node \
     /usr/local/bin/node \
-    /usr/bin/node
+    /usr/bin/node \
+    /usr/bin/nodejs
   do
-    [ -x "$cand" ] || continue
-    v="$("$cand" --version 2>/dev/null | sed 's/[^0-9]*\([0-9]*\).*/\1/')"
-    [ -n "$v" ] || continue
-    if [ "$v" -ge 24 ] 2>/dev/null; then
-      NODE="$cand"
-      break
-    fi
+    [ -x "$p" ] || continue
+    m="$(node_major "$("$p" --version 2>/dev/null)")"
+    [ -n "$m" ] || continue
+    if [ "$m" -ge 24 ] 2>/dev/null; then NODE="$p"; break; fi
   done
 fi
 
 if [ -z "$NODE" ]; then
-  for e in /proc/[0-9]*/exe; do
-    [ -e "$e" ] || continue
-    p="$(readlink -f "$e" 2>/dev/null || true)"
-    case "$p" in
-      */node)
-        v="$("$p" --version 2>/dev/null | sed 's/[^0-9]*\([0-9]*\).*/\1/')"
-        [ -n "$v" ] || continue
-        if [ "$v" -ge 24 ] 2>/dev/null; then
-          NODE="$p"
-          break
-        fi
-        ;;
-    esac
+  for f in /proc/[0-9]*/cmdline; do
+    grep -aq "dist/server/index.js" "$f" 2>/dev/null || continue
+    p="$(readlink -f "${f%/cmdline}/exe" 2>/dev/null || true)"
+    [ -n "$p" ] || continue
+    m="$(node_major "$("$p" --version 2>/dev/null)")"
+    if [ -n "$m" ] && [ "$m" -ge 24 ] 2>/dev/null; then NODE="$p"; break; fi
   done
 fi
 
