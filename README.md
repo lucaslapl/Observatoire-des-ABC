@@ -56,20 +56,32 @@ PORT=8080 npm run serve   # ou : npm run build && npm start
 
 ### Déploiement sur PulseHeberg (Plesk)
 
+Chez Plesk, les applications Node tournent via **Passenger** : le domaine est automatiquement
+proxyfié vers l'app (pas de port fixe à déclarer — l'app doit écouter sur `process.env.PORT`,
+ce que fait déjà ce projet). Le **fichier de démarrage doit être un fichier JS**, pas un script
+shell (`scripts/start-prod.sh` n'est utile qu'en VPS/manuel).
+
 1. **Créer le domaine** (ou sous-domaine, ex. `abc.votre-domaine.fr`) dans Plesk.
 2. **Cloner le dépôt** : Plesk → « Git » (ou FTP/SSH) → cloner
    `https://github.com/lucas_lapl/Observatoire-des-ABC` dans le répertoire du domaine.
 3. **Configurer l'app NodeJS** : Outils Développement → **NodeJS** :
    - Version de Node.js : **24.x** (≥ 24, exigée par `node:sqlite`) ;
-   - Root d'application : le répertoire du dépôt ;
-   - Cliquer **« Installer NPM »** (`npm ci`) ;
-   - Variables d'environnement : `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `PORT`,
-     `TRUST_PROXY=1`, `COOKIE_SECURE=1` ;
-   - Démarrer le script : `scripts/start-prod.sh` (compile `tsc` puis lance `dist/`).
-4. **SSL** : Plesk → certificat Let's Encrypt (gratuit, renouvellement automatique). Le
-   reverse proxy nginx de Plesk expose le domaine en HTTPS vers le port de l'app.
-5. **CRON** : Plesk → Tâches planifiées → `npm run backup` quotidien (et optionnellement
+   - Root d'application : le répertoire du dépôt (là où se trouve `package.json`) ;
+   - Fichier de démarrage : **`dist/server/index.js`** ;
+   - Cliquer **« Installer NPM »** : le `postinstall` compile automatiquement `dist/`
+     (si ça échoue, lancer en SSH `npm ci && npm run build`) ;
+   - Variables d'environnement : `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `TRUST_PROXY=1`,
+     `COOKIE_SECURE=1` (ne **pas** définir `PORT` : Passenger fournit le sien) ;
+   - Cliquer **« Activer Node.js »** puis **« Redémarrer l'app »**.
+4. **Vérifier l'URL de l'application** générée par Plesk (elle doit afficher la carte).
+5. **SSL** : Plesk → certificat Let's Encrypt (gratuit, renouvellement automatique). Le
+   reverse proxy nginx de Plesk expose le domaine en HTTPS vers l'app.
+6. **CRON** : Plesk → Tâches planifiées → `npm run backup` quotidien (et optionnellement
    `npm run collect` mensuel).
+
+> ⚠️ **Symptôme « page par défaut Plesk »** : le plus souvent l'app NodeJS n'est pas
+> activée, ou le fichier de démarrage/root d'application est incorrect (ex. un `.sh`,
+> ou `dist/` absent car `postinstall` n'a pas tourné). Refaire l'étape 3 puis 4.
 
 > ℹ️ La base `data/abc.db` vit sur le disque SSD persistant de l'hébergement : les
 > vérifications et contributions **survivent aux redéploiements**. Pour repartir de zéro

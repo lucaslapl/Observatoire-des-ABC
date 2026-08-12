@@ -15,6 +15,7 @@
     "backup": "tsx src/cli.ts backup",
     "serve": "tsx server/index.ts",
     "build": "tsc -p tsconfig.build.json",
+    "postinstall": "tsc -p tsconfig.build.json",
     "start": "node dist/server/index.js",
     "start:server": "bash scripts/start-server.sh",
     "stop:server": "bash scripts/stop-server.sh",
