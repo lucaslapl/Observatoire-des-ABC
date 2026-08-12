@@ -1,4 +1,5 @@
 import http from "node:http";
+import { timingSafeEqual } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -32,6 +33,15 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const TRUST_PROXY = process.env.TRUST_PROXY === "1";
 const COOKIE_SECURE = process.env.COOKIE_SECURE === "1";
+
+// ADMIN_PASSWORD peut être fourni soit en clair (dans .env), soit déjà hashé au
+// format scrypt `sel:hash` (produit par hashPassword). Détection : un ":" présent.
+function checkAdminPassword(submitted: string): boolean {
+  if (ADMIN_PASSWORD.includes(":")) return verifyPassword(submitted, ADMIN_PASSWORD);
+  const a = Buffer.from(submitted);
+  const b = Buffer.from(ADMIN_PASSWORD);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 const loginLimiter = new RateLimiter(15 * 60 * 1000, 5);
 const contributionLimiter = new RateLimiter(60 * 60 * 1000, 10);
@@ -196,7 +206,7 @@ const server = http.createServer((req, res) => {
         if (!ADMIN_PASSWORD) {
           return sendJson(res, 500, { error: "ADMIN_PASSWORD non défini sur le serveur" });
         }
-        if (body.username !== ADMIN_USERNAME || !verifyPassword(body.password ?? "", ADMIN_PASSWORD)) {
+        if (body.username !== ADMIN_USERNAME || !checkAdminPassword(body.password ?? "")) {
           return sendJson(res, 401, { error: "Identifiants invalides" });
         }
         const db = openDb();
