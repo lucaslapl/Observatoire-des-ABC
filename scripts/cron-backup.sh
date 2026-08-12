@@ -58,9 +58,14 @@ if [ -z "$NODE" ]; then
     "$ROOT_DIR/node" \
     /opt/plesk/nodejs/*/bin/node \
     /opt/plesk/node/*/bin/node \
+    /opt/nodejs/*/bin/node \
+    /opt/node/*/bin/node \
+    /usr/local/nodejs/*/bin/node \
+    /usr/local/node/*/bin/node \
     /usr/local/bin/node \
     /usr/bin/node \
-    /usr/bin/nodejs
+    /usr/bin/nodejs \
+    "$HOME/.nvm/versions/node/"*"/bin/node"
   do
     [ -x "$p" ] || continue
     m="$(node_major "$("$p" --version 2>/dev/null)")"
@@ -77,6 +82,16 @@ if [ -z "$NODE" ]; then
     m="$(node_major "$("$p" --version 2>/dev/null)")"
     if [ -n "$m" ] && [ "$m" -ge 24 ] 2>/dev/null; then NODE="$p"; break; fi
   done
+fi
+
+if [ -z "$NODE" ]; then
+  log "recherche large (find) d'un Node >= 24..."
+  NODE="$(find /opt /usr/local /usr -maxdepth 6 -type f -path '*/bin/node' 2>/dev/null | while IFS= read -r p; do
+    [ -x "$p" ] || continue
+    m="$(node_major "$("$p" --version 2>/dev/null)")"
+    [ -n "$m" ] || continue
+    if [ "$m" -ge 24 ] 2>/dev/null; then printf '%s' "$p"; break; fi
+  done)"
 fi
 
 if [ -z "$NODE" ]; then
