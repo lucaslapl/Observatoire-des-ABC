@@ -194,6 +194,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Diagnostic (aucun secret : uniquement l'état de la config) ---
+  if (urlPath === "/api/diag") {
+    const adminState = !ADMIN_PASSWORD
+      ? "absent"
+      : ADMIN_PASSWORD.includes(":")
+        ? "hash"
+        : "plain";
+    return sendJson(res, 200, {
+      adminState,
+      adminUsername: ADMIN_USERNAME,
+      envFilePresent: fs.existsSync(path.join(ROOT, ".env")),
+      root: ROOT,
+      cwd: process.cwd(),
+      port: PORT,
+    });
+  }
+
   // --- Administration ---
   if (urlPath === "/api/admin/login" && req.method === "POST") {
     const ip = clientIp(req, TRUST_PROXY);
@@ -425,6 +442,9 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Observatoire des ABC — http://localhost:${PORT}`);
+  console.log(
+    `Admin: user="${ADMIN_USERNAME}", mdp=${ADMIN_PASSWORD ? (ADMIN_PASSWORD.includes(":") ? "hash" : "clair") : "ABSENT"}`,
+  );
   if (!ADMIN_PASSWORD) {
     console.warn("⚠ ADMIN_PASSWORD non défini : le panneau admin est inaccessible.");
   }
