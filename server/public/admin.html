@@ -27,26 +27,26 @@
       <div class="d-flex align-items-center gap-2">
         <a class="btn btn-sm btn-outline-light" href="/">← Carte</a>
         <a class="btn btn-sm btn-outline-light" href="/verify">Vérification</a>
-        <span id="user" class="text-white-50 small" style="cursor:pointer" title="Cliquer pour se déconnecter"></span>
+        <span id="user" class="text-white-50 small"></span>
+        <button id="logoutBtn" class="btn btn-sm btn-outline-danger" hidden>Déconnexion</button>
       </div>
     </div>
   </nav>
 
-  <div id="login" class="d-flex align-items-center justify-content-center px-3" style="min-height:calc(100vh - 60px)">
-    <div class="card shadow-sm w-100" style="max-width:360px">
-      <div class="card-body p-4">
-        <h2 class="h5 mb-3">Connexion admin</h2>
-        <label class="form-label">Identifiant</label>
-        <input type="text" id="username" class="form-control" autocomplete="username" />
-        <label class="form-label mt-3">Mot de passe</label>
-        <input type="password" id="password" class="form-control" autocomplete="current-password" />
-        <button id="loginBtn" class="btn btn-success w-100 mt-3">Se connecter</button>
-        <div id="loginErr" class="text-danger small mt-2"></div>
+  <div id="panel">
+    <div class="container py-3">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white fw-semibold py-2">Maintenance</div>
+        <div class="card-body py-2">
+          <div class="d-flex gap-2 flex-wrap align-items-center">
+            <button id="collectBtn" class="btn btn-primary btn-sm">🔄 Collecter les données</button>
+            <button id="backupBtn" class="btn btn-secondary btn-sm">💾 Sauvegarder la base</button>
+            <span id="maintenanceSpinner" class="spinner-border spinner-border-sm text-success" role="status" hidden></span>
+          </div>
+          <div id="maintenanceMsg" class="small mt-1 text-body-secondary"></div>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div id="panel">
     <div class="bg-white border-bottom">
       <ul class="nav nav-tabs px-3 pt-2">
         <li class="nav-item"><button class="tab nav-link active" data-tab="en_attente">À modérer</button></li>
@@ -59,8 +59,7 @@
       <div id="content"></div>
       <p class="foot">
         RGPD : l'adresse IP des contributeurs est conservée uniquement pour la modération des
-        corrections et ne sert à aucun autre traitement. Pensez à effectuer régulièrement
-        <code>npm run backup</code> (ou un CRON) pour sauvegarder la base et ses contributions.
+        corrections et ne sert à aucun autre traitement.
       </p>
     </main>
   </div>
@@ -81,46 +80,36 @@
         const labels = { termine: 'Terminé', en_cours: 'En cours', va_debuter: 'Va débuter' };
         out.push(`<b>Statut suggéré :</b> ${labels[p.statut_suggere] || p.statut_suggere}`);
       }
+      if (p.annee_debut_suggeree || p.annee_fin_suggeree) {
+        const d = p.annee_fin_suggeree ? `${esc(p.annee_debut_suggeree)}–${esc(p.annee_fin_suggeree)}` : esc(p.annee_debut_suggeree);
+        out.push(`<b>Dates suggérées :</b> ${d}`);
+      }
+      if (p.source) out.push(`<b>Source :</b> ${esc(p.source)}`);
       if (p.note) out.push(`<b>Note :</b> ${esc(p.note)}`);
       if (p.lien) out.push(`<b>Lien :</b> <a href="${esc(p.lien)}" target="_blank" rel="noopener">${esc(p.lien)}</a>`);
       if (p.texte) out.push(`<b>Texte :</b> ${esc(p.texte)}`);
       return out.join('\n');
     }
 
+    function goLogin() {
+      window.location.href = '/login';
+    }
+
     async function api(url, opts) {
       const r = await fetch(url, opts);
-      if (r.status === 401) { showLogin(); throw new Error('Non autorisé'); }
+      if (r.status === 401) { goLogin(); throw new Error('Non autorisé'); }
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
       return j;
     }
 
-    function showLogin() {
-      $('login').style.display = '';
-      $('panel').style.display = 'none';
-    }
-
     function showPanel(username) {
-      $('login').style.display = 'none';
       $('panel').style.display = 'block';
       $('user').textContent = 'Connecté : ' + username;
+      $('logoutBtn').hidden = false;
+      window.scrollTo(0, 0);
       load('en_attente');
     }
-
-    $('loginBtn').addEventListener('click', async () => {
-      const err = $('loginErr');
-      err.textContent = '';
-      try {
-        const j = await api('/api/admin/login', {
-          method: 'POST', headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ username: $('username').value, password: $('password').value }),
-        });
-        showPanel(j.username);
-      } catch (e) {
-        err.textContent = e.message;
-      }
-    });
-    $('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('loginBtn').click(); });
 
     function card(c, actions) {
       const payload = JSON.parse(c.payload_json || '{}');
@@ -167,6 +156,7 @@
         const j = await api('/api/admin/contributions');
         render(j.contributions, tab);
       } catch (e) {
+        if (e.message === 'Non autorisé') { goLogin(); return; }
         $('content').innerHTML = '<div class="text-body-secondary py-5 text-center">Erreur : ' + esc(e.message) + '</div>';
       }
     }
@@ -197,16 +187,53 @@
       } catch (err) { alert(err.message); }
     });
 
-    $('user').addEventListener('click', async () => {
+    $('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/admin/logout', { method: 'POST' });
-      showLogin();
+      goLogin();
+    });
+
+    function maintenanceMsg(html, ok) {
+      $('maintenanceMsg').innerHTML = html;
+      $('maintenanceMsg').style.color = ok ? '#166534' : '#dc2626';
+    }
+
+    $('backupBtn').addEventListener('click', async () => {
+      $('maintenanceSpinner').hidden = false;
+      $('backupBtn').disabled = true;
+      try {
+        const j = await api('/api/admin/backup', { method: 'POST' });
+        const time = j.path.replace(/^.*abc-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\..*$/, '$3/$2/$1 $4:$5:$6');
+        maintenanceMsg(`Sauvegarde créée : ${time} (${j.kept} sauvegardes conservées).`, true);
+      } catch (e) {
+        maintenanceMsg('Erreur : ' + esc(e.message), false);
+      } finally {
+        $('maintenanceSpinner').hidden = true;
+        $('backupBtn').disabled = false;
+      }
+    });
+
+    $('collectBtn').addEventListener('click', async () => {
+      if (!confirm('Lancer la collecte des données ? Cela va effacer et reconstruire toute la base.')) return;
+      $('maintenanceSpinner').hidden = false;
+      $('collectBtn').disabled = true;
+      try {
+        const j = await api('/api/admin/collect', { method: 'POST', signal: AbortSignal.timeout(300000) });
+        const statusLines = (j.summary.statuses || []).map(s => `${esc(s.statut)}: ${s.n}`).join(', ');
+        maintenanceMsg(`Collecte terminée : ${j.summary.total} projets, ${j.summary.communes} communes (${j.summary.geocoded} géocodées). ${statusLines}`, true);
+        load(document.querySelector('.tab.active').dataset.tab);
+      } catch (e) {
+        maintenanceMsg('Erreur : ' + esc(e.message), false);
+      } finally {
+        $('maintenanceSpinner').hidden = true;
+        $('collectBtn').disabled = false;
+      }
     });
 
     fetch('/api/admin/me').then((r) => r.json()).then((j) => {
       if (j.admin) {
         showPanel(j.username || 'admin');
       } else {
-        showLogin();
+        goLogin();
       }
     });
   </script>

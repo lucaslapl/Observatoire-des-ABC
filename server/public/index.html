@@ -12,15 +12,67 @@
     html, body { height:100%; }
     body { margin:0; overflow:hidden; }
     .navbar-abc { background:#14532d; }
+    .count-help-wrap { position:relative; display:inline-flex; }
+    .count-help {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:18px; height:18px; border-radius:50%;
+      background:rgba(255,255,255,.18); color:#fff; border:1px solid rgba(255,255,255,.4);
+      font-size:12px; font-weight:700; cursor:help;
+    }
+    .count-help-tip {
+      display:none; position:absolute; right:0; top:calc(100% + 8px); z-index:1001;
+      width:360px; max-width:calc(100vw - 24px); padding:8px 10px; border-radius:8px;
+      background:#1f2937; color:#f3f4f6; font-size:12px; line-height:1.5;
+      box-shadow:0 4px 14px rgba(0,0,0,.4); text-align:left; white-space:normal;
+    }
+    .count-help-tip b { display:block; margin-bottom:4px; color:#fff; }
+    .count-help-tip p { margin:0 0 6px; }
+    .count-help-tip p:last-child { margin-bottom:0; }
+    .count-help-wrap:hover .count-help-tip, .count-help-wrap:focus .count-help-tip { display:block; }
+    /* Info-bulle de la légende (dans l'en-tête Légende) */
     #map { position:relative; z-index:0; }
     .legend {
       position:absolute; z-index:1000; bottom:16px; left:10px;
-      max-width:260px; font-size:12.5px; line-height:1.7;
-      background:#fff; border-radius:8px; box-shadow:0 1px 5px rgba(0,0,0,.35); padding:8px 12px;
+      width:288px; max-width:calc(100vw - 20px);
+      font-family:var(--bs-body-font-family);
+      background:rgba(255,255,255,.97); border-radius:10px;
+      box-shadow:0 2px 12px rgba(0,0,0,.25);
     }
-    .chip { width:11px; height:11px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; }
+    .legend-head {
+      display:flex; align-items:center; gap:8px;
+      padding:9px 12px; cursor:pointer; user-select:none;
+      background:linear-gradient(180deg,#f8fafc,#eef2f7);
+      border-bottom:1px solid #e2e8f0;
+    }
+    .legend-head .title { font-size:13px; font-weight:700; color:#1f2937; letter-spacing:.02em; }
+    .legend-head .chev { margin-left:auto; font-size:11px; color:#64748b; transition:transform .2s; }
+    .legend.retracted .chev { transform:rotate(-90deg); }
+    .legend.retracted .legend-body { display:none; }
+    .legend-body { padding:10px 12px 12px; }
+    .legend-section {
+      font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+      color:#94a3b8; margin:10px 0 5px; }
+    .legend-section:first-child { margin-top:0; }
+    .legend-item {
+      display:flex; align-items:center; gap:8px;
+      font-size:12.5px; color:#374151; line-height:1.5; padding:2px 0;
+    }
+    .legend-item .chip { flex:none; }
+    .legend-item .cnt { margin-left:auto; font-size:11.5px; font-weight:600; color:#9ca3af; font-variant-numeric:tabular-nums; }
+    .meta { padding-top:4px; }
+    .meta-row { display:flex; justify-content:space-between; gap:10px; align-items:baseline; font-size:12.5px; padding:1.5px 0; }
+    .meta-row .k { color:#4b5563; }
+    .meta-row .v { font-weight:600; color:#111827; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .meta-row .k small { font-weight:500; color:#94a3b8; }
+    .meta-note { display:flex; justify-content:space-between; gap:10px; align-items:baseline; font-size:11.5px; padding:1.5px 0; }
+    .meta-note .k { color:#6b7280; }
+    .meta-note .v { color:#374151; text-align:right; font-variant-numeric:tabular-nums; }
+    .chip { width:11px; height:11px; border-radius:50%; display:inline-block; }
+    /* Échelle décalée à droite de la légende (celle-ci occupe ~290px en bas à gauche). */
+    .leaflet-control-scale { margin-left:300px !important; }
     @media (max-width:720px) {
-      .legend { left:6px; right:6px; max-width:none; }
+      .legend { left:6px; right:6px; width:auto; max-width:none; }
+      .leaflet-control-scale { margin-left:6px !important; }
     }
   </style>
 </head>
@@ -48,6 +100,16 @@
             <span class="text-white-50">Région</span>
             <select id="region" class="form-select form-select-sm w-auto"><option value="">Toutes</option></select>
           </label>
+          <label class="d-flex align-items-center gap-1" style="font-size:13px;white-space:nowrap">
+            <span class="text-white-50">Période</span>
+            <select id="yearFrom" class="form-select form-select-sm w-auto" title="Année de début minimum">
+              <option value="">De 🔽</option>
+            </select>
+            <span class="text-white-50">–</span>
+            <select id="yearTo" class="form-select form-select-sm w-auto" title="Année de début maximum">
+              <option value="">À 🔽</option>
+            </select>
+          </label>
           <label class="d-flex align-items-center gap-1" style="font-size:13px">
             <span class="text-white-50">Commune</span>
             <input type="text" id="q" class="form-control form-control-sm" style="width:180px" placeholder="Rechercher…" />
@@ -62,24 +124,40 @@
             style="background:rgba(167,139,250,.3);border:1px solid rgba(196,181,253,.6);color:#fff"
             title="Suggestions en attente de modération" hidden>📥</a>
           <span id="count" class="badge text-bg-light mt-1 mt-sm-0 ms-lg-auto ms-0">chargement…</span>
+          <span class="count-help-wrap mt-1 mt-sm-0" tabindex="0">
+            <span class="count-help" id="countHelp">?</span>
+            <span class="count-help-tip" id="countTip"></span>
+          </span>
         </div>
       </div>
     </div>
   </nav>
   <div id="map" class="flex-grow-1">
     <div class="legend">
-      <div><span class="chip" style="background:var(--ok)"></span>En cours</div>
-      <div><span class="chip" style="background:var(--debut)"></span>Va débuter</div>
-      <div><span class="chip" style="background:var(--fini)"></span>Terminé</div>
-      <div><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu</div>
-      <div id="meta" class="mt-2 pt-1 small text-body-secondary" style="border-top:1px solid #dee2e6"></div>
+      <div class="legend-head" id="legendToggle" role="button" tabindex="0" title="Afficher / masquer">
+        <span class="title">Légende</span><span class="chev" id="legendChev">▾</span>
+      </div>
+      <div id="legendBody" class="legend-body">
+        <div class="legend-section">Statuts</div>
+        <div class="legend-item"><span class="chip" style="background:var(--ok)"></span>En cours<span class="cnt" id="cnt_en_cours">…</span></div>
+        <div class="legend-item"><span class="chip" style="background:var(--debut)"></span>Va débuter<span class="cnt" id="cnt_a_venir">…</span></div>
+        <div class="legend-item"><span class="chip" style="background:var(--fini)"></span>Terminé<span class="cnt" id="cnt_termine">…</span></div>
+        <div class="legend-item"><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu<span class="cnt" id="cnt_inconnu">…</span></div>
+        <div class="legend-section">Données</div>
+        <div id="meta" class="meta"></div>
+      </div>
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const map = L.map('map').setView([46.5, 2.5], 6);
+    const map = L.map('map', {
+      zoomSnap: 0.5, // paliers de zoom fractionnaires (défaut 1) pour une molette progressive
+      wheelPxPerZoomLevel: 300, // adoucit encore : plus de pixels requis par niveau
+      scrollWheelZoom: true,
+    }).setView([46.5, 2.5], 6);
+    L.control.scale({ imperial: false, maxWidth: 160 }).addTo(map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
       attribution: '© OpenStreetMap'
@@ -92,11 +170,15 @@
     const layer = L.layerGroup().addTo(map);
     const lineLayer = L.layerGroup().addTo(map);
     let all = [];
+    let allProjs = new Set();
+    let allProjTotal = 0;
     let groups = new Map();
 
     const state = () => ({
       statut: document.getElementById('statut').value,
       region: document.getElementById('region').value,
+      yearFrom: document.getElementById('yearFrom').value,
+      yearTo: document.getElementById('yearTo').value,
       q: document.getElementById('q').value.trim().toLowerCase(),
       connect: document.getElementById('connect').checked,
     });
@@ -107,6 +189,12 @@
       const p = f.properties;
       if (s.statut && dStatut(p) !== s.statut) return false;
       if (s.region && p.region !== s.region) return false;
+      if (s.yearFrom || s.yearTo) {
+        if (p.annee_debut == null) return false; // date non renseignée → exclue
+        const y = Number(p.annee_debut);
+        if (s.yearFrom && y < Number(s.yearFrom)) return false;
+        if (s.yearTo && y > Number(s.yearTo)) return false;
+      }
       if (s.q) {
         const hay = `${p.nom||''} ${p.commune||''} ${p.structure_porteuse||''} ${p.departement||''}`.toLowerCase();
         if (!hay.includes(s.q)) return false;
@@ -114,10 +202,23 @@
       return true;
     }
 
+    // Un point est-il dans la partie visible de la carte actuellement ?
+    function inViewport(f) {
+      const [lon, lat] = f.geometry.coordinates;
+      const b = map.getBounds();
+      return b.contains([lat, lon]);
+    }
+
+    // Termine true si le point dépend aussi de la vue (déplacement/zoom).
+    function visibleIn(f, s) {
+      return visible(f, s) && inViewport(f);
+    }
+
     const VERDICT = {
       confirme_termine: { label: '✓ Vérifié : Terminé', color: '#1b5e20' },
       confirme_en_cours: { label: '✓ Vérifié : En cours', color: '#2e7d32' },
       toujours_a_venir: { label: '✓ Vérifié : Va débuter', color: '#b45309' },
+      confirme_date: { label: '✓ Vérifié : Date confirmée', color: '#0d9488' },
       introuvable: { label: '⚠ Vérifié : introuvable', color: '#7f1d1d' },
       douteux: { label: '⚠ Vérifié : incertain', color: '#7f1d1d' },
     };
@@ -127,16 +228,18 @@
       layer.clearLayers();
       lineLayer.clearLayers();
       const shown = [];
+      const shownProjIds = new Set();
       for (const f of all) {
         const p = f.properties;
         if (!visible(f, s)) continue;
+        shownProjIds.add(p.projet_id);
         const [lon, lat] = f.geometry.coordinates;
         const src = p.source || '';
         const srcFr = { 'data.gouv':'Registre OFB', 'wayback':'Registre OFB (archives 2022)',
           'fondsvert-p113-2024':'Fonds vert 2024', 'fondsvert-p113-2025':'Fonds vert 2025' }[src] || src;
         const v = VERDICT[p.verif_etat];
         // Une vérification concluante remplace les alertes spéculatives.
-        const confirme = v && ['confirme_termine','confirme_en_cours','toujours_a_venir'].includes(p.verif_etat);
+        const confirme = v && ['confirme_termine','confirme_en_cours','toujours_a_venir','confirme_date'].includes(p.verif_etat);
         const verifNote = v
           ? `<br><b style="color:${v.color}">${v.label}</b>` +
             (p.verif_note ? `<br><small>${p.verif_note}</small>` : '') +
@@ -165,8 +268,8 @@
         })
           .bindPopup(
             `<b>${p.nom}</b><br>${p.commune}${p.departement ? ' (' + p.departement + ')' : ''}<br>` +
-            `Structure : ${p.structure_porteuse || '—'}<br>Année : ${p.annee_debut || '—'}<br>` +
-            `<b>${p.categorie}</b>${anomalieNote}${verifNote}${estimeNote}${ptNote}${pecNote}${staleNote}<br><small>Source : ${srcFr}</small>`
+            `Structure : ${p.structure_porteuse || '—'}<br>Année : ${p.annee_debut ? (p.annee_fin ? p.annee_debut+'–'+p.annee_fin : p.annee_debut) : '—'}<br>` +
+            `<b>${p.categorie}</b>${anomalieNote}${verifNote}${estimeNote}${ptNote}${pecNote}${staleNote}<br><small>${p.verifie ? 'Source initiale' : 'Source'} : ${srcFr}</small>`
           )
           .addTo(layer);
         shown.push([lat, lon]);
@@ -190,9 +293,47 @@
             .addTo(lineLayer);
         }
       }
-      document.getElementById('count').textContent =
-        shown.length + ' point' + (shown.length > 1 ? 's' : '') + ' / ' + all.length;
+      function fmtCount(n, s) { return n + ' ' + (n > 1 ? s : s.replace(/s$/, '')); }
+      const countEl = document.getElementById('count');
+      countEl.textContent =
+        fmtCount(shown.length, 'points') + ' / ' +
+        fmtCount(all.length, 'points') + ' · ' +
+        fmtCount(shownProjIds.size, 'projets') + ' / ' +
+        fmtCount(allProjs.size, 'projets');
       return shown;
+    }
+
+    // Recalcule les compteurs de la légende selon les points visibles dans la
+    // vue courante de la carte (filtres + vue). Appelé sur déplacement/zoom.
+    function updateCounts() {
+      const s = state();
+      const cnts = { en_cours: 0, a_venir: 0, termine: 0, inconnu: 0 };
+      const projVisible = new Set();
+      let vVerif = 0, vEstime = 0, vPt = 0, vPec = 0, vStale = 0, vAno = 0;
+      for (const f of all) {
+        if (!visibleIn(f, s)) continue;
+        const p = f.properties;
+        projVisible.add(p.projet_id);
+        cnts[dStatut(p)] = (cnts[dStatut(p)] || 0) + 1;
+        if (p.verifie) vVerif++;
+        if (p.estime_termine) vEstime++;
+        if (p.potentiellement_termine) vPt++;
+        if (p.potentiellement_en_cours) vPec++;
+        if (p.donnees_2022) vStale++;
+        if (p.anomalie) vAno++;
+      }
+      const stOrder = { en_cours: 'cnt_en_cours', a_venir: 'cnt_a_venir', termine: 'cnt_termine', inconnu: 'cnt_inconnu' };
+      for (const [st, id] of Object.entries(stOrder))
+        document.getElementById(id).textContent = cnts[st] || 0;
+      const cntProj = document.getElementById('metaProjets');
+      if (cntProj) cntProj.textContent = projVisible.size;
+      const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+      set('metaVerif', vVerif);
+      set('metaEstime', vEstime);
+      set('metaPt', vPt);
+      set('metaPec', vPec);
+      set('metaStale', vStale);
+      set('metaAno', vAno);
     }
 
     document.getElementById('fit').addEventListener('click', () => {
@@ -213,6 +354,7 @@
 
     fetch('/api/abc.geojson').then(r => r.json()).then(data => {
       all = data.features;
+      allProjs = new Set(data.features.map(f => f.properties.projet_id));
       groups = new Map();
       for (const f of all) {
         const pid = f.properties.projet_id;
@@ -222,7 +364,12 @@
       const regions = [...new Set(data.features.map(f => f.properties.region).filter(Boolean))].sort();
       const regionSel = document.getElementById('region');
       regions.forEach(r => regionSel.add(new Option(r, r)));
+      const years = [...new Set(data.features.map(f => f.properties.annee_debut).filter(Boolean))].sort();
+      const yearFrom = document.getElementById('yearFrom');
+      const yearTo = document.getElementById('yearTo');
+      years.forEach(y => { yearFrom.add(new Option(y, y)); yearTo.add(new Option(y, y)); });
       apply();
+      updateCounts();
     }).catch(e => {
       document.getElementById('count').textContent = 'Erreur de chargement';
       console.error(e);
@@ -231,6 +378,7 @@
     fetch('/api/meta').then(r => r.json()).then(m => {
       const fmt = d => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
       const total = m.countProjets;
+      allProjTotal = total;
       const pt = m.countPotentiellementTermines || 0;
       const pec = m.countPotentiellementEnCours || 0;
       const stale = m.countDonnees2022 || 0;
@@ -243,27 +391,53 @@
         el.hidden = false;
         el.textContent = '📥 ' + sugg + (sugg > 1 ? ' suggestions' : ' suggestion');
       }
-      document.getElementById('meta').innerHTML =
-        `<b>${total} projets</b>` +
-        (verif ? `<br><span style="color:#14532d">✓ ${verif} vérifiés manuellement</span>` : '') +
-        (anomalies ? `<br><span style="color:#b91c1c">⚠ ${anomalies} communes incohérentes écartées</span>` : '') +
-        (estime ? `<br><span style="color:#1b5e20">✓ ${estime} inconnus > 5 ans reclassés Terminé</span>` : '') +
-        (pt ? `<br><span style="color:#8d6e63">⚠ ${pt} en cours potentiellement terminés</span>` : '') +
-        (pec ? `<br><span style="color:#b45309">⏳ ${pec} « va débuter » potentiellement en cours</span>` : '') +
-        (stale ? `<br><span style="color:#7f1d1d">🕓 ${stale} projets figés aux archives 2022</span>` : '') +
-        `<br>Registre OFB : maj ${fmt(m.sources['data.gouv'])}<br>` +
-        `Archives 2022 : ${fmt(m.sources.wayback)}<br>` +
-        `Fonds vert 2024 : ${fmt(m.sources['fondsvert-p113-2024'])}<br>` +
-        `Fonds vert 2025 : ${fmt(m.sources['fondsvert-p113-2025'])}`;
+      // Compteurs par statut, remplis dans l'ordre de la légende.
+      const statutOrder = { en_cours: 'cnt_en_cours', a_venir: 'cnt_a_venir', termine: 'cnt_termine', inconnu: 'cnt_inconnu' };
+      const defs = { en_cours: 0, a_venir: 0, termine: 0, inconnu: 0 };
+      for (const s of m.stats || []) defs[s.statut] = s.n;
+      for (const [st, id] of Object.entries(statutOrder))
+        document.getElementById(id).textContent = defs[st] ?? 0;
+      const row = (k, v) => `<div class="meta-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+      const date = (label, d) =>
+        `<div class="meta-note"><span class="k">${label}</span><span class="v">maj ${fmt(d)}</span></div>`;
+      document.getElementById('meta').innerHTML = [
+        row('Projets', `<span id="metaProjets">${total}</span> <small class="text-body-secondary">visibles</small>`),
+        verif ? row('Vérifiés manuellement', '✓ <span id="metaVerif">' + verif + '</span>') : '',
+        estime ? row('Reclassés Terminé (> 5 ans)', '<span id="metaEstime">' + estime + '</span>') : '',
+        pt ? row('Potentiellement terminés', '<span id="metaPt">' + pt + '</span>') : '',
+        pec ? row('Potentiellement en cours', '<span id="metaPec">' + pec + '</span>') : '',
+        stale ? row('Figés aux archives 2022', '<span id="metaStale">' + stale + '</span>') : '',
+        anomalies ? row('Communes incohérentes écartées', '<span id="metaAno">' + anomalies + '</span>') : '',
+      ].join('') +
+        `<div class="legend-item" style="padding-top:6px;font-weight:600;color:#374151">Mise à jour des sources</div>` +
+        date('Registre OFB', m.sources['data.gouv']) +
+        date('Archives 2022', m.sources.wayback) +
+        date('Fonds vert 2024', m.sources['fondsvert-p113-2024']) +
+        date('Fonds vert 2025', m.sources['fondsvert-p113-2025']);
+      apply(); // met à jour le compteur/les infobulles (allProjTotal désormais connu)
     }).catch(() => {});
 
-    document.getElementById('statut').addEventListener('change', apply);
-    document.getElementById('region').addEventListener('change', apply);
-    document.getElementById('connect').addEventListener('change', apply);
+    document.getElementById('statut').addEventListener('change', () => { apply(); updateCounts(); });
+    document.getElementById('region').addEventListener('change', () => { apply(); updateCounts(); });
+    document.getElementById('yearFrom').addEventListener('change', () => { apply(); updateCounts(); });
+    document.getElementById('yearTo').addEventListener('change', () => { apply(); updateCounts(); });
+    document.getElementById('connect').addEventListener('change', () => { apply(); updateCounts(); });
+    // Recalcule les compteurs de la légende à chaque déplacement/zoom de la carte.
+    map.on('moveend', updateCounts);
+    map.on('zoomend', updateCounts);
+    const legendEl = document.getElementById('legendToggle');
+    legendEl.addEventListener('click', () =>
+      document.querySelector('.legend').classList.toggle('retracted'));
     let debounce;
     document.getElementById('q').addEventListener('input', () => {
       clearTimeout(debounce);
-      debounce = setTimeout(apply, 200);
+      debounce = setTimeout(() => {
+        const pts = apply();
+        updateCounts();
+        if (pts.length === 0) return;
+        if (pts.length === 1) map.setView(pts[0], 12);
+        else map.fitBounds(pts, { padding: [40, 40] });
+      }, 200);
     });
   </script>
 </body>

@@ -10,7 +10,7 @@ export interface PointFeature {
 export function buildGeoJson(db: DatabaseSync) {
   const communes = db
     .prepare(
-      `SELECT c.*, p.nom, p.structure_porteuse, p.annee_debut, p.statut, p.source,
+      `SELECT c.*, p.nom, p.structure_porteuse, p.annee_debut, p.annee_fin, p.statut, p.source,
               p.potentiellement_termine, p.potentiellement_en_cours, p.estime_termine,
               v.etat AS verif_etat, v.note AS verif_note, v.lien AS verif_lien
        FROM communes c
@@ -48,6 +48,7 @@ export function buildGeoJson(db: DatabaseSync) {
         nom: c.nom,
         structure_porteuse: c.structure_porteuse,
         annee_debut: c.annee_debut,
+        annee_fin: c.annee_fin,
         statut: c.statut,
         statut_affichage: statutAffichage,
         categorie: statutLabel(statutAffichage as never),

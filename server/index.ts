@@ -5,6 +5,7 @@ import path from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { openDb, saveVerification, insertContribution } from "../src/db.js";
 import { backupDb } from "../src/backup.js";
+import { collectAll } from "../src/collect.js";
 import { buildGeoJson } from "../src/geojson.js";
 import { EXPORT_DIR, ROOT, SOURCE_DATES } from "../src/config.js";
 import { statutLabel } from "../src/status.js";
@@ -277,6 +278,20 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === "/api/admin/collect" && req.method === "POST") {
+    const auth = requireAdmin(req, res);
+    if (!auth.ok) return;
+    (async () => {
+      try {
+        const summary = await collectAll();
+        sendJson(res, 200, { ok: true, summary });
+      } catch (e) {
+        sendJson(res, 500, { error: String(e) });
+      }
+    })();
+    return;
+  }
+
   if (urlPath === "/api/admin/contributions") {
     const auth = requireAdmin(req, res);
     if (!auth.ok) return;
@@ -358,10 +373,17 @@ const server = http.createServer((req, res) => {
           etat: string;
           note?: string;
           lien?: string;
+          annee_debut?: number | null;
+          annee_fin?: number | null;
         };
         if (!v.projet_id || !v.etat) throw new Error("champs manquants");
         const db = openDb();
         saveVerification(db, { projet_id: v.projet_id, etat: v.etat, note: v.note, lien: v.lien });
+        if (v.etat === "confirme_date" && (v.annee_debut !== undefined || v.annee_fin !== undefined)) {
+          db.prepare(
+            "UPDATE projets SET annee_debut = ?, annee_fin = ?, updated_at = datetime('now') WHERE id = ?",
+          ).run(v.annee_debut ?? null, v.annee_fin ?? null, v.projet_id);
+        }
         sendJson(res, 200, { ok: true });
       } catch (e) {
         sendJson(res, 400, { error: (e as Error).message });
@@ -385,6 +407,7 @@ const server = http.createServer((req, res) => {
                  WHERE c2.projet_id = p.id AND c2.anomalie = 1) AS communes_anormales
          FROM projets p LEFT JOIN verifications v ON v.projet_id = p.id
          WHERE p.potentiellement_termine = 1 OR p.potentiellement_en_cours = 1 OR p.source = 'wayback'
+            OR p.annee_debut IS NULL
             OR EXISTS (SELECT 1 FROM communes c3 WHERE c3.projet_id = p.id AND c3.anomalie = 1)
          ORDER BY (v.etat IS NULL OR v.etat = 'a_verifier') DESC, p.nom`,
       )
@@ -414,6 +437,7 @@ const server = http.createServer((req, res) => {
         motifs.push("potentiellement en cours");
       if (p.source === "wayback") motifs.push("archives 2022");
       if (p.communes_anormales) motifs.push("anomalie");
+      if (p.annee_debut === null || p.annee_debut === undefined) motifs.push("date inconnue");
       const place = (p.structure_porteuse ?? p.nom).replace(/ABC\s*/i, "").trim();
       const cible = p.communes_anormales ?? (p.communes ?? "").split(",")[0].trim();
       const requete = `"atlas de la biodiversité communale" "${place}" ${cible}`.trim();
@@ -443,7 +467,7 @@ const server = http.createServer((req, res) => {
 
   let file = path.join(
     PUBLIC,
-    urlPath === "/" ? "index.html" : urlPath === "/verify" ? "verify.html" : urlPath === "/admin" ? "admin.html" : urlPath,
+    urlPath === "/" ? "index.html" : urlPath === "/login" ? "login.html" : urlPath === "/verify" ? "verify.html" : urlPath === "/admin" ? "admin.html" : urlPath,
   );
   if (!fs.existsSync(file)) {
     res.writeHead(404, { "content-type": "text/plain" });

@@ -24,6 +24,7 @@ function migrate(db: DatabaseSync) {
       structure_porteuse TEXT,
       type_de_structure_porteuse TEXT,
       annee_debut INTEGER,
+      annee_fin INTEGER,
       avancement_raw TEXT,
       statut TEXT NOT NULL,
       potentiellement_termine INTEGER DEFAULT 0,
@@ -135,6 +136,47 @@ function migrate(db: DatabaseSync) {
   if (!ccols.some((c) => c.name === "anomalie")) {
     db.exec("ALTER TABLE communes ADD COLUMN anomalie INTEGER DEFAULT 0");
     db.exec("ALTER TABLE communes ADD COLUMN distance_centre_km REAL");
+  }
+
+  // Migration : colonne annee_fin sur projets
+  if (!cols.some((c) => c.name === "annee_fin")) {
+    db.exec("ALTER TABLE projets ADD COLUMN annee_fin INTEGER");
+  }
+
+  // Migration : élargit la table `contributions` pour accepter le type
+  // `date_debut` (SQLite ne permet pas de modifier une contrainte CHECK, on
+  // reconstruit donc la table).
+  const cdef = db
+    .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='contributions'")
+    .get() as { sql: string } | undefined;
+  if (cdef && !/date_debut/.test(cdef.sql)) {
+    db.exec("PRAGMA foreign_keys = OFF;");
+    db.exec(`
+      CREATE TABLE contributions_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        projet_id TEXT NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('statut','note','lien','autre','date_debut')),
+        payload_json TEXT NOT NULL,
+        commentaire TEXT,
+        ip TEXT,
+        user_agent TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        statut TEXT NOT NULL DEFAULT 'en_attente' CHECK (statut IN ('en_attente','validee','refusee','retiree')),
+        traite_par TEXT,
+        traite_le TEXT,
+        note_admin TEXT,
+        FOREIGN KEY (projet_id) REFERENCES projets(id)
+      );
+    `);
+    db.exec(
+      `INSERT INTO contributions_new (id, projet_id, type, payload_json, commentaire, ip, user_agent, created_at, statut, traite_par, traite_le, note_admin)
+       SELECT id, projet_id, type, payload_json, commentaire, ip, user_agent, created_at, statut, traite_par, traite_le, note_admin FROM contributions`,
+    );
+    db.exec("DROP TABLE contributions;");
+    db.exec("ALTER TABLE contributions_new RENAME TO contributions;");
+    db.exec("PRAGMA foreign_keys = ON;");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_contributions_projet ON contributions(projet_id);");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_contributions_statut ON contributions(statut);");
   }
 }
 

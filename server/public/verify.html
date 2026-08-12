@@ -56,6 +56,7 @@
         <option value="en_cours">Potentiellement en cours</option>
         <option value="archives">Archives 2022</option>
         <option value="anomalie">Commune incohérente</option>
+        <option value="date inconnue">Date inconnue</option>
       </select>
     </label>
     <label>État
@@ -65,6 +66,7 @@
         <option value="confirme_termine">Confirmé terminé</option>
         <option value="confirme_en_cours">Confirmé en cours</option>
         <option value="toujours_a_venir">Toujours à venir</option>
+        <option value="confirme_date">Date vérifiée</option>
         <option value="introuvable">Introuvable</option>
         <option value="douteux">Incertain</option>
       </select>
@@ -106,10 +108,11 @@
       confirme_termine: { label: '✓ Confirmé terminé', cls: 'confirme_termine' },
       confirme_en_cours: { label: 'Confirmé en cours', cls: 'confirme_en_cours' },
       toujours_a_venir: { label: 'Toujours à venir', cls: 'toujours_a_venir' },
+      confirme_date: { label: '✓ Date vérifiée', cls: 'confirme_termine' },
       introuvable: { label: 'Introuvable', cls: 'introuvable' },
       douteux: { label: 'Incertain', cls: 'douteux' },
     };
-    const MOTIFS = { termine: 'Potentiellement terminé', en_cours: 'Potentiellement en cours', archives: 'Archives 2022', anomalie: 'Commune incohérente' };
+    const MOTIFS = { termine: 'Potentiellement terminé', en_cours: 'Potentiellement en cours', archives: 'Archives 2022', anomalie: 'Commune incohérente', 'date inconnue': 'Date inconnue' };
     const STATUT_SUGG = { termine: 'Terminé', en_cours: 'En cours', va_debuter: 'Va débuter' };
     const SUGG_STATUT_LABEL = { en_attente: 'suggestion en attente', validee: 'suggestion validée', refusee: 'suggestion refusée', retiree: 'suggestion retirée' };
     let data = { projets: [], compteurs: {} };
@@ -161,6 +164,11 @@
               </select>
               <input type="text" data-f="note" placeholder="Note" class="form-control form-control-sm" value="${(p.note||'').replace(/"/g,'&quot;')}" />
               <input type="text" data-f="lien" placeholder="Lien trouvé" class="form-control form-control-sm" value="${(p.lien||'').replace(/"/g,'&quot;')}" />
+              <div data-f-date ${p.etat !== 'confirme_date' ? 'hidden' : ''} class="d-flex gap-1 w-100">
+                <input type="number" data-f-annee min="1990" max="2040" placeholder="Début" class="form-control form-control-sm" style="width:90px" value="${p.annee_debut || ''}" />
+                <input type="number" data-f-annee-fin min="1990" max="2040" placeholder="Fin" class="form-control form-control-sm" style="width:80px" value="" />
+                <input type="text" data-f-source placeholder="Source (organisme)" class="form-control form-control-sm" style="min-width:120px" value="" />
+              </div>
               <button class="btn btn-sm btn-success save" data-id="${p.id}">Sauver</button>
               <span class="saved" id="saved-${p.id}">${p.etat !== 'a_verifier' && p.verifie_le ? '✓ ' + new Date(p.verifie_le).toLocaleDateString('fr-FR') : ''}</span>
             </div>` : `
@@ -169,11 +177,17 @@
               <div class="suggform" data-sform="${p.id}" hidden>
                 <select data-s-type class="form-select form-select-sm">
                   <option value="statut">Statut</option>
+                  <option value="date_debut">Date de début</option>
                   <option value="note">Note</option>
                   <option value="lien">Lien</option>
                   <option value="autre">Autre info</option>
                 </select>
                 <select data-s-statut class="form-select form-select-sm" hidden>${Object.entries(STATUT_SUGG).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+                <div data-s-date hidden class="d-flex gap-2 w-100 flex-wrap">
+                  <input type="number" data-s-annee min="1990" max="2040" placeholder="Début (ex. 2023)" class="form-control form-control-sm" style="width:110px" />
+                  <input type="number" data-s-annee-fin min="1990" max="2040" placeholder="Fin (optionnel)" class="form-control form-control-sm" style="width:110px" />
+                  <input type="text" data-s-source placeholder="Source (organisme, article…)" class="form-control form-control-sm" style="min-width:160px" />
+                </div>
                 <input type="text" data-s-note placeholder="Note" class="form-control form-control-sm" hidden />
                 <input type="text" data-s-lien placeholder="Lien (URL)" class="form-control form-control-sm" hidden />
                 <input type="text" data-s-texte placeholder="Votre information" class="form-control form-control-sm" hidden />
@@ -183,12 +197,25 @@
               </div>
               ${suggBadge(p.id)}
             </div>`}</td>`;
+        tr.querySelector('[data-f=etat]')?.addEventListener('change', (e) => {
+          const df = tr.querySelector('[data-f-date]');
+          df.hidden = e.target.value !== 'confirme_date';
+        });
         const saveBtn = tr.querySelector('button.save');
         if (saveBtn) saveBtn.addEventListener('click', async (e) => {
           const form = tr.querySelector('.form');
           const etat = form.querySelector('[data-f=etat]').value;
           const note = form.querySelector('[data-f=note]').value;
           const lien = form.querySelector('[data-f=lien]').value;
+          const body = { projet_id: p.id, etat, note, lien };
+          if (etat === 'confirme_date') {
+            const an = Number(form.querySelector('[data-f-annee]').value);
+            if (an) { body.annee_debut = an; p.annee_debut = an; }
+            const fin = Number(form.querySelector('[data-f-annee-fin]').value);
+            if (fin) { body.annee_fin = fin; p.annee_fin = fin; }
+            const src = form.querySelector('[data-f-source]').value.trim();
+            if (src) body.note = (body.note ? body.note + ' — ' : '') + 'Source : ' + src;
+          }
           const btn = e.currentTarget;
           btn.disabled = true;
           btn.textContent = '…';
@@ -196,12 +223,11 @@
             const r = await fetch('/api/verifications', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ projet_id: p.id, etat, note, lien }),
+              body: JSON.stringify(body),
             });
             if (!r.ok) throw new Error('HTTP ' + r.status);
             p.etat = etat;
             p.note = note;
-            p.lien = lien;
             p.verifie_le = new Date().toISOString();
             loadCounters();
             render();
@@ -225,6 +251,15 @@
           const t = form.querySelector('[data-s-type]').value;
           const body = { projet_id: p.id, type: t, commentaire: form.querySelector('[data-s-commentaire]').value || undefined };
           if (t === 'statut') body.statut_suggere = form.querySelector('[data-s-statut]').value;
+          if (t === 'date_debut') {
+            const an = Number(form.querySelector('[data-s-annee]').value);
+            if (!an) { alert('Veuillez renseigner au moins l\'année de début.'); btn.disabled = false; btn.textContent = 'Envoyer la suggestion'; return; }
+            body.annee_debut_suggeree = an;
+            const fin = Number(form.querySelector('[data-s-annee-fin]').value);
+            if (fin) body.annee_fin_suggeree = fin;
+            const src = form.querySelector('[data-s-source]').value.trim();
+            if (src) body.source = src;
+          }
           if (t === 'note') body.note = form.querySelector('[data-s-note]').value;
           if (t === 'lien') body.lien = form.querySelector('[data-s-lien]').value;
           if (t === 'autre') body.texte = form.querySelector('[data-s-texte]').value;
@@ -263,10 +298,11 @@
         c.confirme_termine ? `<span class="badge text-bg-success">${c.confirme_termine} ✓ terminés</span>` : '',
         c.confirme_en_cours ? `<span class="badge text-bg-warning">${c.confirme_en_cours} en cours</span>` : '',
         c.toujours_a_venir ? `<span class="badge text-bg-warning">${c.toujours_a_venir} à venir</span>` : '',
+        c.confirme_date ? `<span class="badge text-bg-info">${c.confirme_date} dates vérifiées</span>` : '',
         c.introuvable ? `<span class="badge text-bg-secondary">${c.introuvable} introuvables</span>` : '',
         c.douteux ? `<span class="badge text-bg-danger">${c.douteux} incertains</span>` : '',
       ].join('');
-      const faits = (c.confirme_termine||0)+(c.confirme_en_cours||0)+(c.toujours_a_venir||0)+(c.introuvable||0)+(c.douteux||0);
+      const faits = (c.confirme_termine||0)+(c.confirme_en_cours||0)+(c.toujours_a_venir||0)+(c.confirme_date||0)+(c.introuvable||0)+(c.douteux||0);
       document.getElementById('progress').textContent = `${faits}/${data.projets.length} vérifiés`;
     }
 
@@ -278,6 +314,7 @@
 
     function showSuggFields(form, t) {
       form.querySelector('[data-s-statut]').hidden = t !== 'statut';
+      form.querySelector('[data-s-date]').hidden = t !== 'date_debut';
       form.querySelector('[data-s-note]').hidden = t !== 'note';
       form.querySelector('[data-s-lien]').hidden = t !== 'lien';
       form.querySelector('[data-s-texte]').hidden = t !== 'autre';
