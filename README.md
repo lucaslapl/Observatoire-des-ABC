@@ -51,6 +51,9 @@ PORT=8080 npm run serve   # ou : npm run build && npm start
 - `data/` est régénéré via `npm run collect` (prévoir un **CRON** mensuel pour rafraîchir
   les sources, et un CRON quotidien pour `npm run backup` : la base contient les
   vérifications et les contributions — elle n'est **pas** dans git).
+- Sous Plesk (shell CRON minimal, `node` hors PATH), utiliser `bash scripts/cron-backup.sh` :
+  le script localise lui-même un Node ≥ 24 (ou utilise `NODE_BIN` si défini) avant de lancer
+  le backup, et journalise dans `data/backups/cron.log`.
 - Les scripts `start:server` / `stop:server` sont spécifiques à Windows (dev) : sous Linux,
   utilisez `npm run serve` et votre propre gestionnaire de processus (systemd, PM2…).
 
@@ -76,8 +79,11 @@ shell (`scripts/start-prod.sh` n'est utile qu'en VPS/manuel).
 4. **Vérifier l'URL de l'application** générée par Plesk (elle doit afficher la carte).
 5. **SSL** : Plesk → certificat Let's Encrypt (gratuit, renouvellement automatique). Le
    reverse proxy nginx de Plesk expose le domaine en HTTPS vers l'app.
-6. **CRON** : Plesk → Tâches planifiées → `npm run backup` quotidien (et optionnellement
-   `npm run collect` mensuel).
+6. **CRON** : Plesk → Tâches planifiées → commande `bash /abc-obs.lucaslaplanche.fr/scripts/cron-backup.sh`
+   en quotidien (le script trouve seul le Node ≥ 24, sauvegarde dans `data/backups/` avec
+   rotation sur 14, et journalise dans `data/backups/cron.log`) ; optionnellement un CRON
+   mensuel pour `npm run collect`. En cas d'échec de détection de Node, définir la variable
+   d'environnement `NODE_BIN=/chemin/vers/node` dans la tâche.
 
 > ⚠️ **Symptôme « page par défaut Plesk »** : le plus souvent l'app NodeJS n'est pas
 > activée, ou le fichier de démarrage/root d'application est incorrect (ex. un `.sh`,
