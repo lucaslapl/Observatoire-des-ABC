@@ -5,98 +5,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Observatoire des ABC — Atlas de la Biodiversité Communale</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" />
   <style>
     :root { --ok:#2e7d32; --debut:#ef6c00; --fini:#1565c0; --inconnu:#9e9e9e; }
-    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
     html, body { height:100%; }
-    body { margin:0; font-family:system-ui, -apple-system, sans-serif; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
-
-    header {
-      background:#14532d; color:#fff; padding:10px 14px;
-      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-      flex-shrink:0; z-index:1100; position:relative;
-    }
-    header h1 { font-size:17px; margin:0; white-space:nowrap; }
-    .filters { display:flex; gap:10px; align-items:center; flex-wrap:wrap; color:#fff; flex:1 1 auto; min-width:0; }
-    .filters label { display:flex; align-items:center; gap:6px; font-size:13px; white-space:nowrap; }
-    .filters label span { opacity:.9; }
-    select, input[type=text] {
-      padding:5px 8px; border-radius:5px; border:1px solid #94a3b8; font-size:13px;
-      color:#0f172a; background:#fff; max-width:220px;
-    }
-    #connect { width:auto; }
-    #q { width:190px; }
-    .count { font-size:13px; font-weight:600; background:rgba(255,255,255,.14); padding:4px 10px; border-radius:999px; white-space:nowrap; margin-left:auto; }
-    #fit {
-      background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.4); color:#fff;
-      padding:5px 10px; border-radius:5px; cursor:pointer; font-size:13px;
-    }
-    #fit:hover { background:rgba(255,255,255,.28); }
-    #verifyLink {
-      background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.4); color:#fff;
-      padding:5px 10px; border-radius:5px; font-size:13px; text-decoration:none; white-space:nowrap;
-    }
-    #verifyLink:hover { background:rgba(255,255,255,.28); }
-    #suggLink {
-      background:rgba(167,139,250,.3); border:1px solid rgba(196,181,253,.6); color:#fff;
-      padding:5px 10px; border-radius:5px; font-size:13px; text-decoration:none; white-space:nowrap;
-    }
-    #suggLink:hover { background:rgba(167,139,250,.45); }
-
-    #map { flex:1 1 auto; position:relative; min-height:0; }
-
+    body { margin:0; overflow:hidden; }
+    .navbar-abc { background:#14532d; }
+    #map { position:relative; z-index:0; }
     .legend {
       position:absolute; z-index:1000; bottom:16px; left:10px;
-      background:#fff; padding:8px 12px; border-radius:8px;
-      box-shadow:0 1px 5px rgba(0,0,0,.35); font-size:12.5px; line-height:1.7;
+      max-width:260px; font-size:12.5px; line-height:1.7;
+      background:#fff; border-radius:8px; box-shadow:0 1px 5px rgba(0,0,0,.35); padding:8px 12px;
     }
-    .chip { width:11px; height:11px; border-radius:50%; display:inline-block; margin-right:6px; }
-
+    .chip { width:11px; height:11px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:middle; }
     @media (max-width:720px) {
-      header h1 { width:100%; }
-      .count { margin-left:0; }
+      .legend { left:6px; right:6px; max-width:none; }
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>🌿 Observatoire des ABC</h1>
-    <div class="filters">
-      <label><span>Statut</span>
-        <select id="statut">
-          <option value="">Tous</option>
-          <option value="en_cours">En cours</option>
-          <option value="a_venir">Va débuter</option>
-          <option value="termine">Terminé</option>
-          <option value="inconnu">Statut inconnu</option>
-        </select>
-      </label>
-      <label><span>Région</span>
-        <select id="region"><option value="">Toutes</option></select>
-      </label>
-      <label><span>Commune</span>
-        <input type="text" id="q" placeholder="Rechercher…" />
-      </label>
-      <label title="Relier les communes d'un même ABC"><span>Connexions</span>
-        <input type="checkbox" id="connect" />
-      </label>
+<body class="d-flex flex-column vh-100">
+  <nav class="navbar navbar-dark navbar-expand-lg navbar-abc flex-shrink-0 py-2">
+    <div class="container-fluid">
+      <span class="navbar-brand fs-6 d-flex align-items-center gap-2 mb-0">🌿 Observatoire des ABC</span>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#filters"
+        aria-controls="filters" aria-expanded="false" aria-label="Filtres">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="filters">
+        <div class="d-flex flex-wrap align-items-center gap-2 text-white ms-lg-3 mt-2 mt-lg-0 w-100 justify-content-start">
+          <label class="d-flex align-items-center gap-1" style="font-size:13px;white-space:nowrap">
+            <span class="text-white-50">Statut</span>
+            <select id="statut" class="form-select form-select-sm w-auto">
+              <option value="">Tous</option>
+              <option value="en_cours">En cours</option>
+              <option value="a_venir">Va débuter</option>
+              <option value="termine">Terminé</option>
+              <option value="inconnu">Statut inconnu</option>
+            </select>
+          </label>
+          <label class="d-flex align-items-center gap-1" style="font-size:13px;white-space:nowrap">
+            <span class="text-white-50">Région</span>
+            <select id="region" class="form-select form-select-sm w-auto"><option value="">Toutes</option></select>
+          </label>
+          <label class="d-flex align-items-center gap-1" style="font-size:13px">
+            <span class="text-white-50">Commune</span>
+            <input type="text" id="q" class="form-control form-control-sm" style="width:180px" placeholder="Rechercher…" />
+          </label>
+          <div class="form-check form-switch text-white ms-1" style="font-size:13px;white-space:nowrap">
+            <input class="form-check-input" type="checkbox" id="connect" />
+            <label class="form-check-label" for="connect">Connexions</label>
+          </div>
+          <button id="fit" class="btn btn-sm btn-outline-light mt-1 mt-sm-0" title="Ajuster la vue aux points affichés">📍 Recentrer</button>
+          <a id="verifyLink" class="btn btn-sm btn-outline-light mt-1 mt-sm-0" href="/verify" title="Liste des projets à vérifier">🛠 Vérifier</a>
+          <a id="suggLink" class="btn btn-sm mt-1 mt-sm-0" href="/verify"
+            style="background:rgba(167,139,250,.3);border:1px solid rgba(196,181,253,.6);color:#fff"
+            title="Suggestions en attente de modération" hidden>📥</a>
+          <span id="count" class="badge text-bg-light mt-1 mt-sm-0 ms-lg-auto ms-0">chargement…</span>
+        </div>
+      </div>
     </div>
-    <button id="fit" title="Ajuster la vue aux points affichés">📍 Recentrer</button>
-    <a id="verifyLink" href="/verify" title="Liste des projets à vérifier">🛠 Vérifier</a>
-    <a id="suggLink" href="/verify" title="Suggestions en attente de modération" hidden>📥</a>
-    <div class="count" id="count">chargement…</div>
-  </header>
-  <div id="map">
+  </nav>
+  <div id="map" class="flex-grow-1">
     <div class="legend">
       <div><span class="chip" style="background:var(--ok)"></span>En cours</div>
       <div><span class="chip" style="background:var(--debut)"></span>Va débuter</div>
       <div><span class="chip" style="background:var(--fini)"></span>Terminé</div>
       <div><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu</div>
-      <div id="meta" style="margin-top:8px;border-top:1px solid #ddd;padding-top:6px;color:#555;max-width:230px"></div>
+      <div id="meta" class="mt-2 pt-1 small text-body-secondary" style="border-top:1px solid #dee2e6"></div>
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const map = L.map('map').setView([46.5, 2.5], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

@@ -4,73 +4,58 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Observatoire des ABC — Administration</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" />
   <style>
-    :root { --ok:#2e7d32; --debut:#ef6c00; --fini:#1565c0; --inconnu:#9e9e9e; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f1f5f9; color:#0f172a; }
-    header { background:#14532d; color:#fff; padding:10px 14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    header h1 { font-size:17px; margin:0; white-space:nowrap; }
-    header a { color:#fff; text-decoration:none; font-size:13px; background:rgba(255,255,255,.16); padding:5px 10px; border-radius:5px; }
-    #user { font-size:13px; margin-left:auto; opacity:.9; }
-
-    .tabs { display:flex; gap:6px; padding:10px 14px; background:#fff; border-bottom:1px solid #e2e8f0; }
-    .tab { padding:6px 12px; border-radius:6px; border:1px solid #94a3b8; background:#fff; cursor:pointer; font-size:13px; }
-    .tab.active { background:#14532d; color:#fff; border-color:#14532d; }
-
-    main { padding:0 14px 40px; max-width:1100px; margin:0 auto; }
-    .card { background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:12px 14px; margin-top:12px; }
-    .meta { color:#64748b; font-size:12px; }
-    .payload { margin-top:6px; font-size:13px; background:#f8fafc; border-radius:6px; padding:8px 10px; white-space:pre-wrap; word-break:break-word; }
-    .payload b { color:#0f172a; }
-    .proj { font-weight:600; }
-    .actions { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
-    .btn { padding:5px 12px; border-radius:6px; border:1px solid #94a3b8; background:#fff; cursor:pointer; font-size:13px; }
-    .btn.ok { background:#2e7d32; border-color:#2e7d32; color:#fff; }
-    .btn.no { background:#b91c1c; border-color:#b91c1c; color:#fff; }
-    .btn.undo { background:#b45309; border-color:#b45309; color:#fff; }
+    [hidden] { display:none !important; }
+    body { background:#f1f5f9; color:#0f172a; }
+    .navbar-abc { background:#14532d; }
+    #panel { display:none; }
     .chip { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; background:#e2e8f0; color:#334155; }
     .chip.en_attente { background:#fef9c3; color:#854d0e; }
     .chip.validee { background:#e8f5e9; color:#1b5e20; }
     .chip.refusee { background:#fde8e8; color:#7f1d1d; }
     .chip.retiree { background:#e2e8f0; color:#475569; }
-    .empty { padding:30px; text-align:center; color:#64748b; }
-
-    .login { max-width:340px; margin:60px auto; background:#fff; border-radius:10px; box-shadow:0 1px 5px rgba(0,0,0,.1); padding:24px; }
-    .login h2 { margin-top:0; font-size:18px; }
-    .login label { display:block; font-size:13px; margin:10px 0 4px; }
-    .login input { width:100%; padding:8px; border-radius:6px; border:1px solid #94a3b8; font-size:14px; }
-    .login button { margin-top:14px; width:100%; padding:9px; border-radius:6px; border:none; background:#14532d; color:#fff; font-size:14px; cursor:pointer; }
-    #loginErr { color:#b91c1c; font-size:13px; margin-top:8px; }
-    #panel { display:none; }
+    .payload { margin-top:6px; font-size:13px; background:#f8fafc; border-radius:6px; padding:8px 10px; white-space:pre-wrap; word-break:break-word; border:1px solid #e9ecef; }
+    .payload b { color:#0f172a; }
     .foot { margin-top:20px; font-size:12px; color:#64748b; line-height:1.6; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🛡 Observatoire des ABC — Administration</h1>
-    <a href="/">← Carte</a>
-    <a href="/verify">Vérification</a>
-    <span id="user"></span>
-  </header>
+  <nav class="navbar navbar-dark navbar-abc py-2">
+    <div class="container-fluid">
+      <a class="navbar-brand fs-6 mb-0" href="/">🛡 Observatoire des ABC — Administration</a>
+      <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-sm btn-outline-light" href="/">← Carte</a>
+        <a class="btn btn-sm btn-outline-light" href="/verify">Vérification</a>
+        <span id="user" class="text-white-50 small" style="cursor:pointer" title="Cliquer pour se déconnecter"></span>
+      </div>
+    </div>
+  </nav>
 
-  <div id="login" class="login">
-    <h2>Connexion admin</h2>
-    <label>Identifiant</label>
-    <input type="text" id="username" autocomplete="username" />
-    <label>Mot de passe</label>
-    <input type="password" id="password" autocomplete="current-password" />
-    <button id="loginBtn">Se connecter</button>
-    <div id="loginErr"></div>
+  <div id="login" class="d-flex align-items-center justify-content-center px-3" style="min-height:calc(100vh - 60px)">
+    <div class="card shadow-sm w-100" style="max-width:360px">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3">Connexion admin</h2>
+        <label class="form-label">Identifiant</label>
+        <input type="text" id="username" class="form-control" autocomplete="username" />
+        <label class="form-label mt-3">Mot de passe</label>
+        <input type="password" id="password" class="form-control" autocomplete="current-password" />
+        <button id="loginBtn" class="btn btn-success w-100 mt-3">Se connecter</button>
+        <div id="loginErr" class="text-danger small mt-2"></div>
+      </div>
+    </div>
   </div>
 
   <div id="panel">
-    <div class="tabs">
-      <button class="tab active" data-tab="en_attente">À modérer</button>
-      <button class="tab" data-tab="validee">Appliquées</button>
-      <button class="tab" data-tab="historique">Refusées / retirées</button>
-      <button class="tab" data-tab="toutes">Toutes</button>
+    <div class="bg-white border-bottom">
+      <ul class="nav nav-tabs px-3 pt-2">
+        <li class="nav-item"><button class="tab nav-link active" data-tab="en_attente">À modérer</button></li>
+        <li class="nav-item"><button class="tab nav-link" data-tab="validee">Appliquées</button></li>
+        <li class="nav-item"><button class="tab nav-link" data-tab="historique">Refusées / retirées</button></li>
+        <li class="nav-item"><button class="tab nav-link" data-tab="toutes">Toutes</button></li>
+      </ul>
     </div>
-    <main>
+    <main class="container py-3">
       <div id="content"></div>
       <p class="foot">
         RGPD : l'adresse IP des contributeurs est conservée uniquement pour la modération des
@@ -80,6 +65,7 @@
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     const ETAT_LABEL = { en_attente: 'en attente', validee: 'validée', refusee: 'refusée', retiree: 'retirée' };
@@ -116,7 +102,7 @@
 
     function showPanel(username) {
       $('login').style.display = 'none';
-      $('panel').style.display = '';
+      $('panel').style.display = 'block';
       $('user').textContent = 'Connecté : ' + username;
       load('en_attente');
     }
@@ -139,17 +125,21 @@
     function card(c, actions) {
       const payload = JSON.parse(c.payload_json || '{}');
       const commune = (c.communes || '').split(',')[0];
-      return `<div class="card">
-        <div><span class="chip ${c.statut}">${ETAT_LABEL[c.statut] || c.statut}</span>
-          <span class="proj">${esc(c.projet_nom || c.projet_id)}</span>
-          <span class="meta"> · ${esc(c.type)}</span></div>
-        <div class="meta">${esc(commune || '')}${c.structure_porteuse ? ' · ' + esc(c.structure_porteuse) : ''} · IP ${esc(c.ip)} · ${esc(c.created_at)}${c.user_agent ? ' · ' + esc(c.user_agent.slice(0, 60)) : ''}</div>
-        ${c.commentaire ? `<div class="meta">💬 ${esc(c.commentaire)}</div>` : ''}
-        <div class="payload">${payloadLines(payload)}</div>
-        ${c.note_admin ? `<div class="meta">Note admin : ${esc(c.note_admin)}</div>` : ''}
-        ${c.traite_par ? `<div class="meta">Traité par ${esc(c.traite_par)} le ${esc(c.traite_le)}</div>` : ''}
-        ${c.verif_etat && c.verif_etat !== 'a_verifier' ? `<div class="meta">Verdict actuel : ${esc(c.verif_etat)}</div>` : ''}
-        <div class="actions">${actions}</div>
+      return `<div class="card shadow-sm mb-2">
+        <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-2">
+          <span class="chip ${c.statut}">${ETAT_LABEL[c.statut] || c.statut}</span>
+          <span class="proj fw-semibold">${esc(c.projet_nom || c.projet_id)}</span>
+          <span class="text-body-secondary small">· ${esc(c.type)}</span>
+        </div>
+        <div class="card-body py-2">
+          <div class="small text-body-secondary">${esc(commune || '')}${c.structure_porteuse ? ' · ' + esc(c.structure_porteuse) : ''} · IP ${esc(c.ip)} · ${esc(c.created_at)}${c.user_agent ? ' · ' + esc(c.user_agent.slice(0, 60)) : ''}</div>
+          ${c.commentaire ? `<div class="small text-body-secondary mt-1">💬 ${esc(c.commentaire)}</div>` : ''}
+          <div class="payload">${payloadLines(payload)}</div>
+          ${c.note_admin ? `<div class="small text-body-secondary mt-1">Note admin : ${esc(c.note_admin)}</div>` : ''}
+          ${c.traite_par ? `<div class="small text-body-secondary">Traité par ${esc(c.traite_par)} le ${esc(c.traite_le)}</div>` : ''}
+          ${c.verif_etat && c.verif_etat !== 'a_verifier' ? `<div class="small text-body-secondary">Verdict actuel : ${esc(c.verif_etat)}</div>` : ''}
+          ${actions ? `<div class="d-flex gap-2 flex-wrap mt-2">${actions}</div>` : ''}
+        </div>
       </div>`;
     }
 
@@ -159,14 +149,14 @@
         : tab === 'validee' ? cs.filter((c) => c.statut === 'validee')
         : tab === 'historique' ? cs.filter((c) => c.statut === 'refusee' || c.statut === 'retiree')
         : cs;
-      if (list.length === 0) { box.innerHTML = '<div class="empty">Aucune contribution.</div>'; return; }
+      if (list.length === 0) { box.innerHTML = '<div class="text-center text-body-secondary py-5">Aucune contribution.</div>'; return; }
       box.innerHTML = list.map((c) => {
         const valider = c.statut === 'en_attente'
-          ? `<button class="btn ok" data-act="valider" data-id="${c.id}">✓ Valider</button>
-             <button class="btn no" data-act="refuser" data-id="${c.id}">✗ Refuser</button>`
+          ? `<button class="btn btn-sm btn-success" data-act="valider" data-id="${c.id}">✓ Valider</button>
+             <button class="btn btn-sm btn-danger" data-act="refuser" data-id="${c.id}">✗ Refuser</button>`
           : '';
         const retirer = c.statut === 'validee'
-          ? `<button class="btn undo" data-act="retirer" data-id="${c.id}">↩ Retirer (rollback)</button>`
+          ? `<button class="btn btn-sm btn-warning" data-act="retirer" data-id="${c.id}">↩ Retirer (rollback)</button>`
           : '';
         return card(c, valider + retirer);
       }).join('');
@@ -177,7 +167,7 @@
         const j = await api('/api/admin/contributions');
         render(j.contributions, tab);
       } catch (e) {
-        $('content').innerHTML = '<div class="empty">Erreur : ' + esc(e.message) + '</div>';
+        $('content').innerHTML = '<div class="text-body-secondary py-5 text-center">Erreur : ' + esc(e.message) + '</div>';
       }
     }
 
