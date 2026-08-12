@@ -74,6 +74,64 @@
       .legend { left:6px; right:6px; width:auto; max-width:none; }
       .leaflet-control-scale { margin-left:6px !important; }
     }
+    /* Barre d'outils verticale (droite de la carte) */
+    .map-sidebar {
+      position:absolute; z-index:1000; top:10px; right:10px;
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .map-sidebar-btn {
+      display:flex; align-items:center; justify-content:center;
+      width:36px; height:36px; border:none; border-radius:8px;
+      background:rgba(255,255,255,.92); color:#374151;
+      box-shadow:0 2px 6px rgba(0,0,0,.2);
+      cursor:pointer; position:relative;
+    }
+    .map-sidebar-btn:hover { background:#fff; color:#111827; box-shadow:0 3px 10px rgba(0,0,0,.25); }
+    .map-sidebar-btn.active { background:#14532d; color:#fff; }
+    .map-sidebar-badge {
+      position:absolute; top:-4px; right:-4px;
+      min-width:16px; height:16px; padding:0 4px;
+      border-radius:8px; background:#dc2626; color:#fff;
+      font-size:10px; font-weight:700; line-height:16px; text-align:center;
+    }
+    /* Bulle d'aide des boutons (à droite) */
+    .map-sidebar-btn .tip {
+      position:absolute; right:calc(100% + 8px); top:50%; transform:translateY(-50%);
+      white-space:nowrap; background:#1f2937; color:#fff;
+      padding:4px 8px; border-radius:6px; font-size:11px; font-weight:500;
+      pointer-events:none; opacity:0; transition:opacity .15s;
+    }
+    .map-sidebar-btn:hover .tip { opacity:1; }
+    .map-sidebar-btn .tip::after {
+      content:''; position:absolute; left:100%; top:50%; transform:translateY(-50%);
+      border:5px solid transparent; border-left-color:#1f2937;
+    }
+    /* Fenêtre popup de la tuile et de l'export */
+    .map-sidebar-popup {
+      display:none; position:absolute; right:calc(100% + 8px); top:0;
+      background:#fff; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.25);
+      padding:4px; min-width:120px; z-index:1001;
+    }
+    .map-sidebar-popup.open { display:block; }
+    .map-sidebar-popup-item {
+      display:block; width:100%; padding:6px 10px; border:none; border-radius:6px;
+      background:none; color:#374151; font-size:12px; text-align:left; cursor:pointer;
+      white-space:nowrap;
+    }
+    .map-sidebar-popup-item:hover { background:#f3f4f6; color:#111827; }
+    .map-sidebar-popup-item.active { background:#14532d; color:#fff; }
+    /* Flèche nord */
+    .map-north {
+      position:absolute; z-index:1000; top:84px; left:12px;
+      display:flex; align-items:center; gap:4px;
+      background:rgba(255,255,255,.95); padding:5px 9px; border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,.2);
+      border:1px solid rgba(255,255,255,.8);
+      color:#1f2937; font-size:14px; font-weight:700; line-height:1;
+    }
+    .map-tooltip { background:#1f2937; color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:12px; font-weight:500; box-shadow:0 2px 6px rgba(0,0,0,.3); }
+    .leaflet-tooltip.map-tooltip::before { border-top-color:#1f2937; }
+    .leaflet-popup-content { max-height:300px; overflow-y:auto; }
   </style>
 </head>
 <body class="d-flex flex-column vh-100">
@@ -114,15 +172,6 @@
             <span class="text-white-50">Commune</span>
             <input type="text" id="q" class="form-control form-control-sm" style="width:180px" placeholder="Rechercher…" />
           </label>
-          <div class="form-check form-switch text-white ms-1" style="font-size:13px;white-space:nowrap">
-            <input class="form-check-input" type="checkbox" id="connect" checked />
-            <label class="form-check-label" for="connect">Connexions</label>
-          </div>
-          <button id="fit" class="btn btn-sm btn-outline-light mt-1 mt-sm-0" title="Ajuster la vue aux points affichés">📍 Recentrer</button>
-          <a id="verifyLink" class="btn btn-sm btn-outline-light mt-1 mt-sm-0" href="/verify" title="Liste des projets à vérifier">🛠 Vérifier</a>
-          <a id="suggLink" class="btn btn-sm mt-1 mt-sm-0" href="/verify"
-            style="background:rgba(167,139,250,.3);border:1px solid rgba(196,181,253,.6);color:#fff"
-            title="Suggestions en attente de modération" hidden>📥</a>
           <span id="count" class="badge text-bg-light mt-1 mt-sm-0 ms-lg-auto ms-0">chargement…</span>
           <span class="count-help-wrap mt-1 mt-sm-0" tabindex="0">
             <span class="count-help" id="countHelp">?</span>
@@ -147,32 +196,100 @@
         <div id="meta" class="meta"></div>
       </div>
     </div>
+    <div class="map-sidebar">
+      <!-- Fonds de carte -->
+      <div class="map-sidebar-btn" id="tileBtn" role="button" tabindex="0" title="Fond de carte">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <span class="tip">Fond de carte</span>
+        <div class="map-sidebar-popup" id="tilePopup"></div>
+      </div>
+      <!-- Recentrer -->
+      <button class="map-sidebar-btn" id="fit" title="Ajuster la vue aux points affichés">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+        <span class="tip">Recentrer</span>
+      </button>
+      <!-- Exporter -->
+      <div class="map-sidebar-btn" id="exportBtn" role="button" tabindex="0" title="Exporter la carte">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="tip">Exporter</span>
+        <div class="map-sidebar-popup" id="exportPopup">
+          <button class="map-sidebar-popup-item" data-export="png">PNG</button>
+          <button class="map-sidebar-popup-item" data-export="pdf">PDF</button>
+        </div>
+      </div>
+      <!-- Vérifier -->
+      <a class="map-sidebar-btn" id="verifyLink" href="/verify" title="Liste des projets à vérifier">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span class="tip">Vérifier</span>
+        <span class="map-sidebar-badge" id="suggBadge" hidden>0</span>
+      </a>
+    </div>
+    <div class="map-north">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 5 22 12 16 19 22 12 3" fill="#dc2626"/></svg>
+      <span style="font-size:15px">N</span>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script>
     const map = L.map('map', {
+      preferCanvas: true,
       zoomSnap: 0.5, // paliers de zoom fractionnaires (défaut 1) pour une molette progressive
       wheelPxPerZoomLevel: 300, // adoucit encore : plus de pixels requis par niveau
       scrollWheelZoom: true,
     }).setView([46.5, 2.5], 6);
     L.control.scale({ imperial: false, maxWidth: 160 }).addTo(map);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    const TILE_LAYERS = [
+      { name:'Plan', url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OpenStreetMap' },
+      { name:'Clair', url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr:'© OpenStreetMap © CARTO' },
+      { name:'Sombre', url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr:'© OpenStreetMap © CARTO' },
+      { name:'Satellite', url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr:'© Esri' },
+    ];
+    let tileLayer;
+    function setTileLayer(idx) {
+      if (tileLayer) tileLayer.remove();
+      const t = TILE_LAYERS[idx];
+      tileLayer = L.tileLayer(t.url, { maxZoom:18, updateWhenIdle:true, attribution:t.attr }).addTo(map);
+      document.querySelectorAll('#tilePopup .map-sidebar-popup-item').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+    }
+    const tilePopup = document.getElementById('tilePopup');
+    TILE_LAYERS.forEach((t, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'map-sidebar-popup-item';
+      btn.textContent = t.name;
+      btn.addEventListener('click', () => { setTileLayer(i); closeTilePopup(); });
+      tilePopup.appendChild(btn);
+    });
+    setTileLayer(0);
+
+    // Popups sidebar
+    function closeTilePopup() { document.getElementById('tilePopup').classList.remove('open'); }
+    function closeExportPopup() { document.getElementById('exportPopup').classList.remove('open'); }
+    document.getElementById('tileBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      closeExportPopup();
+      document.getElementById('tilePopup').classList.toggle('open');
+    });
+    document.getElementById('exportBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      closeTilePopup();
+      document.getElementById('exportPopup').classList.toggle('open');
+    });
+    document.addEventListener('click', () => { closeTilePopup(); closeExportPopup(); });
 
     const COLOR = { en_cours:'#2e7d32', a_venir:'#ef6c00', termine:'#1565c0', inconnu:'#9e9e9e' };
     // Cadre de la France métropolitaine (utilisé quand l'étendue visible inclut
     // l'outre-mer et qu'un fitBounds engloberait quasiment tout le globe).
     const METRO = [[41.0, -5.6], [51.5, 10.0]];
     const layer = L.layerGroup().addTo(map);
-    const lineLayer = L.layerGroup().addTo(map);
     let all = [];
     let allProjs = new Set();
     let allProjTotal = 0;
-    let groups = new Map();
 
     const state = () => ({
       statut: document.getElementById('statut').value,
@@ -180,7 +297,6 @@
       yearFrom: document.getElementById('yearFrom').value,
       yearTo: document.getElementById('yearTo').value,
       q: document.getElementById('q').value.trim().toLowerCase(),
-      connect: document.getElementById('connect').checked,
     });
 
     const dStatut = p => p.statut_affichage || p.statut;
@@ -223,76 +339,177 @@
       douteux: { label: '⚠ Vérifié : incertain', color: '#7f1d1d' },
     };
 
+    function buildPopup(p) {
+      const src = p.source || '';
+      const srcFr = { 'data.gouv':'Registre OFB', 'wayback':'Registre OFB (archives 2022)',
+        'fondsvert-p113-2024':'Fonds vert 2024', 'fondsvert-p113-2025':'Fonds vert 2025' }[src] || src;
+      const v = VERDICT[p.verif_etat];
+      const confirme = v && ['confirme_termine','confirme_en_cours','toujours_a_venir','confirme_date'].includes(p.verif_etat);
+      const verifNote = v
+        ? `<br><b style="color:${v.color}">${v.label}</b>` +
+          (p.verif_note ? `<br><small>${p.verif_note}</small>` : '') +
+          (p.verif_lien ? `<br><small><a href="${p.verif_lien.replace(/"/g,'&quot;')}" target="_blank" rel="noopener">Lien source</a></small>` : '')
+        : '';
+      return [
+        `<b>${p.nom}</b><br>${p.commune}${p.departement ? ' (' + p.departement + ')' : ''}<br>`,
+        `Structure : ${p.structure_porteuse || '—'}<br>Année : ${p.annee_debut ? (p.annee_fin ? p.annee_debut+'–'+p.annee_fin : p.annee_debut) : '—'}<br>`,
+        `<b>${p.categorie}</b>`,
+        !confirme && p.potentiellement_termine ? `<br><b style="color:#8d6e63">⚠ Potentiellement terminé</b><br><small>Début ${p.annee_debut}, durée d'un ABC ≈ 3 ans</small>` : '',
+        !confirme && p.potentiellement_en_cours ? `<br><b style="color:#b45309">⏳ Potentiellement en cours</b><br><small>Début annoncé ${p.annee_debut}, toujours « va débuter »</small>` : '',
+        !confirme && p.donnees_2022 ? `<br><b style="color:#7f1d1d">🕓 Statut issu des archives 2022</b><br><small>À vérifier — site officiel hors ligne</small>` : '',
+        !confirme && p.estime_termine ? `<br><b style="color:#1b5e20">✓ Terminé (estimation)</b><br><small>Statut officiel inconnu, projet débuté en ${p.annee_debut} (> 5 ans)</small>` : '',
+        p.anomalie ? `<br><b style="color:#b91c1c">⚠ Commune incohérente</b><br><small>À ${Math.round(p.distance_km)} km de son groupe — non reliée, à vérifier</small>` : '',
+        verifNote,
+        `<br><small>${p.verifie ? 'Source initiale' : 'Source'} : ${srcFr}</small>`,
+      ].join('');
+    }
+    function renderFeature(f, onLayer) {
+      const p = f.properties;
+      const [lon, lat] = f.geometry.coordinates;
+      const m = L.circleMarker([lat, lon], {
+        radius: 6,
+        color: p.anomalie ? '#b91c1c' : p.verifie ? '#14532d' : '#fff',
+        weight: p.anomalie || p.verifie ? 2 : 1,
+        fillColor: COLOR[dStatut(p)] || COLOR.inconnu, fillOpacity: 0.9
+      }).bindPopup(buildPopup(f.properties)).addTo(onLayer || layer);
+      m.bindTooltip(`<b>${p.commune}</b>`, { direction:'top', offset:[0,-8], className:'map-tooltip' });
+      m.on('mouseover', function () { this.setStyle({ radius:8, weight:3 }); });
+      m.on('mouseout', function () { this.setStyle({ radius:6, weight:p.anomalie||p.verifie?2:1 }); });
+    }
+
+    // Animation helper
+    function animateProp(obj, prop, from, to, duration, done) {
+      const start = performance.now();
+      function tick() {
+        const t = Math.min((performance.now() - start) / duration, 1);
+        obj.setStyle({ [prop]: from + (to - from) * t });
+        if (t < 1) requestAnimationFrame(tick);
+        else if (done) done();
+      }
+      tick();
+    }
+
+    // Gestion des groupes dépliés/repliés
+    const expandedLayers = new Map(); // pid → L.layerGroup
+    const centroidMarkers = new Map(); // pid → L.circleMarker
+    const projectData = new Map();     // pid → { valides, clat, clon }
+
+    function clearExpanded() {
+      for (const [, grp] of expandedLayers) map.removeLayer(grp);
+      expandedLayers.clear();
+      centroidMarkers.clear();
+      projectData.clear();
+    }
+
+    function toggleGroup(pid) {
+      const data = projectData.get(pid);
+      if (!data) return;
+      const { valides, clat, clon } = data;
+      const centroid = centroidMarkers.get(pid);
+      if (!centroid) return;
+
+      if (expandedLayers.has(pid)) {
+        // Replier : animation fade-out → nettoyage
+        const grp = expandedLayers.get(pid);
+        const layers = grp.getLayers();
+        let done = 0;
+        const onDone = () => { done++; if (done >= layers.length) { map.removeLayer(grp); expandedLayers.delete(pid); } };
+        for (const layer of layers) {
+          if (layer instanceof L.Polyline) animateProp(layer, 'opacity', 0.65, 0, 200, onDone);
+          else animateProp(layer, 'fillOpacity', 0.9, 0, 200, onDone);
+        }
+        animateProp(centroid, 'radius', 5, 10, 250);
+      } else {
+        // Déplier : créer les marqueurs/lignes avec opacité 0 → animation fade-in
+        animateProp(centroid, 'radius', 10, 5, 250);
+        const grp = L.layerGroup().addTo(map);
+        expandedLayers.set(pid, grp);
+        for (const f of valides) {
+          const [lon, lat] = f.geometry.coordinates;
+          L.polyline([[clat, clon], [lat, lon]], {
+            color: COLOR[dStatut(f.properties)] || COLOR.inconnu, weight: 2, opacity: 0
+          }).addTo(grp);
+          renderFeature(f, grp);
+        }
+        // Remonter le centroïde au premier plan
+        centroid.bringToFront();
+        // Initialiser les marqueurs à opacité 0 pour l'animation
+        grp.eachLayer(item => { if (!(item instanceof L.Polyline)) item.setStyle({ fillOpacity:0 }); });
+        // Démarrer l'animation des enfants (max 2,5 s au total)
+        requestAnimationFrame(() => {
+          const items = grp.getLayers();
+          const stagger = items.length > 1 ? Math.min(40, 2250 / (items.length - 1)) : 0;
+          items.forEach((item, i) => {
+            setTimeout(() => {
+              if (item instanceof L.Polyline) animateProp(item, 'opacity', 0, 0.65, 250);
+              else animateProp(item, 'fillOpacity', 0, 0.9, 250);
+            }, i * stagger);
+          });
+        });
+      }
+    }
+
     function apply() {
-      const s = state();
+      clearExpanded();
       layer.clearLayers();
-      lineLayer.clearLayers();
       const shown = [];
       const shownProjIds = new Set();
+
+      const projMap = new Map();
       for (const f of all) {
-        const p = f.properties;
-        if (!visible(f, s)) continue;
-        shownProjIds.add(p.projet_id);
-        const [lon, lat] = f.geometry.coordinates;
-        const src = p.source || '';
-        const srcFr = { 'data.gouv':'Registre OFB', 'wayback':'Registre OFB (archives 2022)',
-          'fondsvert-p113-2024':'Fonds vert 2024', 'fondsvert-p113-2025':'Fonds vert 2025' }[src] || src;
-        const v = VERDICT[p.verif_etat];
-        // Une vérification concluante remplace les alertes spéculatives.
-        const confirme = v && ['confirme_termine','confirme_en_cours','toujours_a_venir','confirme_date'].includes(p.verif_etat);
-        const verifNote = v
-          ? `<br><b style="color:${v.color}">${v.label}</b>` +
-            (p.verif_note ? `<br><small>${p.verif_note}</small>` : '') +
-            (p.verif_lien ? `<br><small><a href="${p.verif_lien.replace(/"/g,'&quot;')}" target="_blank" rel="noopener">Lien source</a></small>` : '')
-          : '';
-        const ptNote = !confirme && p.potentiellement_termine
-          ? `<br><b style="color:#8d6e63">⚠ Potentiellement terminé</b><br><small>Début ${p.annee_debut}, durée d'un ABC ≈ 3 ans</small>`
-          : '';
-        const pecNote = !confirme && p.potentiellement_en_cours
-          ? `<br><b style="color:#b45309">⏳ Potentiellement en cours</b><br><small>Début annoncé ${p.annee_debut}, toujours « va débuter »</small>`
-          : '';
-        const staleNote = !confirme && p.donnees_2022
-          ? `<br><b style="color:#7f1d1d">🕓 Statut issu des archives 2022</b><br><small>À vérifier — site officiel hors ligne</small>`
-          : '';
-        const estimeNote = !confirme && p.estime_termine
-          ? `<br><b style="color:#1b5e20">✓ Terminé (estimation)</b><br><small>Statut officiel inconnu, projet débuté en ${p.annee_debut} (> 5 ans)</small>`
-          : '';
-        const anomalieNote = p.anomalie
-          ? `<br><b style="color:#b91c1c">⚠ Commune incohérente</b><br><small>À ${Math.round(p.distance_km)} km de son groupe — non reliée, à vérifier</small>`
-          : '';
-        L.circleMarker([lat, lon], {
-          radius: 6,
-          color: p.anomalie ? '#b91c1c' : p.verifie ? '#14532d' : '#fff',
-          weight: p.anomalie || p.verifie ? 2 : 1,
-          fillColor: COLOR[dStatut(p)] || COLOR.inconnu, fillOpacity: 0.9
-        })
-          .bindPopup(
-            `<b>${p.nom}</b><br>${p.commune}${p.departement ? ' (' + p.departement + ')' : ''}<br>` +
-            `Structure : ${p.structure_porteuse || '—'}<br>Année : ${p.annee_debut ? (p.annee_fin ? p.annee_debut+'–'+p.annee_fin : p.annee_debut) : '—'}<br>` +
-            `<b>${p.categorie}</b>${anomalieNote}${verifNote}${estimeNote}${ptNote}${pecNote}${staleNote}<br><small>${p.verifie ? 'Source initiale' : 'Source'} : ${srcFr}</small>`
-          )
-          .addTo(layer);
-        shown.push([lat, lon]);
+        if (!visible(f, state())) continue;
+        const pid = f.properties.projet_id;
+        if (!projMap.has(pid)) projMap.set(pid, []);
+        projMap.get(pid).push(f);
+        shownProjIds.add(pid);
       }
-      if (s.connect) {
-        for (const [pid, feats] of groups) {
-          const valides = feats.filter(f => !f.properties.anomalie && visible(f, s));
-          if (valides.length < 2) continue;
-          // Étoile : un point central (centroïde) relie chaque commune.
+
+      for (const [pid, feats] of projMap) {
+        const anomalieFeats = feats.filter(f => f.properties.anomalie);
+        const valides = feats.filter(f => !f.properties.anomalie);
+
+        for (const f of anomalieFeats) {
+          renderFeature(f);
+          shown.push([f.geometry.coordinates[1], f.geometry.coordinates[0]]);
+        }
+
+        if (valides.length > 1) {
           const clat = valides.reduce((sum, f) => sum + f.geometry.coordinates[1], 0) / valides.length;
           const clon = valides.reduce((sum, f) => sum + f.geometry.coordinates[0], 0) / valides.length;
           const st = dStatut(valides[0].properties);
-          const lineColor = COLOR[st] || COLOR.inconnu;
-          for (const f of valides) {
-            const [lon, lat] = f.geometry.coordinates;
-            L.polyline([[clat, clon], [lat, lon]], { color: lineColor, weight: 2, opacity: 0.65 })
-              .addTo(lineLayer);
+
+          const centroid = L.circleMarker([clat, clon], {
+            radius: 10, color: '#fff', weight: 2.5,
+            fillColor: COLOR[st] || COLOR.inconnu, fillOpacity: 0.9
+          }).addTo(layer);
+          centroid.bindTooltip(
+            `<b>${valides[0].properties.nom}</b> — ${valides.length} communes`,
+            { direction:'top', offset:[0,-12], className:'map-tooltip' }
+          );
+          const nomListe = valides.map(f => f.properties.commune);
+          const popupCommunes = nomListe.length > 15
+            ? nomListe.slice(0, 15).join(', ') + `, … et ${nomListe.length - 15} autres`
+            : nomListe.join(', ');
+          centroid.bindPopup(
+            `<b>${valides[0].properties.nom}</b><br>` +
+            `${valides.length} communes : ${popupCommunes}<br>` +
+            `<small>Cliquez pour voir les communes</small>`
+          );
+          centroid.on('click', () => toggleGroup(pid));
+          centroid.on('mouseover', function () { this.setStyle({ radius:13, weight:3.5 }); });
+          centroid.on('mouseout', function () { this.setStyle({ radius:10, weight:2.5 }); });
+
+          centroidMarkers.set(pid, centroid);
+          projectData.set(pid, { valides, clat, clon });
+          shown.push([clat, clon]);
+        } else {
+          for (const f of feats) {
+            renderFeature(f);
+            shown.push([f.geometry.coordinates[1], f.geometry.coordinates[0]]);
           }
-          L.circleMarker([clat, clon], { radius: 3, color: '#fff', weight: 1.5, fillColor: lineColor, fillOpacity: 0.9 })
-            .bindPopup(`<b>${valides[0].properties.nom}</b><br><small>${valides.length} communes reliées</small>`)
-            .addTo(lineLayer);
         }
       }
+
       function fmtCount(n, s) { return n + ' ' + (n > 1 ? s : s.replace(/s$/, '')); }
       const countEl = document.getElementById('count');
       countEl.textContent =
@@ -355,12 +572,6 @@
     fetch('/api/abc.geojson').then(r => r.json()).then(data => {
       all = data.features;
       allProjs = new Set(data.features.map(f => f.properties.projet_id));
-      groups = new Map();
-      for (const f of all) {
-        const pid = f.properties.projet_id;
-        if (!groups.has(pid)) groups.set(pid, []);
-        groups.get(pid).push(f);
-      }
       const regions = [...new Set(data.features.map(f => f.properties.region).filter(Boolean))].sort();
       const regionSel = document.getElementById('region');
       regions.forEach(r => regionSel.add(new Option(r, r)));
@@ -387,9 +598,9 @@
       const anomalies = m.countAnomalies || 0;
       const sugg = m.countContributionsEnAttente || 0;
       if (sugg > 0) {
-        const el = document.getElementById('suggLink');
-        el.hidden = false;
-        el.textContent = '📥 ' + sugg + (sugg > 1 ? ' suggestions' : ' suggestion');
+        const badge = document.getElementById('suggBadge');
+        badge.textContent = sugg;
+        badge.hidden = false;
       }
       // Compteurs par statut, remplis dans l'ordre de la légende.
       const statutOrder = { en_cours: 'cnt_en_cours', a_venir: 'cnt_a_venir', termine: 'cnt_termine', inconnu: 'cnt_inconnu' };
@@ -417,17 +628,92 @@
       apply(); // met à jour le compteur/les infobulles (allProjTotal désormais connu)
     }).catch(() => {});
 
-    document.getElementById('statut').addEventListener('change', () => { apply(); updateCounts(); });
+    document.getElementById('statut').addEventListener('change', () => { clearExpanded(); apply(); updateCounts(); });
     document.getElementById('region').addEventListener('change', () => { apply(); updateCounts(); });
     document.getElementById('yearFrom').addEventListener('change', () => { apply(); updateCounts(); });
     document.getElementById('yearTo').addEventListener('change', () => { apply(); updateCounts(); });
-    document.getElementById('connect').addEventListener('change', () => { apply(); updateCounts(); });
     // Recalcule les compteurs de la légende à chaque déplacement/zoom de la carte.
     map.on('moveend', updateCounts);
-    map.on('zoomend', updateCounts);
     const legendEl = document.getElementById('legendToggle');
     legendEl.addEventListener('click', () =>
       document.querySelector('.legend').classList.toggle('retracted'));
+    let exportOverlay;
+    function showExportOverlay() {
+      exportOverlay = document.createElement('div');
+      exportOverlay.id = 'exportOverlay';
+      exportOverlay.innerHTML = '<div class="spinner-border text-light" role="status"></div><div style="color:#fff;margin-top:12px;font-size:15px;font-weight:600">Génération de l’image…</div>';
+      Object.assign(exportOverlay.style, {
+        position:'fixed', inset:0, zIndex:9999,
+        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+        background:'rgba(0,0,0,.55)',
+      });
+      document.body.appendChild(exportOverlay);
+    }
+    function hideExportOverlay() { if (exportOverlay) { exportOverlay.remove(); exportOverlay = null; } }
+
+    document.querySelectorAll('[data-export]').forEach(btn => {
+      btn.addEventListener('click', () => { closeExportPopup(); exportMap(btn.dataset.export); });
+    });
+
+    async function exportMap(format) {
+      const nav = document.querySelector('nav');
+      const sidebar = document.querySelector('.map-sidebar');
+      const legendEl = document.querySelector('.legend');
+      const zoomCtrl = document.querySelector('.leaflet-control-zoom');
+      const wasRetracted = legendEl.classList.contains('retracted');
+      legendEl.classList.remove('retracted');
+      if (zoomCtrl) zoomCtrl.style.display = 'none';
+      nav.style.visibility = 'hidden';
+      if (sidebar) sidebar.style.visibility = 'hidden';
+      const scaleCtrl = document.querySelector('.leaflet-control-scale');
+      const legendHead = legendEl.querySelector('.legend-head');
+      const origLegendBg = legendEl.style.background;
+      const origLegendMaxW = legendEl.style.maxWidth;
+      const origLegendW = legendEl.style.width;
+      const origLegendShadow = legendEl.style.boxShadow;
+      const origHeadBg = legendHead ? legendHead.style.background : null;
+      const origScaleMargin = scaleCtrl ? scaleCtrl.style.marginLeft : null;
+      if (scaleCtrl) scaleCtrl.style.marginLeft = '400px';
+      legendEl.style.background = '#fff';
+      legendEl.style.maxWidth = 'none';
+      legendEl.style.width = '280px';
+      legendEl.style.boxShadow = 'none';
+      if (legendHead) legendHead.style.background = '#fff';
+      showExportOverlay();
+      try {
+        await new Promise(r => requestAnimationFrame(r));
+        const canvas = await html2canvas(document.getElementById('map'), {
+          useCORS: true, backgroundColor: '#fff', scale: 1, logging: false,
+        });
+        if (format === 'png') {
+          const link = document.createElement('a');
+          link.download = 'carte-abc.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        } else if (format === 'pdf') {
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('landscape', 'mm', 'a4');
+          const pw = pdf.internal.pageSize.getWidth();
+          const ph = pdf.internal.pageSize.getHeight();
+          const r = Math.min(pw / canvas.width, ph / canvas.height);
+          pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (pw - canvas.width * r) / 2, (ph - canvas.height * r) / 2, canvas.width * r, canvas.height * r);
+          pdf.save('carte-abc.pdf');
+        }
+      } finally {
+        hideExportOverlay();
+        if (zoomCtrl) zoomCtrl.style.display = '';
+        if (scaleCtrl) scaleCtrl.style.marginLeft = origScaleMargin;
+        nav.style.visibility = '';
+        if (sidebar) sidebar.style.visibility = '';
+        legendEl.style.background = origLegendBg;
+        legendEl.style.maxWidth = origLegendMaxW;
+        legendEl.style.width = origLegendW;
+        legendEl.style.boxShadow = origLegendShadow;
+        if (legendHead) legendHead.style.background = origHeadBg;
+        if (wasRetracted) legendEl.classList.add('retracted');
+      }
+    }
+
     let debounce;
     document.getElementById('q').addEventListener('input', () => {
       clearTimeout(debounce);
