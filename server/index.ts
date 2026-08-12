@@ -208,6 +208,8 @@ const server = http.createServer((req, res) => {
       root: ROOT,
       cwd: process.cwd(),
       port: PORT,
+      nodePath: process.execPath,
+      nodeVersion: process.version,
     });
   }
 
