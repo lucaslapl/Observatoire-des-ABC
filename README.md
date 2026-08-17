@@ -208,7 +208,8 @@ npm run build                    # compilation frontend (Vite)
 CI
 - `.github/workflows/tests.yml` : PHP 8.3 + Composer + build Vite + PHPUnit
   (avec `php artisan key:generate`) + Pint.
-- `.github/workflows/ci.yml` : build Vite sous Node 24.
+- `.github/workflows/ci.yml` : Composer + build Vite sous Node 24 (Ziggy est
+  fourni par Composer via `vendor/tightenco/ziggy`).
 - Actions GitHub en v5 (`actions/checkout@v5`, `actions/cache@v5`) pour lever
   la dépréciation Node 20.
 
