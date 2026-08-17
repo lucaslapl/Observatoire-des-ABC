@@ -57,6 +57,8 @@ d'un collect à l'autre et jamais écrasées.
 | --- | --- |
 | `abc:import-legacy` | Importe `data/abc.db` (SQLite) vers PostgreSQL |
 | `abc:collect` | Collecte des 4 sources puis statuts, géocodage, anomalies |
+| `abc:collect --init` | Même collect mais **sans purge** (upsert = synchronisation, pas de superuser requis) |
+| `abc:export-deploy` | Export portable (SQL, sans `geom`) pour import Plesk sans PostGIS |
 | `abc:status` | Recalcule les statuts et les anomalies |
 | `abc:geocode` | Géocode les communes manquantes (geo.api.gouv.fr) |
 | `abc:export --fmt=csv\|geojson` | Export CSV ou GeoJSON (`storage/app/abc/exports`) |
@@ -80,6 +82,11 @@ d'un collect à l'autre et jamais écrasées.
 > **Exclusions** : un projet supprimé depuis la carte (admin) est enregistré
 > dans `project_exclusions` ; le collect **ne le ré-importe pas** tant que
 > l'exclusion n'est pas levée depuis le panneau admin.
+>
+> **Hébergements sans superuser** : le collect classique purge via
+> `session_replication_role = replica` (réservé superuser). Sur de tels
+> hébergements, utiliser `abc:collect --init` (synchro sans purge) et
+> `COLLECT_AUTOMATIC=false` (le scheduler lancera alors `abc:collect --init`).
 
 ## Planification (CRON)
 
@@ -92,13 +99,18 @@ Sur le serveur, un seul CRON suffit (Laravel scheduler) :
 Tâches planifiées (`routes/console.php`) :
 
 - `abc:backup` tous les jours à 04:00
-- `abc:collect` le 1er de chaque mois à 03:00
+- `abc:collect --init` le 1er de chaque mois à 03:00 (si `COLLECT_AUTOMATIC=true`)
 
 ## Déploiement (PulseHeberg / Plesk)
 
-1. **Base de données** : créer une base PostgreSQL avec l'extension PostGIS
-   (`CREATE EXTENSION IF NOT EXISTS postgis;`) dans l'outil Bases de données
-   de Plesk.
+> **Sans SSH** : les commandes (`composer`, `npm`, `php artisan`) s'exécutent
+> via des **Scheduled Tasks Plesk** jetables.
+>
+> **Sans PostGIS** (cas mutualisé) : voir « Chemin B » en fin de section.
+
+1. **Base de données** : créer une base PostgreSQL dans l'outil Bases de données
+   de Plesk. PostGIS n'est **pas requis** : le schéma ignore `geom` s'il est
+   absent (`abc:export-deploy` produit un SQL sans la colonne géométrique).
 2. **Fichiers** : cloner/push le dépôt dans `httpdocs` (ou sous-répertoire), à
    l'exclusion de `.env`, `storage/*/private`, `data/abc.db`.
 3. **PHP** : sélectionner PHP 8.3 dans Plesk (PHP-FPM recommandé), activer
@@ -119,6 +131,7 @@ Tâches planifiées (`routes/console.php`) :
    ADMIN_USERNAME=admin
    ADMIN_EMAIL=admin@exemple.fr
    ADMIN_PASSWORD=mot-de-passe-fort
+   COLLECT_AUTOMATIC=false
    ```
 5. **Dépendances & assets** :
    ```bash
@@ -137,7 +150,25 @@ Tâches planifiées (`routes/console.php`) :
    ```
    fréquence : toutes les minutes.
 8. **Premier import des données** (une seule fois, après migration) :
-   `php artisan abc:import-legacy`.
+   - Hébergement **avec PostGIS** : `php artisan abc:import-legacy`, puis un collect.
+   - Hébergement **sans PostGIS** : voir « Chemin B » ci-dessous.
+
+### Chemin B — sans PostGIS (mutualisé)
+
+1. Sur le poste local (base PostGIS actuelle), générer l'export portable :
+   ```bash
+   php artisan abc:export-deploy
+   # → storage/app/abc/deploy/abc-deploy.sql
+   ```
+2. Créer la base PostgreSQL dans Plesk ; `php artisan migrate --force` sur le
+   serveur (le schéma saute `geom` si PostGIS est absent).
+3. Uploader puis **importer** `abc-deploy.sql` (Plesk → Base de données →
+   Importer) : porte toutes les données utiles (projets, communes, snapshots,
+   vérifications, contributions, geo_cache, utilisateur/admin, …).
+4. Synchroniser le cache du collect (offline) :
+   `data/cache/*` → `storage/app/abc/cache/` (copie en ligne de commande).
+5. Mises à jour ultérieures : `abc:collect --init` (sync sans purge) ou
+   re-générer/importer un nouveau `abc-deploy.sql`.
 
 ## Rôles & permissions
 

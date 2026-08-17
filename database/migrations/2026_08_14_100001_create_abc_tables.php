@@ -50,10 +50,14 @@ return new class extends Migration
             $table->index('region');
         });
 
-        // Colonne géométrique prête pour les futures couches de carte.
+        // Colonne géométrique prête pour les futures couches de carte — uniquement
+        // si PostGIS est effectivement installé (Plesk mutualisé : absent).
         if (config('database.default') === 'pgsql') {
-            DB::statement("SELECT AddGeometryColumn('communes', 'geom', 4326, 'POINT', 2)");
-            DB::statement('CREATE INDEX communes_geom_idx ON communes USING GIST (geom)');
+            $postgis = DB::select("SELECT 1 FROM pg_extension WHERE extname = 'postgis'");
+            if ($postgis) {
+                DB::statement("SELECT AddGeometryColumn('communes', 'geom', 4326, 'POINT', 2)");
+                DB::statement('CREATE INDEX communes_geom_idx ON communes USING GIST (geom)');
+            }
         }
 
         Schema::create('snapshots', function (Blueprint $table) {

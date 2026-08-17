@@ -24,12 +24,19 @@ class CollectService
         private AnomalyService $anomalies,
     ) {}
 
-    public function collectAll(): array
+    /**
+     * @param  bool  $init  true = mode installation/synchronisation : ne purge
+     *                      pas (pas de désactivation FK, donc pas de superuser
+     *                      requis) — adapté aux hébergements sans superuser.
+     */
+    public function collectAll(bool $init = false): array
     {
         // Purge des données re-collectables (les tables de travail humain —
         // verifications, contributions, audit_log — ne sont PAS touchées).
         ProjetRepository::refreshExclusions();
-        $this->purgeReplicableData();
+        if (! $init) {
+            $this->purgeReplicableData();
+        }
 
         $datagouv = $this->datagouv->collect();
         $wayback = $this->wayback->collect();

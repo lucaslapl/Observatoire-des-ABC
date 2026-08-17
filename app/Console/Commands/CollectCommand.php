@@ -8,14 +8,17 @@ use Illuminate\Console\Command;
 
 class CollectCommand extends Command
 {
-    protected $signature = 'abc:collect';
+    protected $signature = 'abc:collect {--init : Mode installation/synchronisation : ne purge pas (pas de superuser requis)}';
 
     protected $description = 'Collecte des 4 sources (registre, wayback, fonds vert) puis statuts, géocodage et anomalies';
 
     public function handle(CollectService $service): int
     {
         $this->line('Collect complet en cours…');
-        $s = $service->collectAll();
+        $s = $service->collectAll($this->option('init'));
+        if ($this->option('init')) {
+            $this->line('(mode --init : pas de purge — les projets supprimés à la source ne sont pas retirés)');
+        }
 
         $this->line("data.gouv : {$s['sources']['datagouv']['projets']} projets / {$s['sources']['datagouv']['communes']} communes");
         $this->line("wayback : {$s['sources']['wayback']['projets']} projets uniquement issus des archives (instantané 2022-12-06) + snapshots historiques");

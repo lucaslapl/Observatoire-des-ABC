@@ -54,6 +54,11 @@ return [
     'backup_retention' => 14,
 
     /**
+     * Collect mensuel automatique (désactivable en prod : COLLECT_AUTOMATIC=false).
+     */
+    'collect_automatic' => (bool) env('COLLECT_AUTOMATIC', false),
+
+    /**
      * Seuil de distance (km) au-delà duquel une commune est une anomalie.
      */
     'anomalie_km' => 100,
