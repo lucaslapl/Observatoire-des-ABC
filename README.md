@@ -58,7 +58,7 @@ d'un collect à l'autre et jamais écrasées.
 | `abc:import-legacy` | Importe `data/abc.db` (SQLite) vers PostgreSQL |
 | `abc:collect` | Collecte des 4 sources puis statuts, géocodage, anomalies |
 | `abc:collect --init` | Même collect mais **sans purge** (upsert = synchronisation, pas de superuser requis) |
-| `abc:export-deploy` | Export portable (SQL, sans `geom`) pour import Plesk sans PostGIS |
+| `abc:export-deploy` | Export portable (SQL, sans `geom`) pour hébergement sans PostGIS |
 | `abc:status` | Recalcule les statuts et les anomalies |
 | `abc:geocode` | Géocode les communes manquantes (geo.api.gouv.fr) |
 | `abc:export --fmt=csv\|geojson` | Export CSV ou GeoJSON (`storage/app/abc/exports`) |
@@ -101,20 +101,31 @@ Tâches planifiées (`routes/console.php`) :
 - `abc:backup` tous les jours à 04:00
 - `abc:collect --init` le 1er de chaque mois à 03:00 (si `COLLECT_AUTOMATIC=true`)
 
-## Déploiement (PulseHeberg / Plesk)
+## Déploiement en production
 
-> **Sans SSH** : les commandes (`composer`, `npm`, `php artisan`) s'exécutent
-> via des **Scheduled Tasks Plesk** jetables.
+Le guide ci-dessous est volontairement générique : les chemins, gestionnaires
+PHP et interfaces de gestion de bases de données (Plesk, cPanel, panel maison,
+VPS, Docker…) varient d'un hébergeur à l'autre. Le socle technique reste le
+même : **PHP 8.3+, PostgreSQL, Vite**.
+
+> **Accès en ligne de commande** : avec un accès SSH/terminal, lancez les
+> commandes directement dans le dossier de l'application. Sans accès shell,
+> la plupart des pans de contrôle (Plesk, cPanel…) permettent de créer des
+> **tâches planifiées « exécuter une commande »** jetables : c'est le moyen
+> de jouer `composer`, `npm` et `php artisan` sans terminal.
 >
-> **Sans PostGIS** (cas mutualisé) : voir « Chemin B » en fin de section.
+> **Sans PostGIS** (cas mutualisé fréquent) : voir « Chemin B », intégré au
+> dépôt (`abc:export-deploy`), qui évite toute dépendance à l'extension.
 
-1. **Base de données** : créer une base PostgreSQL dans l'outil Bases de données
-   de Plesk. PostGIS n'est **pas requis** : le schéma ignore `geom` s'il est
-   absent (`abc:export-deploy` produit un SQL sans la colonne géométrique).
-2. **Fichiers** : cloner/push le dépôt dans `httpdocs` (ou sous-répertoire), à
-   l'exclusion de `.env`, `storage/*/private`, `data/abc.db`.
-3. **PHP** : sélectionner PHP 8.3 dans Plesk (PHP-FPM recommandé), activer
-   `pdo_pgsql`, `pgsql`, `intl`, `mbstring`.
+1. **Base de données** : créer une base PostgreSQL via l'outil de gestion de
+   l'hébergeur. **PostGIS n'est pas requis** : le schéma ignore la colonne
+   `geom` si l'extension est absente.
+2. **Fichiers** : cloner/push le dépôt dans le répertoire d'hébergement
+   (`httpdocs`, `www`, sous-répertoire…), en excluant `.env`, `vendor/`,
+   `node_modules/`, `storage/*/private`, `data/abc.db`. Le **document root**
+   doit pointer sur le dossier **`public/`** de l'application.
+3. **PHP** : choisir PHP **8.3 ou plus** (PHP-FPM recommandé), avec les
+   extensions `pdo_pgsql`, `pgsql`, `intl`, `mbstring`.
 4. **`.env`** de production :
    ```dotenv
    APP_ENV=production
@@ -140,18 +151,32 @@ Tâches planifiées (`routes/console.php`) :
    php artisan key:generate
    php artisan migrate --force
    php artisan db:seed --force
-   php artisan config:cache && php artisan route:cache && php artisan view:cache
    ```
 6. **Permissions** : `storage/` et `bootstrap/cache/` accessibles en écriture
-   par l'utilisateur web.
-7. **CRON** (Plesk → Scheduled Tasks) :
+   par l'utilisateur du serveur web.
+7. **CRON** (via le panneau ou `crontab -e`) — une seule ligne suffit, toutes
+   les minutes :
    ```
-   /opt/plesk/php/8.3/bin/php /var/www/vhosts/.../httpdocs/artisan schedule:run
+   * * * * * cd /chemin/vers/abc_scrapper && /chemin/vers/php/php artisan schedule:run >> /dev/null 2>&1
    ```
-   fréquence : toutes les minutes.
 8. **Premier import des données** (une seule fois, après migration) :
    - Hébergement **avec PostGIS** : `php artisan abc:import-legacy`, puis un collect.
    - Hébergement **sans PostGIS** : voir « Chemin B » ci-dessous.
+
+> **⚠️ Attention à `php artisan config:cache` sur certains hébergements** :
+> avec `OPcache` et un gestionnaire PHP-FPM qui ne s'arrête jamais proprement
+> (hébergements mutualisés), le cache de config compilé peut être servi
+> **périmé** (ex. une `APP_KEY` générée après un premier `config:cache` ne sera
+> pas vue : erreur `MissingAppKeyException` persistante, sans log récent). En
+> cas de symptôme identique :
+> ```bash
+> php artisan config:clear    # puis re-tester
+> ```
+> La bonne pratique sur ces hébergements est de **ne pas utiliser
+> `config:cache`** (l'application fonctionne très bien en lisant `.env`), et de
+> garder éventuellement `route:cache`/`view:cache` qui, eux, ne figent pas
+> d'environnement. Si le site devient invisible après un `config:cache`, faire
+> un `config:clear` puis re-tester.
 
 ### Chemin B — sans PostGIS (mutualisé)
 
@@ -160,10 +185,10 @@ Tâches planifiées (`routes/console.php`) :
    php artisan abc:export-deploy
    # → storage/app/abc/deploy/abc-deploy.sql
    ```
-2. Créer la base PostgreSQL dans Plesk ; `php artisan migrate --force` sur le
-   serveur (le schéma saute `geom` si PostGIS est absent).
-3. Uploader puis **importer** `abc-deploy.sql` (Plesk → Base de données →
-   Importer) : porte toutes les données utiles (projets, communes, snapshots,
+2. Créer la base PostgreSQL chez l'hébergeur ; `php artisan migrate --force`
+   sur le serveur (le schéma saute `geom` si PostGIS est absent).
+3. Uploader puis **importer** `abc-deploy.sql` (outil SQL de l'hébergeur, ou
+   `psql`) : porte toutes les données utiles (projets, communes, snapshots,
    vérifications, contributions, geo_cache, utilisateur/admin, …).
 4. Synchroniser le cache du collect (offline) :
    `data/cache/*` → `storage/app/abc/cache/` (copie en ligne de commande).
