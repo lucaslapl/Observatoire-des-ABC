@@ -13,6 +13,10 @@
 /.vscode
 /.zed
 /auth.json
+/dist
+/data/backups/
+/data/exports/
+/data/server.pid
 /node_modules
 /public/build
 /public/fonts-manifest.dev.json
