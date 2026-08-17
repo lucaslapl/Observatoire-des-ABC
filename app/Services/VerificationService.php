@@ -11,7 +11,11 @@ use Illuminate\Support\Facades\DB;
  */
 class VerificationService
 {
-    public function list(): array
+    /**
+     * @param  bool  $tous  true = inclut aussi les projets déjà vérifiés
+     *                      (pour pouvoir les corriger depuis la page /verify)
+     */
+    public function list(bool $tous = false): array
     {
         $rows = DB::table('projets as p')
             ->leftJoin('verifications as v', 'v.projet_id', '=', 'p.id')
@@ -29,17 +33,17 @@ class VerificationService
                 'v.lien',
                 'v.verifie_le',
             ])
-            ->where(fn ($q) => $q
+            ->when(! $tous, fn ($q) => $q->where(fn ($w) => $w
                 ->where('p.potentiellement_termine', true)
                 ->orWhere('p.potentiellement_en_cours', true)
                 ->orWhere('p.source', 'wayback')
                 ->orWhereNull('p.annee_debut')
-                ->orWhereExists(function ($q) {
-                    $q->select(DB::raw(1))
+                ->orWhereExists(function ($q2) {
+                    $q2->select(DB::raw(1))
                         ->from('communes as c3')
                         ->whereColumn('c3.projet_id', 'p.id')
                         ->where('c3.anomalie', true);
-                }))
+                })))
             ->orderByRaw("(v.etat IS NULL OR v.etat = 'a_verifier') DESC, p.nom")
             ->get();
 

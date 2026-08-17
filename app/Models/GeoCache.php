@@ -8,6 +8,8 @@ class GeoCache extends Model
 {
     protected $table = 'geo_cache';
 
+    protected $primaryKey = 'code_geographique';
+
     public $incrementing = false;
 
     protected $keyType = 'string';

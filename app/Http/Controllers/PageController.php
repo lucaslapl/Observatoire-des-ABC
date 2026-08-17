@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Actualite;
 use App\Models\Contribution;
+use App\Models\ProjectExclusion;
+use App\Models\Projet;
 use App\Services\StatsService;
 use App\Services\VerificationService;
 use Inertia\Inertia;
@@ -20,12 +22,13 @@ class PageController extends Controller
     {
         return Inertia::render('Map', [
             'meta' => $this->stats->meta(),
+            'isAdmin' => auth()->check() && auth()->user()->hasRole('admin'),
         ]);
     }
 
     public function verify(): Response
     {
-        return Inertia::render('Verify', $this->verifications->list());
+        return Inertia::render('Verify', $this->verifications->list(true));
     }
 
     public function actualites(): Response
@@ -56,9 +59,26 @@ class PageController extends Controller
             ->orderByDesc('contributions.created_at')
             ->get();
 
+        $exclusions = ProjectExclusion::query()
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function (ProjectExclusion $e) {
+                return [
+                    'projet_id' => $e->projet_id,
+                    'nom' => Projet::whereKey($e->projet_id)->value('nom'),
+                    'motif' => $e->motif,
+                    'par_admin' => $e->par_admin,
+                    'cree_le' => $e->created_at?->toDateTimeString(),
+                ];
+            });
+
         return Inertia::render('Admin', [
             'meta' => $this->stats->meta(),
             'contributions' => $contributions,
+            'actualites' => Actualite::query()
+                ->orderByDesc('created_at')
+                ->get(['id', 'titre', 'slug', 'contenu', 'statut', 'date_publication']),
+            'exclusions' => $exclusions,
         ]);
     }
 

@@ -85,8 +85,6 @@ class WaybackCollector
             }
         }
 
-        echo "wayback : {$projects} projets uniquement issus des archives (instantané ".self::SNAPSHOT_DATE.") + snapshots historiques\n";
-
         return [$projects, count($rows)];
     }
 

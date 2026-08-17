@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
@@ -10,6 +10,14 @@ const props = defineProps({
         default: null,
     },
     contributions: {
+        type: Array,
+        default: () => [],
+    },
+    actualites: {
+        type: Array,
+        default: () => [],
+    },
+    exclusions: {
         type: Array,
         default: () => [],
     },
@@ -39,6 +47,120 @@ const actionMsg = ref('');
 const actionOk = ref(true);
 const maintenanceMsg = ref('');
 const maintenanceOk = ref(true);
+
+const actualiteForm = reactive({
+    id: null,
+    titre: '',
+    contenu: '',
+    statut: 'publie',
+    date_publication: '',
+});
+const actualiteMsg = ref('');
+const actualiteOk = ref(true);
+
+const formatDateFr = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '');
+
+function openActualite(a) {
+    actualiteForm.id = a ? a.id : null;
+    actualiteForm.titre = a ? a.titre : '';
+    actualiteForm.contenu = a ? a.contenu : '';
+    actualiteForm.statut = a ? a.statut : 'publie';
+    actualiteForm.date_publication = a && a.date_publication ? a.date_publication.slice(0, 10) : '';
+}
+
+async function saveActualite() {
+    if (!actualiteForm.titre.trim()) {
+        actualiteMsg.value = 'Le titre est requis.';
+        actualiteOk.value = false;
+        return;
+    }
+    if (!actualiteForm.contenu.trim()) {
+        actualiteMsg.value = 'Le contenu est requis.';
+        actualiteOk.value = false;
+        return;
+    }
+    busy.value = true;
+    actualiteMsg.value = '';
+    const payload = {
+        titre: actualiteForm.titre,
+        contenu: actualiteForm.contenu,
+        statut: actualiteForm.statut,
+        date_publication: actualiteForm.date_publication || null,
+    };
+    try {
+        if (actualiteForm.id) {
+            await router.put(`/actualites/${actualiteForm.id}`, payload);
+        } else {
+            await router.post('/actualites', payload);
+        }
+        actualiteMsg.value = 'Actualité enregistrée.';
+        actualiteOk.value = true;
+        openActualite(null);
+    } catch (e) {
+        actualiteMsg.value = 'Erreur : ' + errMsg(e);
+        actualiteOk.value = false;
+    } finally {
+        busy.value = false;
+    }
+}
+
+async function destroyActualite(a) {
+    if (!window.confirm(`Supprimer l'actualité « ${a.titre} » ?`)) return;
+    busy.value = true;
+    actualiteMsg.value = '';
+    try {
+        await router.delete(`/actualites/${a.id}`);
+        actualiteMsg.value = 'Actualité supprimée.';
+        actualiteOk.value = true;
+    } catch (e) {
+        actualiteMsg.value = 'Erreur : ' + errMsg(e);
+        actualiteOk.value = false;
+    } finally {
+        busy.value = false;
+    }
+}
+
+const exclusionsMsg = ref('');
+const exclusionsOk = ref(true);
+const exclusionsBusy = ref(false);
+
+async function unexcludeProjet(e) {
+    if (!window.confirm(`Le projet « ${e.nom || e.projet_id} » (${e.projet_id}) sera ré-importé au prochain collect. Continuer ?`)) return;
+    exclusionsBusy.value = true;
+    exclusionsMsg.value = '';
+    try {
+        await axios.delete(`/api/admin/exclusions/${encodeURIComponent(e.projet_id)}`);
+        exclusionsMsg.value = 'Exclusion levée.';
+        exclusionsOk.value = true;
+        router.reload({ only: ['exclusions'] });
+    } catch (error) {
+        exclusionsMsg.value = 'Erreur : ' + errMsg(error);
+        exclusionsOk.value = false;
+    } finally {
+        exclusionsBusy.value = false;
+    }
+}
+
+async function exportAudit() {
+    exclusionsBusy.value = true;
+    exclusionsMsg.value = '';
+    try {
+        const r = await axios.get('/api/admin/exclusions/export', { responseType: 'blob' });
+        const url = window.URL.createObjectURL(new Blob([r.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'audit-abc.csv';
+        link.click();
+        window.URL.revokeObjectURL(url);
+        exclusionsMsg.value = 'Journal exporté.';
+        exclusionsOk.value = true;
+    } catch (error) {
+        exclusionsMsg.value = 'Erreur : ' + errMsg(error);
+        exclusionsOk.value = false;
+    } finally {
+        exclusionsBusy.value = false;
+    }
+}
 
 const tabs = [
     { key: 'en_attente', label: 'À modérer' },
@@ -154,8 +276,9 @@ async function collect() {
     try {
         const j = await axios.post('/api/admin/collect');
         const s = j.data.summary || {};
-        const statusLines = (s.statuses || []).map((x) => `${x.statut}: ${x.n}`).join(', ');
-        maintenanceMsg.value = `Collecte terminée : ${s.total} projets, ${s.communes} communes (${s.geocoded} géocodées). ${statusLines}`;
+        const statusObj = s.statuses || {};
+        const statusLines = Object.entries(statusObj).map(([statut, n]) => `${statutLabel(statut)}: ${n}`).join(', ');
+        maintenanceMsg.value = `Collecte terminée : ${s.total ?? 0} projets, ${s.communes ?? 0} communes (${s.geocoded ?? 0} géocodées). ${statusLines}`;
         maintenanceOk.value = true;
         router.reload({ only: ['contributions', 'meta'] });
     } catch (e) {
@@ -181,6 +304,76 @@ async function collect() {
                         <span v-if="busy" class="spinner-border spinner-border-sm text-success" role="status"></span>
                     </div>
                     <div v-if="maintenanceMsg" class="small mt-1" :class="maintenanceOk ? 'text-success' : 'text-danger'">{{ maintenanceMsg }}</div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white fw-semibold py-2">Actualités</div>
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button v-if="!actualiteForm.id" class="btn btn-sm btn-outline-primary" @click="openActualite(null)">➕ Nouvelle actualité</button>
+                        <button v-else class="btn btn-sm btn-outline-secondary" @click="openActualite(null)">↩ Annuler l'édition</button>
+                    </div>
+                    <form @submit.prevent="saveActualite" class="border rounded-3 p-2 mb-2 bg-light">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <input v-model="actualiteForm.titre" type="text" class="form-control form-control-sm" style="max-width:280px"
+                                :placeholder="actualiteForm.id ? 'Titre (en cours d\'édition)' : 'Titre'" />
+                            <select v-model="actualiteForm.statut" class="form-select form-select-sm" style="max-width:130px">
+                                <option value="publie">Publié</option>
+                                <option value="masque">Masqué</option>
+                            </select>
+                            <input v-model="actualiteForm.date_publication" type="date" class="form-control form-control-sm" style="max-width:160px" />
+                            <button class="btn btn-xs btn-success btn-sm" type="submit" :disabled="busy">
+                                {{ actualiteForm.id ? 'Mettre à jour' : 'Publier' }}
+                            </button>
+                        </div>
+                        <textarea v-model="actualiteForm.contenu" rows="3" class="form-control form-control-sm mt-2" placeholder="Contenu de l'actualité…"></textarea>
+                    </form>
+                    <div v-if="actualiteMsg" class="small mb-2" :class="actualiteOk ? 'text-success' : 'text-danger'">{{ actualiteMsg }}</div>
+
+                    <div v-if="actualites.length === 0" class="text-muted small py-2">Aucune actualité.</div>
+                    <ul class="list-group list-group-flush">
+                        <li v-for="a in actualites" :key="a.id"
+                            class="list-group-item d-flex flex-wrap align-items-center gap-2 px-0">
+                            <div class="flex-grow-1" style="min-width:200px">
+                                <div class="fw-semibold small">
+                                    <span class="chip" :class="a.statut">{{ a.statut === 'publie' ? 'publié' : 'masqué' }}</span>
+                                    &nbsp;{{ a.titre }}
+                                </div>
+                                <div class="small text-muted">
+                                    {{ formatDateFr(a.date_publication) }} · {{ (a.contenu || '').slice(0, 80) }}{{ (a.contenu || '').length > 80 ? '…' : '' }}
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="openActualite(a)">✎ Modifier</button>
+                            <button class="btn btn-sm btn-outline-danger" :disabled="busy" @click="destroyActualite(a)">🗑 Supprimer</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-2">
+                    <span class="fw-semibold">Exclusions (projets supprimés)</span>
+                    <button class="btn btn-sm btn-outline-secondary ms-auto" :disabled="exclusionsBusy" @click="exportAudit">⬇ Exporter le journal d'audit</button>
+                </div>
+                <div class="card-body py-2">
+                    <div v-if="exclusionsMsg" class="small mb-2" :class="exclusionsOk ? 'text-success' : 'text-danger'">{{ exclusionsMsg }}</div>
+                    <div v-if="exclusions.length === 0" class="text-muted small py-2">
+                        Aucune exclusion. Les projets supprimés depuis la carte (admin) apparaissent ici et ne sont pas ré-importés au prochain collect.
+                    </div>
+                    <ul v-else class="list-group list-group-flush">
+                        <li v-for="e in exclusions" :key="e.projet_id"
+                            class="list-group-item d-flex flex-wrap align-items-center gap-2 px-0">
+                            <div class="flex-grow-1" style="min-width:220px">
+                                <div class="fw-semibold small">{{ e.nom || e.projet_id }}</div>
+                                <div class="small text-muted">
+                                    {{ e.projet_id }}{{ e.motif ? ` · motif : ${e.motif}` : '' }}{{ e.par_admin ? ` · par ${e.par_admin}` : '' }}{{ e.cree_le ? ` · le ${formatDateFr(e.cree_le)}` : '' }}
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" :disabled="exclusionsBusy" @click="unexcludeProjet(e)">↩ Ré-import</button>
+                        </li>
+                    </ul>
+                    <div class="small text-muted mt-2">La levée d'exclusion ne recrée pas le projet : il faut ensuite lancer un collect.</div>
                 </div>
             </div>
 

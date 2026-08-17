@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Verification extends Model
 {
+    protected $primaryKey = 'projet_id';
+
     public $incrementing = false;
 
     protected $keyType = 'string';

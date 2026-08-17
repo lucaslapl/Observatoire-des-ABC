@@ -14,7 +14,8 @@ class GeocodeCommand extends Command
 
     public function handle(GeocodeService $geocode, AnomalyService $anomalies): int
     {
-        $geocode->enrichGeocoding();
+        $g = $geocode->enrichGeocoding();
+        $this->line("géocodage : {$g['distinct']} communes distinctes, {$g['fetched']} à récupérer, {$g['updated']} avec coordonnées");
         $anom = $anomalies->computeAnomalies();
         $this->line("Anomalies détectées : {$anom} commune(s)");
 

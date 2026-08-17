@@ -86,8 +86,6 @@ class DatagouvCollector
             $projects++;
         }
 
-        echo "data.gouv : {$projects} projets / ".count($rows)." communes\n";
-
         return [$projects, count($rows)];
     }
 

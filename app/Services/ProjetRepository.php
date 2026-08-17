@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Commune;
+use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\Snapshot;
 
@@ -12,8 +13,29 @@ use App\Models\Snapshot;
  */
 class ProjetRepository
 {
+    /** Ids exclus, chargés une fois par collect (mémoire). */
+    private static ?array $excludedIds = null;
+
+    public static function refreshExclusions(): void
+    {
+        static::$excludedIds = ProjectExclusion::query()->pluck('projet_id')->all();
+    }
+
+    public function isExcluded(string $id): bool
+    {
+        if (static::$excludedIds === null) {
+            static::$excludedIds = ProjectExclusion::query()->pluck('projet_id')->all();
+        }
+
+        return in_array($id, static::$excludedIds, true);
+    }
+
     public function upsertProjet(array $p): void
     {
+        if ($this->isExcluded($p['id'])) {
+            return;
+        }
+
         $data = [
             'nom' => $p['nom'],
             'structure_porteuse' => $p['structure_porteuse'] ?? null,
@@ -37,7 +59,13 @@ class ProjetRepository
         Commune::where('projet_id', $p['id'])->delete();
         if (! empty($p['communes'])) {
             $rows = [];
+            $seen = [];
             foreach ($p['communes'] as $c) {
+                $code = (string) $c['code_geographique'];
+                if (isset($seen[$code])) {
+                    continue; // équivalent d'INSERT OR IGNORE (1re occurrence conservée)
+                }
+                $seen[$code] = true;
                 $rows[] = [
                     'projet_id' => $p['id'],
                     'code_geographique' => $c['code_geographique'],
@@ -58,6 +86,10 @@ class ProjetRepository
 
     public function recordSnapshot(string $snapshotDate, string $projetId, string $avancement, string $source): void
     {
+        if ($this->isExcluded($projetId)) {
+            return;
+        }
+
         Snapshot::updateOrCreate(
             ['snapshot_date' => $snapshotDate, 'projet_id' => $projetId],
             ['avancement' => $avancement, 'source' => $source],

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\CollectController;
 use App\Http\Controllers\Admin\ContributionController as AdminContributionController;
+use App\Http\Controllers\Admin\ProjetController as AdminProjetController;
 use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\DiagController;
 use App\Http\Controllers\Api\GeoJsonController;
@@ -37,6 +38,11 @@ Route::middleware('web')->group(function () {
         Route::post('/admin/contributions/{id}/retirer', [AdminContributionController::class, 'retirer']);
         Route::post('/admin/backup', [BackupController::class, 'store']);
         Route::post('/admin/collect', [CollectController::class, 'store']);
+
+        Route::delete('/admin/projets/{projet}', [AdminProjetController::class, 'destroy']);
+        Route::get('/admin/exclusions', [AdminProjetController::class, 'index']);
+        Route::delete('/admin/exclusions/{projet}', [AdminProjetController::class, 'unexclude']);
+        Route::get('/admin/exclusions/export', [AdminProjetController::class, 'export']);
     });
 
 });

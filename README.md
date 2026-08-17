@@ -45,9 +45,11 @@ npm run dev          # développement (Vite + HMR)
 php artisan serve
 ```
 
-Parité vérifiée après import : 1338 projets, 5437 communes, 1958 snapshots,
-5 vérifications, 1 contribution, 2 entrées d'audit ; GeoJSON identique à
-l'ancien endpoint.
+Le collect des sources en ligne (échantillonnées en cache) aboutit à un jeu
+de référence de **1263 projets, 5421 lignes communes, 1958 snapshots** (GeoJSON
+= 5420 points, attributs paritaires à l'ancien endpoint). Les données de
+travail humain (`verifications`, `contributions`, `audit_log`) sont préservées
+d'un collect à l'autre et jamais écrasées.
 
 ## Commandes artisan
 
@@ -60,6 +62,24 @@ l'ancien endpoint.
 | `abc:export --fmt=csv\|geojson` | Export CSV ou GeoJSON (`storage/app/abc/exports`) |
 | `abc:verify` | Worklist de vérification (CSV) |
 | `abc:backup` | Sauvegarde pg_dump avec rotation (14) |
+
+> **`abc:collect` et la purge** : le collect vide puis ré-ingère les tables
+> *re-collectables* (`projets`, `communes`, `snapshots`) sans toucher au travail
+> humain (`verifications`, `contributions`, `audit_log`). Pour cela il
+> désactive temporairement les contraintes de clé étrangère — via
+> `SET session_replication_role = replica` sur PostgreSQL, ce qui **exige un
+> rôle superuser** pour la collecte en production.
+>
+> **Source Fonds vert** : les exports `fonds-vert-p113-*.csv` actuellement pinnés
+> ne listent que **65 projets ABC** (16 en 2024, 49 en 2025). L'ancienne base
+> `data/abc.db` en contenait 140 — issue d'une version plus riche de ces
+> exports qui n'est plus disponible. Le collect reflète donc désormais les
+> sources en ligne (1263 projets au total, soit 75 « à venir » de moins que
+> l'ancien jeu de données).
+>
+> **Exclusions** : un projet supprimé depuis la carte (admin) est enregistré
+> dans `project_exclusions` ; le collect **ne le ré-importe pas** tant que
+> l'exclusion n'est pas levée depuis le panneau admin.
 
 ## Planification (CRON)
 
@@ -123,7 +143,8 @@ Tâches planifiées (`routes/console.php`) :
 
 Rôles Spatie (`db:seed`) : `admin`, `moderateur`, `contributeur`.
 
-- `admin` : panneau complet (modération, collecte, sauvegarde, actualités).
+- `admin` : panneau complet (modération, collecte, sauvegarde, actualités,
+  exclusions + export du journal d'audit), suppression de projets depuis la carte.
 - `moderateur` : modération des contributions et actualités.
 - `contributeur` : compte connecté (proposition de données).
 
@@ -148,18 +169,48 @@ Le compte administrateur est créé depuis `.env` (`ADMIN_USERNAME`,
 | `POST /api/admin/contributions/{id}/retirer` | admin | Retire une contribution validée |
 | `POST /api/admin/backup` | admin | Sauvegarde immédiate |
 | `POST /api/admin/collect` | admin | Relance la collecte |
+| `DELETE /api/admin/projets/{id}` | admin | Supprime un projet et l'exclut du collect |
+| `GET /api/admin/exclusions` | admin | Liste des exclusions en cours |
+| `DELETE /api/admin/exclusions/{id}` | admin | Lève une exclusion (ré-import au prochain collect) |
+| `GET /api/admin/exclusions/export` | admin | Journal d'audit CSV (suppressions / levées) |
 | `GET /api/diag` | public | Diagnostic (aucun secret) |
+
+## Corrections & exclusions
+
+Deux flux complémentaires pour maintenir les données :
+
+- **Signaler une correction** (public) : popup de la carte → « 💡 Signaler une
+  correction » → contribution modérée par un admin (`/api/contributions`).
+- **Vérifier** (admin) : page `/verify` (worklist « À vérifier » par défaut,
+  filtres *Vérifiés* / *Tous* pour revoir ou corriger un projet déjà confirmé).
+- **Supprimer un projet** (admin uniquement) : bouton 🗑 dans le popup de la
+  carte (marqueurs simples et agrégés). Le projet est supprimé avec sa fiche
+  et **exclu du prochain collect** (table `project_exclusions`, motif optionnel
+  consigné dans `audit_log`).
+- **Journal d'audit** : panneau admin → « Exclusions » → *⬇ Exporter le journal
+  d'audit* (CSV des suppressions et levées d'exclusion).
+- **Levée d'exclusion** : panneau admin → « ↩ Ré-import » ; le projet reviendra
+  au prochain collect.
+
+Sur la carte, quand plusieurs ABC cohabitent au même point, un **marqueur
+agrégé** (réduit en taille pour ne pas être confondu avec les points
+intercommunaux) liste chaque projet avec son **statut, son année, sa source**
+et son verdict ; un clic déplie les communes reliées par des traits.
 
 ## Tests & style
 
 ```bash
-php artisan test                 # 40 tests (slug, statuts, anomalies, CSV, contributions, GeoJSON)
+php artisan test                 # 45 tests (slug, statuts, anomalies, CSV, contributions, GeoJSON, exclusions)
 ./vendor/bin/pint                # formatage
-npm run build                    # compilation frontend
+npm run build                    # compilation frontend (Vite)
 ```
 
-CI (`.github/workflows/tests.yml`) : PHP 8.3 + Composer + build Vite + PHPUnit
-+ Pint.
+CI
+- `.github/workflows/tests.yml` : PHP 8.3 + Composer + build Vite + PHPUnit
+  (avec `php artisan key:generate`) + Pint.
+- `.github/workflows/ci.yml` : build Vite sous Node 24.
+- Actions GitHub en v5 (`actions/checkout@v5`, `actions/cache@v5`) pour lever
+  la dépréciation Node 20.
 
 ## Licence
 

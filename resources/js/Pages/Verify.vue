@@ -34,7 +34,11 @@ const filtered = computed(() => {
     const q = sQ.value.trim().toLowerCase();
     return props.projets.filter((p) => {
         if (sMotif.value && !p.motifs.includes(sMotif.value)) return false;
-        if (sEtat.value && p.etat !== sEtat.value) return false;
+        if (sEtat.value === 'verifies') {
+            if (p.etat === 'a_verifier') return false;
+        } else if (sEtat.value === 'a_verifier') {
+            if (p.etat !== 'a_verifier' || p.motifs.length === 0) return false;
+        } else if (sEtat.value && p.etat !== sEtat.value) return false;
         if (q) {
             const hay = `${p.nom} ${p.communes || ''} ${p.structure_porteuse || ''} ${p.departements || ''}`.toLowerCase();
             if (!hay.includes(q)) return false;
@@ -42,6 +46,9 @@ const filtered = computed(() => {
         return true;
     });
 });
+
+const aVerifierCount = computed(() => props.projets.filter((p) => p.etat === 'a_verifier' && p.motifs.length > 0).length);
+const verifiesCount = computed(() => props.projets.filter((p) => p.etat !== 'a_verifier').length);
 
 const faits = computed(() => {
     const c = props.compteurs;
@@ -83,7 +90,13 @@ const save = async (p, f) => {
         fache.message = 'Vérification enregistrée.';
     } catch (err) {
         fache.type = 'danger';
-        fache.message = 'Erreur : ' + (err.response?.data?.error || err.message);
+        if (err.response?.status === 401) {
+            fache.message = 'Connexion requise : seuls les administrateurs peuvent enregistrer une vérification.';
+            fache.login = true;
+        } else {
+            fache.message = 'Erreur : ' + (err.response?.data?.error || err.message);
+            fache.login = false;
+        }
     }
 };
 </script>
@@ -98,6 +111,7 @@ const save = async (p, f) => {
 
             <div v-if="fache.message" class="alert alert-{{ fache.type }} alert-dismissible fade show pb-2 pt-2" role="alert">
                 {{ fache.message }}
+                <a v-if="fache.login" href="/login" class="btn btn-sm btn-dark ms-2">Se connecter</a>
                 <button type="button" class="btn-close" @click="fache.message = ''"></button>
             </div>
 
@@ -116,6 +130,7 @@ const save = async (p, f) => {
                     <select v-model="sEtat" class="form-select form-select-sm">
                         <option value="a_verifier">À vérifier</option>
                         <option value="">Tous</option>
+                        <option value="verifies">Vérifiés</option>
                         <option value="confirme_termine">Confirmé terminé</option>
                         <option value="confirme_en_cours">Confirmé en cours</option>
                         <option value="toujours_a_avenir">Toujours à venir</option>
@@ -129,7 +144,8 @@ const save = async (p, f) => {
                         placeholder="Nom, commune, structure…" />
                 </label>
                 <div class="d-flex gap-2 flex-wrap">
-                    <span class="badge text-bg-secondary">{{ projets.length }} à vérifier</span>
+                    <span class="badge text-bg-secondary">{{ aVerifierCount }} à vérifier</span>
+                    <span v-if="verifiesCount" class="badge text-bg-light" title="Projets déjà vérifiés — visibles via le filtre État">✓ {{ verifiesCount }} vérifiés</span>
                     <span v-if="compteurs.confirme_termine" class="badge text-bg-success">{{ compteurs.confirme_termine }} ✓ terminés</span>
                     <span v-if="compteurs.confirme_en_cours" class="badge text-bg-warning">{{ compteurs.confirme_en_cours }} en cours</span>
                     <span v-if="compteurs.toujours_a_avenir" class="badge text-bg-warning">{{ compteurs.toujours_a_avenir }} à venir</span>
@@ -137,6 +153,12 @@ const save = async (p, f) => {
                     <span v-if="compteurs.introuvable" class="badge text-bg-secondary">{{ compteurs.introuvable }} introuvables</span>
                     <span v-if="compteurs.douteux" class="badge text-bg-danger">{{ compteurs.douteux }} incertains</span>
                 </div>
+            </div>
+
+            <div class="small text-muted mb-2">
+                Les projets déjà vérifiés restent consultables et corrigeables : passez le filtre
+                « État » sur <b>Vérifiés</b> ou <b>Tous</b>. Une erreur sur un projet confirmé ?
+                Re-sauvegardez un verdict corrigé, ou signalez-la depuis le popup de la carte.
             </div>
 
             <div class="table-responsive">

@@ -22,12 +22,9 @@ class DownloadService
         $dest = $dir.DIRECTORY_SEPARATOR.$base;
 
         if (file_exists($dest) && filesize($dest) > 0) {
-            echo "[cache] {$label} → {$dest}\n";
-
             return $dest;
         }
 
-        echo "[download] {$label} …\n";
         $response = Http::timeout(120)
             ->withHeaders([
                 'User-Agent' => config('abc.user_agent'),

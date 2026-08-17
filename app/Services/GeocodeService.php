@@ -31,8 +31,6 @@ class GeocodeService
             }
         }
 
-        echo 'géocodage : '.$rows->count().' communes distinctes, '.count($toFetch)." à récupérer\n";
-
         $this->fetchParallel($toFetch);
 
         $updated = 0;
@@ -44,9 +42,12 @@ class GeocodeService
                 $updated++;
             }
         }
-        echo "géocodage : {$updated} communes avec coordonnées\n";
 
-        return $updated;
+        return [
+            'distinct' => $rows->count(),
+            'fetched' => count($toFetch),
+            'updated' => $updated,
+        ];
     }
 
     /**

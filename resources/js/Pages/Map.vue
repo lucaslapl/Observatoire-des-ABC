@@ -10,6 +10,10 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const navRef = ref(null);
@@ -47,6 +51,29 @@ const VERDICT = {
     introuvable: { label: '⚠ Vérifié : introuvable', color: '#7f1d1d' },
     douteux: { label: '⚠ Vérifié : incertain', color: '#7f1d1d' },
 };
+const SRC_LABEL = {
+    'data.gouv': 'Registre OFB',
+    wayback: 'Archives 2022',
+    'fondsvert-p113-2024': 'Fonds vert 2024',
+    'fondsvert-p113-2025': 'Fonds vert 2025',
+};
+const srcLabel = (s) => SRC_LABEL[s] || s || '—';
+
+// Badge de source : « Archives 2022 » est un instantané figé (dépréciable).
+function srcChip(p) {
+    const l = srcLabel(p.source);
+    if (p.donnees_2022 || p.source === 'wayback') {
+        return `<span class="multi-badge multi-src src-stale" title="Projet figé à l'instantané de 2022 — statut possiblement obsolète">${l}</span>`;
+    }
+    return `<span class="multi-badge multi-src">${l}</span>`;
+}
+
+// Bouton de suppression admin pour un projet.
+function delBtn(p) {
+    if (!props.isAdmin) return '';
+    const nom = (p.nom || '').replace(/"/g, '&quot;');
+    return `<button type="button" class="btn-del" data-del-pid="${p.projet_id}" data-del-nom="${nom}" title="Supprimer ce projet (admin)">🗑</button>`;
+}
 
 let map = null;
 let tileLayer = null;
@@ -104,6 +131,7 @@ function buildPopup(p) {
         p.anomalie ? `<br><b style="color:#b91c1c">⚠ Commune incohérente</b><br><small>À ${Math.round(p.distance_km)} km de son groupe — non reliée, à vérifier</small>` : '',
         verifNote,
         `<br><small>${p.verifie ? 'Source initiale' : 'Source'} : ${srcFr}</small>`,
+        delBtn(p),
     ].join('');
     const sugg =
         `<div class="pop-contrib" data-sugg data-pid="${p.projet_id}">` +
@@ -157,12 +185,17 @@ function animateProp(obj, prop, from, to, duration, done) {
 const expandedLayers = new Map();
 const centroidMarkers = new Map();
 const projectData = new Map();
+const aggregateExpanded = new Map();
+const aggregateData = new Map();
 
 function clearExpanded() {
     for (const [, grp] of expandedLayers) map.removeLayer(grp);
     expandedLayers.clear();
     centroidMarkers.clear();
     projectData.clear();
+    for (const [, grp] of aggregateExpanded) map.removeLayer(grp);
+    aggregateExpanded.clear();
+    aggregateData.clear();
 }
 
 function toggleGroup(pid) {
@@ -208,7 +241,121 @@ function toggleGroup(pid) {
     }
 }
 
+function toggleAggregate(key) {
+    const data = aggregateData.get(key);
+    if (!data) return;
+    const { byCoord, clat, clon, marker, baseRadius } = data;
+
+    if (aggregateExpanded.has(key)) {
+        const grp = aggregateExpanded.get(key);
+        const layers = grp.getLayers();
+        let done = 0;
+        const onDone = () => { done++; if (done >= layers.length) { map.removeLayer(grp); aggregateExpanded.delete(key); } };
+        for (const item of layers) {
+            if (item instanceof L.Polyline) animateProp(item, 'opacity', 0.65, 0, 200, onDone);
+            else animateProp(item, 'fillOpacity', 0.9, 0, 200, onDone);
+        }
+        animateProp(marker, 'radius', 5, baseRadius, 250);
+    } else {
+        animateProp(marker, 'radius', baseRadius, 5, 250);
+        const grp = L.layerGroup().addTo(map);
+        aggregateExpanded.set(key, grp);
+        for (const [, feats] of byCoord) {
+            const c = feats[0].geometry.coordinates;
+            const p = feats[0].properties;
+            const live = feats.find(f => f.properties.source !== 'wayback' && !f.properties.donnees_2022);
+            const color = COLOR[dStatut(live ? live.properties : p)] || COLOR.inconnu;
+            L.polyline([[clat, clon], [c[1], c[0]]], {
+                color, weight: 2, opacity: 0,
+            }).addTo(grp);
+            const pt = L.circleMarker([c[1], c[0]], {
+                radius: 6, color: '#fff', weight: 1.5,
+                fillColor: color, fillOpacity: 0.9,
+            }).addTo(grp);
+            pt.bindTooltip(`<b>${p.commune}</b>`, { direction: 'top', offset: [0, -8], className: 'map-tooltip' });
+        }
+        marker.bringToFront();
+        grp.eachLayer(item => { if (item instanceof L.Polyline) item.setStyle({ opacity: 0 }); else item.setStyle({ fillOpacity: 0 }); });
+        requestAnimationFrame(() => {
+            const items = grp.getLayers();
+            const stagger = items.length > 1 ? Math.min(40, 2250 / (items.length - 1)) : 0;
+            items.forEach((item, i) => {
+                setTimeout(() => {
+                    if (item instanceof L.Polyline) animateProp(item, 'opacity', 0, 0.65, 250);
+                    else animateProp(item, 'fillOpacity', 0, 0.9, 250);
+                }, i * stagger);
+            });
+        });
+    }
+}
+
 function fmtCount(n, s) { return n + ' ' + (n > 1 ? s : s.replace(/s$/, '')); }
+
+const STATUT_LABEL = { en_cours: 'En cours', a_venir: 'Va débuter', termine: 'Terminé', inconnu: 'Statut inconnu' };
+
+// Marqueur agrégé : quand plusieurs ABSC distincts partagent le même point
+// (ex. deux démarches sur la même commune, ou deux sources du même territoire),
+// on affiche un seul marqueur dont le popup liste chaque projet avec son propre
+// statut / année / source / verdict.
+function buildMultiMarker(group) {
+    const lat = group[0].lat;
+    const lon = group[0].lon;
+
+    const featsAll = group.flatMap(e => e.feats);
+    const distinctCommuneCodes = new Set(featsAll.map(f => f.properties.code_commune).filter(Boolean));
+    const nbCommunes = distinctCommuneCodes.size;
+    const count = group.length;
+
+    const majorityColor = (() => {
+        const tally = {};
+        for (const e of group) {
+            const s = dStatut(e.feats[0].properties);
+            tally[s] = (tally[s] || 0) + 1;
+        }
+        const top = Object.entries(tally).sort((a, b) => b[1] - a[1])[0][0];
+        return COLOR[top] || COLOR.inconnu;
+    })();
+
+    const rows = group.map(e => e.feats[0].properties).map(p => {
+        const s = dStatut(p);
+        const color = COLOR[s] || COLOR.inconnu;
+        const sLabel = STATUT_LABEL[s] || s;
+        const year = p.annee_debut ? ` · ${p.annee_debut}${p.annee_fin ? '–' + p.annee_fin : ''}` : '';
+        const v = VERDICT[p.verif_etat];
+        const verdict = v ? `<span class="multi-badge multi-verdict" style="border-color:${v.color};color:${v.color}">${v.label}</span>` : '';
+        const figee = (p.donnees_2022 || p.source === 'wayback')
+            ? `<div class="multi-srcnote">Statut figé à l'instantané 2022 → à vérifier (site hors ligne).</div>`
+            : '';
+        return `<div class="multi-row">` +
+            `<span class="multi-chip" style="background:${color}"></span>` +
+            `<div class="multi-main"><div class="multi-name">${p.nom}</div>` +
+            `<div class="multi-tags"><span class="multi-badge" style="border-color:${color};color:${color}">${sLabel}${year}</span>` +
+            srcChip(p) + verdict + `</div>${figee}</div>` +
+            delBtn(p) +
+            `</div>`;
+    }).join('');
+
+    const header =
+        `<div class="multi-head"><span class="multi-count">${count}</span> ABC sur ce territoire` +
+        (nbCommunes ? ` · ${nbCommunes} commune${nbCommunes > 1 ? 's' : ''}` : '') +
+        (props.isAdmin ? '<div class="multi-adminnote">Admin : 🗑 supprime un projet jugé erroné.</div>' : '') +
+        `</div>`;
+
+    const marker = L.circleMarker([lat, lon], {
+        radius: 7 + Math.min(count, 4) * 0.4,
+        color: '#fff', weight: 2,
+        fillColor: majorityColor, fillOpacity: 0.95,
+    });
+    const firstCommune = group[0].feats[0].properties.commune;
+    marker.bindTooltip(`<b>${count} ABC</b>${nbCommunes && count < nbCommunes ? ' · ' + nbCommunes + ' communes' : (firstCommune ? ' à ' + firstCommune : '')}`, { direction: 'top', offset: [0, -14], className: 'map-tooltip' });
+    marker.bindPopup(
+        header + rows +
+        `<div class="multi-note">Chaque entrée conserve son propre statut et sa source. Corriger via <a href="/verify" target="_blank">la page de vérification</a>.</div>`
+    );
+    marker.on('mouseover', function () { this.setStyle({ weight: 4 }); });
+    marker.on('mouseout', function () { this.setStyle({ weight: 3 }); });
+    return marker;
+}
 
 function apply() {
     if (!map) return [];
@@ -226,48 +373,95 @@ function apply() {
         shownProjIds.add(pid);
     }
 
+    const entries = [];
+
     for (const [pid, feats] of projMap) {
         const anomalieFeats = feats.filter(f => f.properties.anomalie);
         const valides = feats.filter(f => !f.properties.anomalie);
 
         for (const f of anomalieFeats) {
-            renderFeature(f);
-            shown.push([f.geometry.coordinates[1], f.geometry.coordinates[0]]);
+            entries.push({ lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], feats: [f], pid, anomalie: true });
         }
-
+        if (valides.length === 0) continue;
         if (valides.length > 1) {
             const clat = valides.reduce((sum, f) => sum + f.geometry.coordinates[1], 0) / valides.length;
             const clon = valides.reduce((sum, f) => sum + f.geometry.coordinates[0], 0) / valides.length;
-            const st = dStatut(valides[0].properties);
-
-            const centroid = L.circleMarker([clat, clon], {
-                radius: 10, color: '#fff', weight: 2.5,
-                fillColor: COLOR[st] || COLOR.inconnu, fillOpacity: 0.9,
-            }).addTo(layer);
-            centroid.bindTooltip(
-                `<b>${valides[0].properties.nom}</b> — ${valides.length} communes`,
-                { direction: 'top', offset: [0, -12], className: 'map-tooltip' }
-            );
-            const nomListe = valides.map(f => f.properties.commune);
-            const popupCommunes = nomListe.length > 15
-                ? nomListe.slice(0, 15).join(', ') + `, … et ${nomListe.length - 15} autres`
-                : nomListe.join(', ');
-            centroid.bindPopup(
-                `<b>${valides[0].properties.nom}</b><br>` +
-                `${valides.length} communes : ${popupCommunes}<br>` +
-                `<small>Cliquez pour voir les communes</small>`
-            );
-            centroid.on('click', () => toggleGroup(pid));
-            centroid.on('mouseover', function () { this.setStyle({ radius: 13, weight: 3.5 }); });
-            centroid.on('mouseout', function () { this.setStyle({ radius: 10, weight: 2.5 }); });
-
-            centroidMarkers.set(pid, centroid);
-            projectData.set(pid, { valides, clat, clon });
-            shown.push([clat, clon]);
+            entries.push({ lat: clat, lon: clon, feats: valides, pid });
         } else {
-            for (const f of feats) {
-                renderFeature(f);
-                shown.push([f.geometry.coordinates[1], f.geometry.coordinates[0]]);
+            const f2 = valides[0];
+            entries.push({ lat: f2.geometry.coordinates[1], lon: f2.geometry.coordinates[0], feats: [f2], pid });
+        }
+    }
+
+    const byPoint = new Map();
+    for (const e of entries) {
+        const key = e.lat.toFixed(5) + '_' + e.lon.toFixed(5);
+        if (!byPoint.has(key)) byPoint.set(key, []);
+        byPoint.get(key).push(e);
+    }
+
+    for (const [pointKey, group] of byPoint) {
+        const distinctPids = new Set(group.map(e => e.pid));
+        if (group.length > 1 && distinctPids.size > 1) {
+            const count = group.length;
+            const marker = buildMultiMarker(group).addTo(layer);
+            shown.push([group[0].lat, group[0].lon]);
+
+            const byCoord = new Map();
+            for (const e of group) {
+                for (const f of e.feats) {
+                    const c = f.geometry.coordinates;
+                    const k = c[0].toFixed(5) + '_' + c[1].toFixed(5);
+                    if (!byCoord.has(k)) byCoord.set(k, []);
+                    byCoord.get(k).push(f);
+                }
+            }
+            if (byCoord.size > 1) {
+                const baseRadius = 7 + Math.min(count, 4) * 0.4;
+                aggregateData.set(pointKey, {
+                    byCoord,
+                    clat: group[0].lat,
+                    clon: group[0].lon,
+                    marker,
+                    baseRadius,
+                });
+                marker.on('click', () => toggleAggregate(pointKey));
+            }
+            continue;
+        }
+        for (const e of group) {
+            if (e.feats.length > 1) {
+                const st = dStatut(e.feats[0].properties);
+
+                const centroid = L.circleMarker([e.lat, e.lon], {
+                    radius: 10, color: '#fff', weight: 2.5,
+                    fillColor: COLOR[st] || COLOR.inconnu, fillOpacity: 0.9,
+                }).addTo(layer);
+                centroid.bindTooltip(
+                    `<b>${e.feats[0].properties.nom}</b> — ${e.feats.length} communes`,
+                    { direction: 'top', offset: [0, -12], className: 'map-tooltip' }
+                );
+                const nomListe = e.feats.map(f => f.properties.commune);
+                const popupCommunes = nomListe.length > 15
+                    ? nomListe.slice(0, 15).join(', ') + `, … et ${nomListe.length - 15} autres`
+                    : nomListe.join(', ');
+                centroid.bindPopup(
+                    `<b>${e.feats[0].properties.nom}</b><br>` +
+                    `${e.feats.length} communes : ${popupCommunes}<br>` +
+                    `<small>Cliquez pour voir les communes</small>`
+                );
+                centroid.on('click', () => toggleGroup(e.pid));
+                centroid.on('mouseover', function () { this.setStyle({ radius: 13, weight: 3.5 }); });
+                centroid.on('mouseout', function () { this.setStyle({ radius: 10, weight: 2.5 }); });
+
+                centroidMarkers.set(e.pid, centroid);
+                projectData.set(e.pid, { valides: e.feats, clat: e.lat, clon: e.lon });
+                shown.push([e.lat, e.lon]);
+            } else {
+                for (const f of e.feats) {
+                    renderFeature(f);
+                    shown.push([f.geometry.coordinates[1], f.geometry.coordinates[0]]);
+                }
             }
         }
     }
@@ -390,6 +584,27 @@ function showSuggFields(root, t) {
 }
 
 async function onDocClick(e) {
+    const del = e.target.closest('[data-del-pid]');
+    if (del) {
+        const pid = del.dataset.delPid;
+        const nom = del.dataset.delNom || pid;
+        if (!window.confirm(`Supprimer le projet « ${nom} » (${pid}) ?\nSa fiche (communes, vérifications, contributions) sera supprimée ET exclue du prochain collect.`)) return;
+        const motif = window.prompt('Motif (optionnel, pour le journal d\'audit) :');
+        const btn = del;
+        btn.disabled = true;
+        try {
+            await axios.delete(`/api/admin/projets/${encodeURIComponent(pid)}`, { data: { motif: motif || null } });
+            await loadData();
+            map.closePopup();
+        } catch (err) {
+            const msg = err.response && err.response.data && err.response.data.error
+                ? err.response.data.error
+                : (err.response && err.response.status === 401 ? 'Connexion admin requise.' : err.message);
+            window.alert('Erreur lors de la suppression : ' + msg);
+            btn.disabled = false;
+        }
+        return;
+    }
     const suggest = e.target.closest('[data-suggest]');
     if (suggest) {
         const root = suggest.closest('[data-sugg]');
@@ -597,6 +812,7 @@ onBeforeUnmount(() => {
                                 <b>Comptage des points</b>
                                 <p>Les compteurs totaux (bas) et par statut (légende) ne tiennent compte que des projets visibles dans la fenêtre courante de la carte, filtres appliqués.</p>
                                 <p>Projets regroupés en un point rempli sont comptés pour leurs communes.</p>
+                                <p>Quand plusieurs ABC cohabitent à la même commune, un marqueur unique liste chaque projet avec son propre statut et son année.</p>
                             </span>
                         </span>
                     </div>
@@ -808,4 +1024,30 @@ body { overflow: hidden; }
 .pop-contrib .contrib-toggle:hover { background: #f0fdf4; }
 .pop-contrib .contrib-form { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; max-width: 260px; }
 .pop-contrib .saved { font-size: 12px; font-weight: 600; }
+.multi-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #111827; flex-wrap: wrap; }
+.multi-count {
+    flex: none; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
+    background: #14532d; color: #fff; font-size: 12px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.multi-adminnote { width: 100%; flex-basis: 100%; font-size: 11px; font-weight: 500; color: #7f1d1d; margin-top: 2px; }
+.multi-row { display: flex; align-items: flex-start; gap: 6px; padding: 4px 0; line-height: 1.35; border-top: 1px solid #f1f5f9; }
+.multi-row:first-of-type { border-top: none; }
+.multi-chip { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
+.multi-main { flex: 1; min-width: 0; }
+.multi-name { font-weight: 600; font-size: 12.5px; color: #111827; }
+.multi-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.multi-badge {
+    display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px;
+    border: 1px solid #cbd5e1; color: #334155; background: #f8fafc; white-space: nowrap;
+}
+.multi-src.src-stale { background: #fff7ed; border-color: #fdba74; color: #9a3412; }
+.multi-srcnote { margin-top: 3px; font-size: 11px; color: #b45309; }
+.btn-del {
+    flex: none; border: 1px solid #fecaca; background: #fff; color: #b91c1c;
+    border-radius: 6px; width: 24px; height: 24px; font-size: 13px; line-height: 1;
+    cursor: pointer; padding: 0;
+}
+.btn-del:hover { background: #fef2f2; border-color: #f87171; }
+.multi-note { margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b; }
 </style>

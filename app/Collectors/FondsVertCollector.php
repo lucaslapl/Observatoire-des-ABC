@@ -22,18 +22,19 @@ class FondsVertCollector
         private CommuneCorrectionsService $corrections,
     ) {}
 
-    public function collect(): int
+    public function collect(): array
     {
         $specs = [
             ['url' => config('abc.sources.fondsvert2024'), 'year' => 2024, 'rich' => false],
             ['url' => config('abc.sources.fondsvert2025'), 'year' => 2025, 'rich' => true],
         ];
 
-        $total = 0;
+        $byYear = [];
         foreach ($specs as $s) {
             $file = $this->download->downloadToCache($s['url'], "Fonds vert biodiversité {$s['year']}");
             $rows = $this->csv->read($file, ',');
             $hits = array_filter($rows, fn ($r) => $this->isAbc($r));
+            $byYear[$s['year']] = count($hits);
 
             foreach ($hits as $r) {
                 $nom = trim($r['nom_du_projet'] ?? '');
@@ -66,12 +67,10 @@ class FondsVertCollector
                     'url_page' => null,
                     'communes' => $communes,
                 ]);
-                $total++;
             }
-            echo "fonds vert biodiversité {$s['year']} : ".count($hits)." projets ABC\n";
         }
 
-        return $total;
+        return ['total' => array_sum($byYear), 'by_year' => $byYear];
     }
 
     private function isAbc(array $r): bool
