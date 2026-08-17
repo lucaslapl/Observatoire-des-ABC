@@ -1,0 +1,1 @@
+# Le dossier `data/` (base, caches, exports) est reconstruit par `npm run collect`.

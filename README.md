@@ -1,258 +1,166 @@
-# Observatoire des ABC — Atlas de la Biodiversité Communale
+# Observatoire des ABC
 
-Recensement des **Atlas de la Biodiversité Communale (ABC)** de France métropolitaine et d'outre-mer, à partir de sources officielles, présenté sur une carte interactive (Leaflet) avec suivi des vérifications manuelles.
+Observatoire national des Atlas de la Biodiversité Communale (ABC). Suivi des
+projets financés (data.gouv / Fonds vert), archives 2022 (Wayback), vérifications
+manuelles, contributions du public et export cartographique.
 
-> Le site officiel `abc.naturefrance.fr` étant hors ligne, les données proviennent de registres et archives fiables (voir [Sources](#sources-de-données)).
+Application **Laravel 12 + Vue 3 (Inertia) + PostgreSQL/PostGIS**, migration de
+l'ancien serveur Node/TS/SQLite (fichiers `server/` et `src/` conservés comme
+filet de secours et source de vérité).
 
----
+## Prérequis
 
-## Commandes
+- PHP **8.3** (extensions `pdo_pgsql`, `pgsql`, `intl`, `mbstring`)
+- Composer 2
+- Node 20+ / npm
+- PostgreSQL 16 **+ PostGIS** (dev : Docker ; prod : extension de l'hébergeur)
 
-| Commande | Rôle |
-|---|---|
-| `npm run collect` | Télécharge les sources, reconstruit la base, géocode, calcule statuts + anomalies |
-| `npm run status` | Recalcule les statuts/flags et les anomalies sur la base existante |
-| `npm run export:csv` | Exporte `data/exports/abc-projets.csv` (1 ligne/projet, colonne `note`) |
-| `npm run export:geojson` | Exporte `data/exports/abc.geojson` (1 point/commune) |
-| `npm run verify` | Génère `data/exports/verification-worklist.csv` (projets à vérifier + requêtes) |
-| `npm run backup` | Sauvegarde la base (`data/backups/abc-<horodatage>.db`, rotation sur 14) |
-| `npm run serve` | Lance la mini-app web sur `http://localhost:4000` (variable `PORT` pour changer) |
-| `npm run build` | Compile TypeScript vers `dist/` (production) |
-| `npm run start` | Démarre le build (`node dist/server/index.js`) |
-| `npm run start:server` / `stop:server` | **Aide dev Windows uniquement** (démarre/arrête via netstat.exe + taskkill) |
-| `npm run typecheck` | `npx tsc --noEmit` |
-
-## Prérequis & installation
-
-- **Node.js ≥ 24** (le projet utilise le module natif expérimental `node:sqlite`, stable à partir de Node 24).
-- `npm ci` puis `npm run collect` pour construire la base (le géocodage initial interroge `geo.api.gouv.fr` sur ~5 000 communes, quelques minutes).
-- `npm run serve` → http://localhost:4000.
-- Pour le panneau admin, définir `ADMIN_USERNAME` et `ADMIN_PASSWORD` (voir [Variables d'environnement](#variables-denvironnement)).
-
-Fonctionnement sous Windows (développement) : Node est appelé via `node.exe` (symlinks dans `~/bin`), la base est `data/abc.db` (SQLite natif `node:sqlite`).
-
-## Déploiement
-
-Serveur Linux (ou tout hébergeur Node) :
+## Installation (développement local)
 
 ```bash
-git clone <votre-depot> observatoire-des-abc && cd observatoire-des-abc
-npm ci
-npm run collect      # premier remplissage (réseau requis)
-PORT=8080 npm run serve   # ou : npm run build && npm start
+# 1. Base PostGIS via Docker (conteneur abc-postgis, port hôte 5433)
+docker compose up -d
+
+# 2. Dépendances
+composer install
+npm install
+
+# 3. Environnement
+cp .env.example .env
+php artisan key:generate
+# ajuster .env si besoin (DB_*, ADMIN_*)
+
+# 4. Schéma + compte admin (seedé depuis ADMIN_*)
+php artisan migrate
+php artisan db:seed
+
+# 5. Import des données historiques depuis l'ancienne base SQLite (une seule fois)
+php artisan abc:import-legacy
+
+# 6. Frontend
+npm run build        # production
+npm run dev          # développement (Vite + HMR)
+
+# 7. Serveur local
+php artisan serve
 ```
 
-- La variable d'environnement `PORT` est lue par le serveur (défaut : 4000).
-- Mettre en place un **reverse proxy** (nginx ou Caddy) vers le port Node pour exposer
-  le domaine et terminer le **HTTPS**. Les réponses du serveur sont déjà servies avec
-  `Cache-Control: no-store` (aucun risque de données périmées).
-- Derrière un proxy, activer `TRUST_PROXY=1` (IP correcte des contributeurs) et
-  `COOKIE_SECURE=1` (cookie de session en `Secure`).
-- `data/` est régénéré via `npm run collect` (prévoir un **CRON** mensuel pour rafraîchir
-  les sources. La base contient les vérifications et les contributions — elle n'est **pas**
-  dans git).
-- Pour un backup hors-serveur, voir `scripts/cron-backup.sh` (base locale, rotation sur 14) :
-  en Plesk, il doit tourner avec un utilisateur ayant accès au binaire Node (root, sinon
-  indiquer `NODE_BIN=/opt/plesk/node/24/bin/node` dans la tâche). Le CRON Plesk a un PATH
-  minimal : le script rétablit un PATH standard et utilise des builtins bash.
-- L'app sauvegarde aussi **automatiquement** son propre `data/abc.db` chaque jour sans CRON :
-  le processus Node lance une sauvegarde quotidienne (heure UTC réglable via `BACKUP_HOUR_UTC`,
-  désactivable avec `BACKUP_DAILY=0`). Un backup « init » est fait ~5 s après le démarrage,
-  et un endpoint admin `POST /api/admin/backup` permet un backup à la demande.
-- Les scripts `start:server` / `stop:server` sont spécifiques à Windows (dev) : sous Linux,
-  utilisez `npm run serve` et votre propre gestionnaire de processus (systemd, PM2…).
+Parité vérifiée après import : 1338 projets, 5437 communes, 1958 snapshots,
+5 vérifications, 1 contribution, 2 entrées d'audit ; GeoJSON identique à
+l'ancien endpoint.
 
-### Déploiement sur PulseHeberg (Plesk)
+## Commandes artisan
 
-Chez Plesk, les applications Node tournent via **Passenger** : le domaine est automatiquement
-proxyfié vers l'app (pas de port fixe à déclarer — l'app doit écouter sur `process.env.PORT`,
-ce que fait déjà ce projet). Le **fichier de démarrage doit être un fichier JS**, pas un script
-shell (`scripts/start-prod.sh` n'est utile qu'en VPS/manuel).
+| Commande | Rôle |
+| --- | --- |
+| `abc:import-legacy` | Importe `data/abc.db` (SQLite) vers PostgreSQL |
+| `abc:collect` | Collecte des 4 sources puis statuts, géocodage, anomalies |
+| `abc:status` | Recalcule les statuts et les anomalies |
+| `abc:geocode` | Géocode les communes manquantes (geo.api.gouv.fr) |
+| `abc:export --fmt=csv\|geojson` | Export CSV ou GeoJSON (`storage/app/abc/exports`) |
+| `abc:verify` | Worklist de vérification (CSV) |
+| `abc:backup` | Sauvegarde pg_dump avec rotation (14) |
 
-1. **Créer le domaine** (ou sous-domaine, ex. `abc.votre-domaine.fr`) dans Plesk.
-2. **Cloner le dépôt** : Plesk → « Git » (ou FTP/SSH) → cloner
-   `https://github.com/lucas_lapl/Observatoire-des-ABC` dans le répertoire du domaine.
-3. **Configurer l'app NodeJS** : Outils Développement → **NodeJS** :
-   - Version de Node.js : **24.x** (≥ 24, exigée par `node:sqlite`) ;
-   - Root d'application : le répertoire du dépôt (là où se trouve `package.json`) ;
-   - Fichier de démarrage : **`dist/server/index.js`** ;
-   - Cliquer **« Installer NPM »** : le `postinstall` compile automatiquement `dist/`
-     (si ça échoue, lancer en SSH `npm ci && npm run build`) ;
-   - Variables d'environnement : `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `TRUST_PROXY=1`,
-     `COOKIE_SECURE=1` (ne **pas** définir `PORT` : Passenger fournit le sien) ;
-   - Cliquer **« Activer Node.js »** puis **« Redémarrer l'app »**.
-4. **Vérifier l'URL de l'application** générée par Plesk (elle doit afficher la carte).
-5. **SSL** : Plesk → certificat Let's Encrypt (gratuit, renouvellement automatique). Le
-   reverse proxy nginx de Plesk expose le domaine en HTTPS vers l'app.
-6. **CRON** : pour la sauvegarde, plus besoin de CRON — l'app sauvegarde automatiquement
-   `data/abc.db` chaque jour (`data/backups/abc-<horodatage>.db`, rotation sur 14 ; voir
-   `BACKUP_DAILY` / `BACKUP_HOUR_UTC`, contrôle du log au redémarrage de l'app).
-   Optionnellement, un CRON mensuel pour `npm run collect` (à exécuter, selon l'hébergement,
-   avec un utilisateur ayant accès à Node). Le `scripts/cron-backup.sh` reste disponible
-   pour un backup hors-serveur à la demande.
+## Planification (CRON)
 
-> ⚠️ **Symptôme « page par défaut Plesk »** : le plus souvent l'app NodeJS n'est pas
-> activée, ou le fichier de démarrage/root d'application est incorrect (ex. un `.sh`,
-> ou `dist/` absent car `postinstall` n'a pas tourné). Refaire l'étape 3 puis 4.
+Sur le serveur, un seul CRON suffit (Laravel scheduler) :
 
-> ℹ️ La base `data/abc.db` vit sur le disque SSD persistant de l'hébergement : les
-> vérifications et contributions **survivent aux redéploiements**. Pour repartir de zéro
-> (ou migrer de serveur), il suffit de copier `data/abc.db`.
+```
+* * * * * cd /chemin/vers/abc_scrapper && /chemin/php/php artisan schedule:run >> /dev/null 2>&1
+```
 
----
+Tâches planifiées (`routes/console.php`) :
 
-## Sources de données
+- `abc:backup` tous les jours à 04:00
+- `abc:collect` le 1er de chaque mois à 03:00
 
-| Source | Contenu | Fraîcheur |
-|---|---|---|
-| **Registre OFB** (data.gouv.fr) | ~1 112 projets / 5 056 communes (référence « vivante ») | mise à jour ~annuelle |
-| **Archives Wayback** (2022-12-06) | 846 projets, historique ; sert de snapshots + apporte les projets disparus du registre | figé à 2022 |
-| **Fonds vert P113 biodiversité 2024** | 75 projets ABC | publié 2025-07-31 |
-| **Fonds vert P113 biodiversité 2025** | 65 projets ABC (AMI OFB, classés « va débuter ») | publié 2026-06-22 |
+## Déploiement (PulseHeberg / Plesk)
 
-Clé de jointure des projets : slug de `nom | structure_porteuse | annee_debut`.
+1. **Base de données** : créer une base PostgreSQL avec l'extension PostGIS
+   (`CREATE EXTENSION IF NOT EXISTS postgis;`) dans l'outil Bases de données
+   de Plesk.
+2. **Fichiers** : cloner/push le dépôt dans `httpdocs` (ou sous-répertoire), à
+   l'exclusion de `.env`, `storage/*/private`, `data/abc.db`.
+3. **PHP** : sélectionner PHP 8.3 dans Plesk (PHP-FPM recommandé), activer
+   `pdo_pgsql`, `pgsql`, `intl`, `mbstring`.
+4. **`.env`** de production :
+   ```dotenv
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://votre-domaine.fr
+   DB_CONNECTION=pgsql
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_DATABASE=...
+   DB_USERNAME=...
+   DB_PASSWORD=...
+   SESSION_DRIVER=database
+   SESSION_SECURE_COOKIE=true
+   ADMIN_USERNAME=admin
+   ADMIN_EMAIL=admin@exemple.fr
+   ADMIN_PASSWORD=mot-de-passe-fort
+   ```
+5. **Dépendances & assets** :
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   npm ci && npm run build
+   php artisan key:generate
+   php artisan migrate --force
+   php artisan db:seed --force
+   php artisan config:cache && php artisan route:cache && php artisan view:cache
+   ```
+6. **Permissions** : `storage/` et `bootstrap/cache/` accessibles en écriture
+   par l'utilisateur web.
+7. **CRON** (Plesk → Scheduled Tasks) :
+   ```
+   /opt/plesk/php/8.3/bin/php /var/www/vhosts/.../httpdocs/artisan schedule:run
+   ```
+   fréquence : toutes les minutes.
+8. **Premier import des données** (une seule fois, après migration) :
+   `php artisan abc:import-legacy`.
 
----
+## Rôles & permissions
 
-## Statuts & règles de cohérence
+Rôles Spatie (`db:seed`) : `admin`, `moderateur`, `contributeur`.
 
-Statuts agrégés : `en_cours`, `a_venir`, `termine`, `inconnu`.
+- `admin` : panneau complet (modération, collecte, sauvegarde, actualités).
+- `moderateur` : modération des contributions et actualités.
+- `contributeur` : compte connecté (proposition de données).
 
-Le statut **officiel** n'est jamais détruit : les corrections sont des **flags/notes** à part, sauf cas explicites (estimation) qui restent tracés.
+Le compte administrateur est créé depuis `.env` (`ADMIN_USERNAME`,
+`ADMIN_EMAIL`, `ADMIN_PASSWORD`) par `db:seed`. Connexion au panneau via
+`/login` (email + mot de passe, Breeze standard).
 
-| Règle | Déclencheur | Effet |
-|---|---|---|
-| Historique « Fini » | un snapshot Wayback mentionne `Fini` | statut → `termine` |
-| **Potentiellement terminé** | `en_cours` + `annee_debut ≤ année − 3` (durée ≈ 3 ans) | flag `potentiellement_termine` |
-| **Potentiellement en cours** | `a_venir` + `annee_debut ≤ année − 2` | flag `potentiellement_en_cours` |
-| **Terminé (estimation)** | statut `inconnu` + `annee_debut > 5 ans` | statut → `termine` + flag `estime_termine` |
-| Fonds vert 2025 | source `fondsvert-p113-2025` | statut → `a_venir` |
-| **Archives 2022** | projet connu uniquement via Wayback | flag « statut issu des archives 2022, à vérifier » |
+## Endpoints API
 
-Les seuils utilisent `annee_debut ≥ 2000` (garde anti-valeurs aberrantes, ex. `annee_debut = 1`).
+| Endpoint | Accès | Description |
+| --- | --- | --- |
+| `GET /api/abc.geojson` | public | GeoJSON de la carte (FeatureCollection) |
+| `GET /api/meta` | public | Statistiques globales + dates des sources |
+| `GET /api/stats` | public | Comptage par statut |
+| `GET /api/verifications` | public | Worklist de vérification |
+| `POST /api/verifications` | admin | Enregistre une vérification |
+| `GET /api/contributions` | public | Liste des contributions |
+| `POST /api/contributions` | public (10/h/IP) | Propose une contribution |
+| `GET /api/admin/contributions` | admin | Liste des contributions |
+| `POST /api/admin/contributions/{id}/valider` | admin | Valide une contribution |
+| `POST /api/admin/contributions/{id}/refuser` | admin | Refuse une contribution |
+| `POST /api/admin/contributions/{id}/retirer` | admin | Retire une contribution validée |
+| `POST /api/admin/backup` | admin | Sauvegarde immédiate |
+| `POST /api/admin/collect` | admin | Relance la collecte |
+| `GET /api/diag` | public | Diagnostic (aucun secret) |
 
-⚠️ **Bug corrigé** : l'instantané Wayback (2022) écrasait les statuts plus récents du registre (2026). Désormais il n'ajoute que les snapshots et les projets absents du registre (86 restants), sans jamais surcharger la donnée fraîche.
+## Tests & style
 
----
+```bash
+php artisan test                 # 40 tests (slug, statuts, anomalies, CSV, contributions, GeoJSON)
+./vendor/bin/pint                # formatage
+npm run build                    # compilation frontend
+```
 
-## Anomalies de communes (rattachements incohérents)
-
-Détection automatique lors du géocodage :
-
-- **Centroïde médian** du projet (robuste aux outliers — la moyenne était tirée par les mauvaises coordonnées et flaguait tout le groupe, ex. Martinique).
-- Une commune est **incohérente** si elle est à **> 100 km** du centroïde de son groupe.
-- Les communes incohérentes sont **écartées des connexions visuelles**, marquées d'un liseré rouge, avec la distance dans la popup, et ajoutées à la page `/verify` (motif « Commune incohérente »).
-- Les grands territoires légitimes (PNR Lorraine ~116 km, Landes ~95 km…) restent < 100 km du centre et ne sont pas touchés.
-
----
-
-## Vérification manuelle — page `/verify`
-
-Accessible via le bouton « 🛠 Vérifier » de la carte. Liste les ~390 projets à vérifier (potentiellement terminé / potentiellement en cours / archives 2022 / commune incohérente) avec une **requête pré-construite** (DuckDuckGo) ciblée.
-
-**Contribution ouverte** : tout visiteur peut, pour chaque projet, signaler une correction
-(statut, note, lien ou autre information). La suggestion reçoit le statut `en_attente` et
-n'a **aucun effet sur la carte** tant qu'un admin ne l'a pas validée.
-
-Un verdict concluant **remplace les alertes spéculatives** sur la carte (couleur du point + badge « ✓ Vérifié », légende « N vérifiés manuellement »).
-
----
-
-## Administration — page `/admin`
-
-Panneau réservé à l'admin (authentifié par mot de passe) :
-
-- **À modérer** : suggestions en attente avec **adresse IP**, user-agent et horodatage ;
-  actions **✓ valider** (applique le verdict à la carte), **✗ refuser** (avec note facultative) ;
-- **Appliquées** : suggestions validées, avec action **↩ retirer** (rollback : restaure l'état
-  précédent de la vérification) ;
-- **Refusées / retirées** : historique.
-- Chaque action admin est tracée dans la table `audit_log` (état avant/après).
-
-Les **verdicts directs** de l'admin (les mêmes champs qu'avant : confirmé terminé/en cours,
-toujours à venir, introuvable, incertain) se font sur la page `/verify` une fois connecté.
-
----
-
-## Variables d'environnement
-
-| Variable | Rôle | Défaut |
-|---|---|---|
-| `PORT` | Port HTTP du serveur | `4000` |
-| `ADMIN_USERNAME` | Identifiant admin | `admin` |
-| `ADMIN_PASSWORD` | **Mot de passe admin** (si absent, le panneau est inaccessible) | *(aucun)* |
-| `TRUST_PROXY` | `1` si le serveur est derrière un reverse proxy (lecture de `X-Forwarded-For` pour l'IP) | désactivé |
-| `COOKIE_SECURE` | `1` pour marquer le cookie de session `Secure` (HTTPS) | désactivé |
-| `ABC_DATA_DIR` | Dossier des données (utile pour les tests) | `data/` |
-
-En développement, copier `.env.example` en `.env` (non commité) ; en production, les
-définir dans Plesk (section NodeJS → Variables d'environnement).
-
-**RGPD** : l'adresse IP des contributeurs est conservée uniquement pour la modération des
-corrections. Aucun autre traitement n'en est fait.
-
----
-
-## Connexions inter-communes
-
-Case « Connexions » dans les filtres : les communes d'un même ABC sont reliées à un **point central (centroïde)** par des **traits pleins** (topologie en étoile, couleur = statut du projet). Les communes incohérentes ne sont pas reliées. ~252 projets multi-communes concernés.
-
----
-
-## Incohérences existantes (à vérifier / corriger)
-
-| Commune | Projet | Problème | Suivi |
-|---|---|---|---|
-| **Saint-Pierre** (code `97416`) | ABC du Nord de la Martinique | Le registre source donne le code INSEE de Saint-Pierre **de La Réunion** au lieu de Martinique (`97225`) → géocodée à ~13 319 km | à corriger/vérifier |
-| **Coutras** (Gironde) | ABC de la Vallée de la Dordogne (Epidor) | Rattachement non confirmé (aucune source trouvée) ; 136 km du groupe | à vérifier |
-
-Ces communes restent écartées des connexions et visibles dans `/verify` (motif « Commune incohérente »).
-
----
-
-## Incohérences corrigées
-
-| Code erroné | Commune (source) | Correction | Projet | Corrigé le |
-|---|---|---|---|---|
-| `17258` | Neuillac (Charente-Maritime) | **Neulliac** (`56146`, Morbihan) — faute d'orthographe | ABC de Pontivy Communauté | 2026-08-11 |
-| `18041` | La Celette (Cher) | **Cellettes** (`41031`, Loir-et-Cher) — faute d'orthographe | ABC Agglopolys (Blois) | 2026-08-11 |
-
-> ⚠️ Codes vérifiés via `geo.api.gouv.fr` : `56124` est en réalité **Malestroit** et `41025` **Bracieux** (première version erronée, corrigée le jour même).
-
-Les corrections sont dans **`src/corrections.ts`** (clé : code INSEE erroné), appliquées à l'ingestion des 3 sources (datagouv, wayback, fondsvert) : elles rétablissent code, nom, département, région et coordonnées, et **survivent à `npm run collect`**. Pour corriger une nouvelle erreur, ajouter une entrée dans ce fichier.
-
----
-
-## Journal des décisions & bugs corrigés
-
-- **Wayback écrasait les statuts récents** (2022 > 2026) → collecteur rendu non destructif.
-- **CSV source avec guillemets cassés** (`"PETR '"Pays de la Jeune Loire'"`) → `relax_quotes` + `relax_column_count`.
-- **Lat/lon inversés** dans Leaflet (GeoJSON `[lon, lat]`, Leaflet attend `[lat, lon]`).
-- **FK bloquait `collect`** : `node:sqlite` active les clés étrangères par défaut → `PRAGMA foreign_keys = OFF` pendant la purge, les vérifications persistent.
-- **Centroïde moyen trompé par les outliers** (Martinique) → centroïde médian.
-- **Mise à jour incrémentale des flags** : ne se déclenchait que 0→1, jamais 1→0 → comparaison avec la valeur stockée.
-- **Cache navigateur** : en-têtes `Cache-Control: no-store` sur toutes les réponses serveur.
-- Géocodage **`geo.api.gouv.fr/communes/<code>`** (12 workers concurrents, cache `data/cache/geo.json`).
-
----
-
-## Limites connues
-
-- Les sources sont **déclaratives** et mises à jour avec retard : d'où les règles de cohérence temporelle (durée d'un ABC ≈ 3 ans).
-- Certains ABC ont des communes homonymes : la correction se fait au cas par cas via `src/corrections.ts`.
-- La fraîcheur des statuts dépend du dernier `npm run collect`.
-- La page `/verify` stocke les verdicts dans la base locale : ils ne sont pas partagés entre plusieurs déploiements.
-
-## Attributions & licences des données
-
-- **Données ABC** : registre OFB et lauréats Fonds vert publiés sur **data.gouv.fr**
-  sous [licence Ouverte / Open Licence 2.0 (Etalab)](https://www.etalab.gouv.fr/licence-ouverte-open-licence/).
-- **Géocodage** : [geo.api.gouv.fr](https://geo.api.gouv.fr/) (données ouvertes).
-- **Carte** : [Leaflet](https://leafletjs.com/) (BSD-2-Clause), tuiles © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).
-- Code du projet : Tous droits réservés — voir [LICENSE](LICENSE).
+CI (`.github/workflows/tests.yml`) : PHP 8.3 + Composer + build Vite + PHPUnit
++ Pint.
 
 ## Licence
 
-Projet propriétaire : **tous droits réservés**. Aucune réutilisation ou copie du
-code, des données ou de la documentation n'est autorisée sans l'autorisation
-écrite préalable de l'auteur. Voir [LICENSE](LICENSE).
+GPL-3.0 — voir `LICENSE` (projet d'origine « Observatoire des ABC »).

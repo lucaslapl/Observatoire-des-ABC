@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [laravel-migration, main]
+  pull_request:
+
+jobs:
+  php:
+    name: PHP 8.3
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, intl, dom, xml
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Cache Vite build
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+
+      - name: Install and build frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Copy environment
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Run PHPUnit
+        run: php artisan test
+
+      - name: Run Pint (style)
+        run: ./vendor/bin/pint --test

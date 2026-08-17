@@ -1,0 +1,21 @@
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    container_name: abc-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: abc
+      POSTGRES_USER: abc
+      POSTGRES_PASSWORD: abc
+    ports:
+      - "5433:5432"
+    volumes:
+      - abc_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abc -d abc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  abc_pgdata:
