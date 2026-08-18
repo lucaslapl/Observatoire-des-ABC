@@ -31,6 +31,16 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+            'site' => [
+                'name' => config('seo.site_name'),
+                'title' => config('seo.default_title'),
+                'description' => config('seo.default_description'),
+                'url' => url('/'),
+                'ogImage' => url(config('seo.og_image')),
+                'sources' => config('seo.sources'),
+                'licenseNote' => config('seo.license_note'),
+                'tracking' => config('seo.tracking'),
+            ],
             'auth' => [
                 'user' => $request->user()?->only('id', 'name', 'email')
                     ? [...$request->user()->only('id', 'name', 'email'), 'roles' => $request->user()->getRoleNames()]

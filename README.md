@@ -143,23 +143,42 @@ même : **PHP 8.3+, PostgreSQL, Vite**.
    ADMIN_EMAIL=admin@exemple.fr
    ADMIN_PASSWORD=mot-de-passe-fort
    COLLECT_AUTOMATIC=false
+   # Rendu serveur (SEO) — requis en production
+   INERTIA_SSR_ENABLED=true
    ```
 5. **Dépendances & assets** :
    ```bash
    composer install --no-dev --optimize-autoloader
-   npm ci && npm run build
+   npm ci && npm run build      # clients + bundle SSR (bootstrap/ssr)
    php artisan key:generate
    php artisan migrate --force
    php artisan db:seed --force
    ```
+   > **`npm run build` construit deux bundles** : le client (`public/build`)
+   > **et le SSR** (`bootstrap/ssr`), utilisé pour servir chaque page en HTML
+   > rendu serveur (indispensable au référencement). Le schéma ajouté par la
+   > migration `add_slug_to_projets` est généré automatiquement (colonnes
+   > `projets.slug`).
 6. **Permissions** : `storage/` et `bootstrap/cache/` accessibles en écriture
    par l'utilisateur du serveur web.
-7. **CRON** (via le panneau ou `crontab -e`) — une seule ligne suffit, toutes
+7. **Serveur SSR (production)** : Inertia SSR rend chaque page via un processus
+   Node. Le démarrer avec Supervisord après chaque déploiement :
+   ```ini
+   [program:abc-ssr]
+   command=php /chemin/vers/abc_scrapper/artisan inertia:start-ssr
+   autostart=true
+   autorestart=true
+   user=www-data
+   ```
+   Vérifier avec `php artisan inertia:check-ssr`. En l'absence de serveur SSR,
+   le site bascule automatiquement en rendu client (HTML non indexé).
+   En développement local, laisser `INERTIA_SSR_ENABLED=false`.
+8. **CRON** (via le panneau ou `crontab -e`) — une seule ligne suffit, toutes
    les minutes :
    ```
    * * * * * cd /chemin/vers/abc_scrapper && /chemin/vers/php/php artisan schedule:run >> /dev/null 2>&1
    ```
-8. **Premier import des données** (une seule fois, après migration) :
+9. **Premier import des données** (une seule fois, après migration) :
    - Hébergement **avec PostGIS** : `php artisan abc:import-legacy`, puis un collect.
    - Hébergement **sans PostGIS** : voir « Chemin B » ci-dessous.
 
@@ -194,6 +213,35 @@ même : **PHP 8.3+, PostgreSQL, Vite**.
    `data/cache/*` → `storage/app/abc/cache/` (copie en ligne de commande).
 5. Mises à jour ultérieures : `abc:collect --init` (sync sans purge) ou
    re-générer/importer un nouveau `abc-deploy.sql`.
+
+## Référencement (SEO)
+
+Le site est pensé pour être indexé : rendu **serveur (SSR)** de toutes les
+pages, URLs hiérarchiques, données structurées JSON-LD et sitemap.
+
+| URL | Rôle SEO |
+| --- | --- |
+| `/` | Page d'accueil (carte + contenu indexable : stats, régions, départements) |
+| `/abc/{slug}` | Fiche d'un projet ABC (communes, porteur, statut, source) |
+| `/commune/{code}` | Page commune (projets ABC la concernant) |
+| `/departement/{code}` | Page département (projets et communes) |
+| `/region/{slug}` | Page région (départements du territoire) |
+| `/actualites` / `/actualites/{slug}` | Fil d'actualités et articles |
+| `/mentions-legales` / `/confidentialite` | Pages légales (RGPD) |
+| `/sitemap.xml` | Sitemap (6 000+ URLs, généré et caché, `lastmod` des projets) |
+| `/robots.txt` | Disallow `/api/`, `/admin`, `/login`, `/verify` + pointe vers le sitemap |
+
+Points d'attention lors d'un déploiement :
+
+- **SSR** : `npm run build` produit `bootstrap/ssr` ; un serveur
+  `php artisan inertia:start-ssr` (Supervisord) doit tourner, sinon le site
+  tombe en rendu client (non indexé).
+- **Attribution des données** : le site réutilise l'attribution des sources
+  (Registre OFB et Fonds vert, publique via data.gouv.fr) — exporter cette
+  attribution dans les mentions légales ne l'atténue pas.
+- **Console Search** : soumettre `https://votre-domaine.fr/sitemap.xml` dans
+  Google Search Console et Bing Webmaster Tools après la mise en ligne.
+- Les pages fonctionnelles (`/verify`, `/login`, `/admin`) sont en `noindex`.
 
 ## Rôles & permissions
 

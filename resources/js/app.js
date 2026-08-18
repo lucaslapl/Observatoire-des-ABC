@@ -7,7 +7,6 @@ import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} — Observatoire des ABC` : 'Observatoire des ABC'),
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,

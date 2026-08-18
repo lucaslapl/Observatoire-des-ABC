@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import ConsentBanner from './ConsentBanner.vue';
 
 defineProps({
     title: String,
@@ -40,6 +41,8 @@ const pages = [
         <main>
             <slot />
         </main>
+
+        <ConsentBanner />
     </div>
 </template>
 

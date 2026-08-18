@@ -2,6 +2,7 @@
 import { ref, computed, reactive } from 'vue';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
+import Seo from '../Components/Seo.vue';
 
 const props = defineProps({
     projets: { type: Array, default: () => [] },
@@ -103,6 +104,7 @@ const save = async (p, f) => {
 
 <template>
     <Layout>
+        <Seo noindex title="Vérification des ABC" description="Worklist de vérification manuelle des Atlas de la Biodiversité Communale." />
         <div class="container py-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h1 class="h4 mb-0">Vérification des ABC</h1>

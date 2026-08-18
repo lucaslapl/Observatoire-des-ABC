@@ -3,6 +3,7 @@ import { ref, computed, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
+import Seo from '../Components/Seo.vue';
 
 const props = defineProps({
     meta: {
@@ -292,6 +293,7 @@ async function collect() {
 
 <template>
     <Layout>
+        <Seo noindex title="Administration" description="Panneau d'administration de l'Observatoire des ABC." />
         <div class="container py-4">
             <h1 class="h4 mb-4">Administration</h1>
 

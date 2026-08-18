@@ -6,6 +6,7 @@ use App\Models\Actualite;
 use App\Models\Contribution;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
+use App\Services\LandingService;
 use App\Services\StatsService;
 use App\Services\VerificationService;
 use Inertia\Inertia;
@@ -16,12 +17,14 @@ class PageController extends Controller
     public function __construct(
         private StatsService $stats,
         private VerificationService $verifications,
+        private LandingService $landing,
     ) {}
 
     public function index(): Response
     {
         return Inertia::render('Map', [
             'meta' => $this->stats->meta(),
+            'index' => $this->stats->index(),
             'isAdmin' => auth()->check() && auth()->user()->hasRole('admin'),
         ]);
     }
@@ -29,6 +32,51 @@ class PageController extends Controller
     public function verify(): Response
     {
         return Inertia::render('Verify', $this->verifications->list(true));
+    }
+
+    public function projet(Projet $projet): Response
+    {
+        return Inertia::render('Projet', [
+            'projet' => $this->landing->projet($projet),
+        ]);
+    }
+
+    public function commune(string $code): Response
+    {
+        return Inertia::render('Commune', [
+            'commune' => $this->landing->commune($code),
+        ]);
+    }
+
+    public function departement(string $code): Response
+    {
+        return Inertia::render('Departement', [
+            'departement' => $this->landing->departement($code),
+        ]);
+    }
+
+    public function region(string $slug): Response
+    {
+        return Inertia::render('Region', [
+            'region' => $this->landing->region($slug),
+        ]);
+    }
+
+    public function actualite(Actualite $actualite): Response
+    {
+        return Inertia::render('Actualite', [
+            'actualite' => $this->landing->actualite($actualite),
+        ]);
+    }
+
+    public function mentionsLegales(): Response
+    {
+        return Inertia::render('MentionsLegales');
+    }
+
+    public function confidentialite(): Response
+    {
+        return Inertia::render('Confidentialite');
     }
 
     public function actualites(): Response

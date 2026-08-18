@@ -3,12 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Commune extends Model
 {
     public $incrementing = false;
 
     protected $primaryKey = ['projet_id', 'code_geographique'];
+
+    public function projet(): BelongsTo
+    {
+        return $this->belongsTo(Projet::class, 'projet_id', 'id');
+    }
 
     protected $fillable = [
         'projet_id', 'code_geographique', 'libelle_geographique', 'epci',
