@@ -162,17 +162,24 @@ même : **PHP 8.3+, PostgreSQL, Vite**.
 6. **Permissions** : `storage/` et `bootstrap/cache/` accessibles en écriture
    par l'utilisateur du serveur web.
 7. **Serveur SSR (production)** : Inertia SSR rend chaque page via un processus
-   Node. Le démarrer avec Supervisord après chaque déploiement :
-   ```ini
-   [program:abc-ssr]
-   command=php /chemin/vers/abc_scrapper/artisan inertia:start-ssr
-   autostart=true
-   autorestart=true
-   user=www-data
+   Node. Sans racine ni Supervisord (hébergements mutualisés Plesk), le
+   **watchdog** `ssr:watchdog` (cron) vérifie chaque minute que le serveur répond
+   sur `/health` et le relance sinon :
+   ```bash
+   # Premier lancement (ou après chaque déploiement) :
+   php artisan ssr:watchdog --restart
+   # Vérifier l'état :
+   php artisan ssr:watchdog        # « serveur opérationnel » ou relance
+   php artisan inertia:check-ssr
+   curl -s http://127.0.0.1:13714/health   # → {"status":"OK",...}
    ```
-   Vérifier avec `php artisan inertia:check-ssr`. En l'absence de serveur SSR,
-   le site bascule automatiquement en rendu client (HTML non indexé).
-   En développement local, laisser `INERTIA_SSR_ENABLED=false`.
+   - En production, `.env` : `INERTIA_SSR_ENABLED=true` et
+     `SSR_NODE_BIN=/opt/plesk/node/24/bin/node` (chemin absolu du binaire Node).
+   - Avoir `Supervisord`/une vraie gestion de daemon ? Utiliser alors
+     `php artisan inertia:start-ssr` sous Supervisor à la place du watchdog.
+   - En l'absence de serveur SSR, le site bascule automatiquement en rendu
+     client (HTML non indexé). En développement local, laisser
+     `INERTIA_SSR_ENABLED=false`.
 8. **CRON** (via le panneau ou `crontab -e`) — une seule ligne suffit, toutes
    les minutes :
    ```

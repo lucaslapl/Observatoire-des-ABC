@@ -11,6 +11,10 @@ Artisan::command('inspire', function () {
 // --- Sauvegarde quotidienne (remplace la sauvegarde auto du processus Node) ---
 Schedule::command('abc:backup')->dailyAt('04:00');
 
+// --- Watchdog SSR : relance le serveur Node d'Inertia s'il ne répond plus.
+//     (Alternative à Supervisord, adaptée aux hébergements mutualisés.) ---
+Schedule::command('ssr:watchdog')->everyMinute();
+
 // --- Collect mensuel (désactivable en prod : COLLECT_AUTOMATIC=false).
 //     Lancé avec --init : synchronisation sans purge (pas de superuser requis
 //     sur les hébergements mutualisés). ---
