@@ -16,6 +16,14 @@ class SsrWatchdogTest extends TestCase
         config(['inertia.ssr.node_bin' => '/chemin/inexistant/node']);
     }
 
+    protected function tearDown(): void
+    {
+        @unlink(storage_path('app/ssr.pid'));
+        @unlink(storage_path('logs/ssr.log'));
+
+        parent::tearDown();
+    }
+
     public function test_no_relance_quand_le_serveur_repond(): void
     {
         Http::fake([
@@ -37,7 +45,7 @@ class SsrWatchdogTest extends TestCase
 
         $this->artisan('ssr:watchdog')
             ->expectsOutput('SSR : serveur injoignable, relance en cours…')
-            ->assertExitCode(0);
+            ->assertExitCode(1);
     }
 
     public function test_restart_sans_pid_ne_fait_pas_defaut(): void
@@ -48,6 +56,6 @@ class SsrWatchdogTest extends TestCase
 
         $this->artisan('ssr:watchdog --restart')
             ->expectsOutput('SSR : aucun fichier PID, rien à arrêter.')
-            ->assertExitCode(0);
+            ->assertExitCode(1);
     }
 }

@@ -44,8 +44,14 @@ class SsrWatchdogCommand extends Command
 
     private function startProcess(): int
     {
+        $url = rtrim(config('inertia.ssr.url', 'http://127.0.0.1:13714'), '/');
         $nodeBin = config('inertia.ssr.node_bin', 'node');
         $bundle = base_path('bootstrap/ssr/ssr.js');
+        $pidFile = storage_path('app/ssr.pid');
+        $logDir = storage_path('logs');
+        $log = $logDir.'/ssr.log';
+
+        $this->line('SSR : racine = '.base_path());
 
         if (! is_file($bundle)) {
             $this->error('Bundle SSR introuvable ('.$bundle.'). Lancez « npm run build ».');
@@ -53,8 +59,9 @@ class SsrWatchdogCommand extends Command
             return self::FAILURE;
         }
 
-        $log = storage_path('logs/ssr.log');
-        $pidFile = storage_path('app/ssr.pid');
+        if (! is_dir($logDir)) {
+            @mkdir($logDir, 0775, true);
+        }
 
         $cmd = sprintf(
             'cd %s && %s %s >> %s 2>&1 & echo $!',
@@ -74,7 +81,27 @@ class SsrWatchdogCommand extends Command
 
         $this->info('SSR : processus lancé (pid '.$pid.', log '.$log.').');
 
-        return self::SUCCESS;
+        // Vérifie réellement que le serveur répond avant de déclarer la victoire.
+        usleep(1500000);
+
+        if ($this->isHealthy($url)) {
+            $this->info('SSR : serveur opérationnel ('.$url.').');
+
+            return self::SUCCESS;
+        }
+
+        $this->error('SSR : le processus a été lancé mais le serveur ne répond pas.');
+
+        if (is_file($log)) {
+            $tail = implode(PHP_EOL, array_slice(file($log), -12));
+            $this->line('--- fin du log '.$log.' ---');
+            $this->line($tail);
+            $this->line('--- fin du log ---');
+        } else {
+            $this->error('Aucun log ('.$log.'). Vérifiez la permission d\'écriture sur storage/logs.');
+        }
+
+        return self::FAILURE;
     }
 
     private function stopProcess(): void
