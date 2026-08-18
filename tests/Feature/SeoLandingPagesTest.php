@@ -164,4 +164,41 @@ class SeoLandingPagesTest extends TestCase
             ->assertSee('/region/bretagne')
             ->assertSee('/actualites');
     }
+
+    public function test_saving_hook_backfills_null_slug_on_update(): void
+    {
+        $projet = Projet::create([
+            'id' => 'abc-backfill',
+            'nom' => 'ABC de la ville test',
+            'statut' => 'a_venir',
+            'source' => 'data.gouv',
+        ]);
+
+        // Simule une ligne héritée sans slug (import SQL brutal, migration jamais appliquée).
+        Projet::query()->whereKey($projet->id)->update(['slug' => null]);
+        $this->assertNull($projet->refresh()->slug);
+
+        // Le moindre save() (création OU mise à jour) doit rétro-remplir le slug.
+        $projet = Projet::findOrFail($projet->id);
+        $projet->statut = 'en_cours';
+        $projet->save();
+
+        $this->assertNotEmpty($projet->slug);
+        $this->get('/abc/'.$projet->slug)->assertOk();
+    }
+
+    public function test_departement_page_never_links_to_null_slug(): void
+    {
+        $this->seedData();
+        $projet = Projet::firstOrFail();
+
+        // Simule un projet dont le slug est resté vide en base.
+        Projet::query()->whereKey($projet->id)->update(['slug' => null]);
+
+        $this->get('/departement/56')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Departement')
+                ->where('departement.projets.0.slug', null)
+                ->where('departement.projets.0.nom', $projet->nom)
+        );
+    }
 }

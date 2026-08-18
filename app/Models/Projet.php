@@ -22,7 +22,7 @@ class Projet extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (self $projet) {
+        static::saving(function (self $projet) {
             if (empty($projet->slug)) {
                 $projet->slug = static::makeUniqueSlug($projet->nom, $projet->id);
             }

@@ -87,7 +87,7 @@ const jsonLd = computed(() => {
                 <div v-for="p in commune.projets" :key="p.projet_id" class="col">
                     <div class="card h-100 shadow-sm">
                         <div class="card-body">
-                            <h3 class="h6"><Link class="text-reset text-decoration-none" :href="`/abc/${p.slug}`">{{ p.nom }}</Link></h3>
+                            <h3 class="h6"><Link v-if="p.slug" class="text-reset text-decoration-none" :href="`/abc/${p.slug}`">{{ p.nom }}</Link><span v-else class="text-reset">{{ p.nom }}</span></h3>
                             <div class="d-flex flex-wrap gap-2 small">
                                 <span class="badge" :class="statutClass(p.statut)">{{ p.statut_label }}</span>
                                 <span class="badge text-bg-light">{{ p.source_label }}</span>

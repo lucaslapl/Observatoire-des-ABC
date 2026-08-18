@@ -82,7 +82,7 @@ const jsonLd = computed(() => {
                     </thead>
                     <tbody>
                         <tr v-for="p in departement.projets" :key="p.projet_id">
-                            <td><Link class="text-reset" :href="`/abc/${p.slug}`">{{ p.nom }}</Link></td>
+                            <td><Link v-if="p.slug" class="text-reset" :href="`/abc/${p.slug}`">{{ p.nom }}</Link><span v-else class="text-reset">{{ p.nom }}</span></td>
                             <td class="text-muted small">{{ p.commune_principale }}</td>
                             <td class="small">{{ p.annee_debut || '—' }}</td>
                             <td><span class="badge" :class="statutClass(p.statut)">{{ p.statut_label }}</span></td>
