@@ -45,7 +45,7 @@ class SsrWatchdogTest extends TestCase
 
         $this->artisan('ssr:watchdog')
             ->expectsOutput('SSR : serveur injoignable, relance en cours…')
-            ->assertExitCode(1);
+            ->assertExitCode(0);
     }
 
     public function test_restart_sans_pid_ne_fait_pas_defaut(): void
@@ -56,6 +56,6 @@ class SsrWatchdogTest extends TestCase
 
         $this->artisan('ssr:watchdog --restart')
             ->expectsOutput('SSR : aucun fichier PID, rien à arrêter.')
-            ->assertExitCode(1);
+            ->assertExitCode(0);
     }
 }

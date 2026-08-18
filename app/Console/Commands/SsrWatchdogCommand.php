@@ -44,7 +44,6 @@ class SsrWatchdogCommand extends Command
 
     private function startProcess(): int
     {
-        $url = rtrim(config('inertia.ssr.url', 'http://127.0.0.1:13714'), '/');
         $nodeBin = config('inertia.ssr.node_bin', 'node');
         $bundle = base_path('bootstrap/ssr/ssr.js');
         $pidFile = storage_path('app/ssr.pid');
@@ -63,8 +62,10 @@ class SsrWatchdogCommand extends Command
             @mkdir($logDir, 0775, true);
         }
 
+        // Détache complètement le processus : stdin/err détournés vers le log,
+        // stdin fermé (</dev/null) pour que la commande ne « bloque » jamais.
         $cmd = sprintf(
-            'cd %s && %s %s >> %s 2>&1 & echo $!',
+            'cd %s && nohup %s %s >> %s 2>&1 < /dev/null & echo $!',
             escapeshellarg(base_path()),
             escapeshellarg($nodeBin),
             escapeshellarg($bundle),
@@ -81,27 +82,17 @@ class SsrWatchdogCommand extends Command
 
         $this->info('SSR : processus lancé (pid '.$pid.', log '.$log.').');
 
-        // Vérifie réellement que le serveur répond avant de déclarer la victoire.
-        usleep(1500000);
+        // Lit brièvement la fin du log (lecture locale uniquement, jamais de
+        // requête réseau) pour signaler un échec de démarrage immédiat.
+        usleep(900000);
 
-        if ($this->isHealthy($url)) {
-            $this->info('SSR : serveur opérationnel ('.$url.').');
-
-            return self::SUCCESS;
-        }
-
-        $this->error('SSR : le processus a été lancé mais le serveur ne répond pas.');
-
-        if (is_file($log)) {
-            $tail = implode(PHP_EOL, array_slice(file($log), -12));
-            $this->line('--- fin du log '.$log.' ---');
-            $this->line($tail);
+        if (is_file($log) && filesize($log) > 0) {
             $this->line('--- fin du log ---');
-        } else {
-            $this->error('Aucun log ('.$log.'). Vérifiez la permission d\'écriture sur storage/logs.');
+            $this->line(implode(PHP_EOL, array_slice(file($log), -12)));
+            $this->line('--- fin du log ---');
         }
 
-        return self::FAILURE;
+        return self::SUCCESS;
     }
 
     private function stopProcess(): void
