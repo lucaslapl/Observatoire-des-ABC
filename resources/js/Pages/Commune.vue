@@ -91,6 +91,7 @@ const jsonLd = computed(() => {
                             <div class="d-flex flex-wrap gap-2 small">
                                 <span class="badge" :class="statutClass(p.statut)">{{ p.statut_label }}</span>
                                 <span class="badge text-bg-light">{{ p.source_label }}</span>
+                                <span v-if="p.anomalie" class="badge text-bg-danger" title="Association de cette commune au projet à vérifier (écart géographique)">À vérifier</span>
                                 <span v-if="p.annee_debut" class="text-muted">{{ p.annee_debut }}</span>
                             </div>
                         </div>

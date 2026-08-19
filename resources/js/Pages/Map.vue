@@ -1096,6 +1096,11 @@ onBeforeUnmount(() => {
 .leaflet-control-scale { margin-left: 300px !important; }
 @media (max-width:720px) {
     .legend { left: 6px; right: 6px; width: auto; max-width: none; }
+    .legend-head { padding: 7px 10px; }
+    .legend-body { padding: 8px 10px 10px; }
+    .legend-section { margin: 8px 0 4px; }
+    .legend-item { font-size: 12px; padding: 1.5px 0; }
+    .legend .meta { display: none; }
     .leaflet-control-scale { margin-left: 6px !important; }
 }
 .map-sidebar {

@@ -102,17 +102,15 @@ class LandingService
      */
     public function commune(string $code): array
     {
+        // On liste les projets même quand l'association est marquée « anomalie » :
+        // la carte les affiche (points rouges) et la page doit refléter ces données.
         $rows = Commune::query()
             ->where('code_geographique', $code)
-            ->where('anomalie', false)
+            ->orderBy('projet_id')
             ->get();
 
         if ($rows->isEmpty()) {
-            $any = Commune::where('code_geographique', $code)->exists();
-            if (! $any) {
-                abort(404);
-            }
-            $rows = Commune::where('code_geographique', $code)->get();
+            abort(404);
         }
 
         $libelle = $this->firstNonEmpty($rows, 'libelle_geographique');
@@ -167,8 +165,14 @@ class LandingService
     public function departement(string $code): array
     {
         $norm = mb_strtolower($code);
+        $len = strlen($norm);
+        // Certaines lignes n'ont pas de colonne `departement` (ex. datée 2025) :
+        // on les rattrape via le préfixe du code INSEE (2 chiffres métropole/Corse,
+        // 3 chiffres outre-mer), tout en gardant la colonne comme source de vérité.
         $rows = Commune::query()
-            ->whereRaw('LOWER(departement) = ?', [$norm])
+            ->where(fn ($q) => $q
+                ->whereRaw('LOWER(SUBSTR(code_geographique, 1, ?)) = ?', [$len, $norm])
+                ->orWhereRaw('LOWER(departement) = ?', [$norm]))
             ->get();
 
         if ($rows->isEmpty()) {
@@ -246,18 +250,18 @@ class LandingService
 
         $rows = Commune::query()
             ->whereIn('region', $values)
-            ->whereNotNull('departement')
             ->get();
 
         $departements = $rows
             ->filter(fn ($c) => $c->anomalie === false)
-            ->groupBy(fn ($c) => mb_strtolower((string) $c->departement))
+            ->groupBy(fn ($c) => $this->departementOf($c))
             ->map(function (Collection $cs) {
                 $first = $cs->first();
+                $dept = $this->departementOf($first);
 
                 return [
-                    'code' => mb_strtolower((string) $first->departement),
-                    'label' => $first->libelle_departement ?: (string) $first->departement,
+                    'code' => $dept,
+                    'label' => $first->libelle_departement ?: ($dept ?: '—'),
                     'n' => $cs->pluck('projet_id')->unique()->count(),
                 ];
             })
@@ -305,6 +309,22 @@ class LandingService
         }
 
         return null;
+    }
+
+    /**
+     * Code département normalisé d'une ligne commune : colonne `departement`
+     * si renseignée, sinon dérivé du préfixe du code INSEE (`code_geographique`).
+     */
+    private function departementOf(Commune $c): ?string
+    {
+        if (! empty($c->departement)) {
+            return mb_strtolower((string) $c->departement);
+        }
+
+        $code = (string) $c->code_geographique;
+        $length = preg_match('/^9[7-8]/', $code) ? 3 : 2;
+
+        return mb_substr(strtolower($code), 0, $length) ?: null;
     }
 
     private function verdictLabel(string $etat): string
