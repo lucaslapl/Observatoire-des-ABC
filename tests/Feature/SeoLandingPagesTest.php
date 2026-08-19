@@ -207,7 +207,7 @@ class SeoLandingPagesTest extends TestCase
         $this->seedData();
         Projet::create([
             'id' => 'atlas-vitre-2025',
-            'nom' => "ABC de Vitré 2025",
+            'nom' => 'ABC de Vitré 2025',
             'statut' => 'a_venir',
             'source' => 'data.gouv',
             'annee_debut' => 2025,

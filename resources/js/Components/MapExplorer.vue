@@ -782,62 +782,52 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="d-flex flex-column">
-        <nav ref="navRef" class="navbar navbar-dark navbar-expand-lg navbar-abc flex-shrink-0 py-2">
-            <div class="container-fluid">
-                <span class="navbar-brand fs-6 d-flex align-items-center gap-2 mb-0">🌿 Observatoire des ABC</span>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#filters" aria-controls="filters" aria-expanded="false" aria-label="Filtres">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="filters">
-                    <div class="d-flex flex-wrap align-items-center gap-2 text-white ms-lg-3 mt-2 mt-lg-0 w-100 justify-content-start">
-                        <label class="d-flex align-items-center gap-1" style="font-size:13px;white-space:nowrap">
-                            <span class="text-white-50">Statut</span>
-                            <select v-model="filters.statut" class="form-select form-select-sm w-auto" @change="onStatutChange">
-                                <option value="">Tous</option>
-                                <option value="en_cours">En cours</option>
-                                <option value="a_venir">Va débuter</option>
-                                <option value="termine">Terminé</option>
-                                <option value="inconnu">Statut inconnu</option>
-                            </select>
-                        </label>
-                        <label class="d-flex align-items-center gap-1" style="font-size:13px;white-space:nowrap">
-                            <span class="text-white-50">Région</span>
-                            <select v-model="filters.region" class="form-select form-select-sm w-auto" @change="onRegionChange">
-                                <option value="">Toutes</option>
-                                <option v-for="r in regionOptions" :key="r" :value="r">{{ r }}</option>
-                            </select>
-                        </label>
-                        <label class="d-flex align-items-center gap-1" style="font-size:13px;white-space:nowrap">
-                            <span class="text-white-50">Période</span>
-                            <select v-model="filters.yearFrom" class="form-select form-select-sm w-auto" title="Année de début minimum" @change="onYearChange">
-                                <option value="">De 🔽</option>
-                                <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
-                            </select>
-                            <span class="text-white-50">–</span>
-                            <select v-model="filters.yearTo" class="form-select form-select-sm w-auto" title="Année de début maximum" @change="onYearChange">
-                                <option value="">À 🔽</option>
-                                <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
-                            </select>
-                        </label>
-                        <label class="d-flex align-items-center gap-1" style="font-size:13px">
-                            <span class="text-white-50">Commune</span>
-                            <input v-model="filters.q" type="text" class="form-control form-control-sm" style="width:180px" placeholder="Rechercher…" @input="onSearchInput" />
-                        </label>
-                        <span class="badge text-bg-light mt-1 mt-sm-0 ms-lg-auto ms-0">{{ countLine }}</span>
-                        <span class="count-help-wrap mt-1 mt-sm-0" tabindex="0">
-                            <span class="count-help">?</span>
-                            <span class="count-help-tip">
-                                <b>Comptage des points</b>
-                                <p>Les compteurs totaux (bas) et par statut (légende) ne tiennent compte que des projets visibles dans la fenêtre courante de la carte, filtres appliqués.</p>
-                                <p>Projets regroupés en un point rempli sont comptés pour leurs communes.</p>
-                                <p>Quand plusieurs ABC cohabitent à la même commune, un marqueur unique liste chaque projet avec son propre statut et son année.</p>
-                            </span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </nav>
+    <div class="d-flex flex-column" :class="{ 'map-wrap-full': fullPage }">
+        <div ref="navRef" class="map-toolbar">
+            <label class="tb-field">
+                <span class="tb-label">Statut</span>
+                <select v-model="filters.statut" class="tb-ctrl" @change="onStatutChange">
+                    <option value="">Tous</option>
+                    <option value="en_cours">En cours</option>
+                    <option value="a_venir">Va débuter</option>
+                    <option value="termine">Terminé</option>
+                    <option value="inconnu">Statut inconnu</option>
+                </select>
+            </label>
+            <label class="tb-field">
+                <span class="tb-label">Région</span>
+                <select v-model="filters.region" class="tb-ctrl" @change="onRegionChange">
+                    <option value="">Toutes</option>
+                    <option v-for="r in regionOptions" :key="r" :value="r">{{ r }}</option>
+                </select>
+            </label>
+            <label class="tb-field">
+                <span class="tb-label">Période</span>
+                <select v-model="filters.yearFrom" class="tb-ctrl" title="Année de début minimum" @change="onYearChange">
+                    <option value="">De 🔽</option>
+                    <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
+                </select>
+                <span class="tb-sep">–</span>
+                <select v-model="filters.yearTo" class="tb-ctrl" title="Année de début maximum" @change="onYearChange">
+                    <option value="">À 🔽</option>
+                    <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
+                </select>
+            </label>
+            <label class="tb-field tb-search">
+                <span class="tb-label">Commune</span>
+                <input v-model="filters.q" type="text" class="tb-ctrl tb-input" placeholder="Rechercher…" @input="onSearchInput" />
+            </label>
+            <span class="tb-count">{{ countLine }}</span>
+            <span class="count-help-wrap" tabindex="0">
+                <span class="count-help">?</span>
+                <span class="count-help-tip">
+                    <b>Comptage des points</b>
+                    <p>Les compteurs totaux (bas) et par statut (légende) ne tiennent compte que des projets visibles dans la fenêtre courante de la carte, filtres appliqués.</p>
+                    <p>Projets regroupés en un point rempli sont comptés pour leurs communes.</p>
+                    <p>Quand plusieurs ABC cohabitent à la même commune, un marqueur unique liste chaque projet avec son propre statut et son année.</p>
+                </span>
+            </span>
+        </div>
 
         <div id="map" ref="mapRef" class="map-main" :class="{ 'map-full': fullPage, 'map-compact-legend': compactLegend }">
             <div class="legend" :class="{ retracted: legendRetracted }" ref="legendRef">
@@ -911,7 +901,33 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.navbar-abc { background: #14532d; }
+.map-wrap-full { min-height: 100vh; }
+.map-toolbar {
+    position: relative; z-index: 1001; flex-shrink: 0;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: #f1f5f9; border-bottom: 1px solid #e2e8f0;
+}
+.tb-field {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 4px 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    font-size: 12px; white-space: nowrap;
+}
+.tb-field:focus-within { border-color: #14532d; box-shadow: 0 0 0 2px rgba(20,83,45,.15); }
+.tb-label { color: #6b7280; font-weight: 600; }
+.tb-ctrl {
+    border: none; background: transparent; padding: 0; width: auto;
+    font-size: 12px; font-weight: 500; color: #111827; box-shadow: none;
+}
+.tb-ctrl:focus { box-shadow: none; }
+.tb-input { min-width: 150px; }
+.tb-sep { color: #9ca3af; }
+.tb-count {
+    margin-left: auto;
+    background: #14532d; color: #fff; font-weight: 600; font-size: 11.5px;
+    padding: 4px 12px; border-radius: 20px; white-space: nowrap;
+}
 .map-main {
     position: relative;
     z-index: 0;
@@ -919,7 +935,8 @@ onBeforeUnmount(() => {
     min-height: 460px;
 }
 .map-main.map-full {
-    height: calc(100vh - 56px);
+    height: auto;
+    flex: 1 1 auto;
     min-height: 420px;
 }
 #map { position: relative; z-index: 0; }
