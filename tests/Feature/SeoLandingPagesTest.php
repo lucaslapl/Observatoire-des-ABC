@@ -229,6 +229,16 @@ class SeoLandingPagesTest extends TestCase
         );
     }
 
+    public function test_carte_page_returns_map_payload(): void
+    {
+        $this->seedData();
+
+        $this->get('/carte')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Carte')
+                ->has('meta')
+        );
+    }
+
     public function test_commune_page_lists_projects_with_anomalous_association(): void
     {
         $this->seedData();

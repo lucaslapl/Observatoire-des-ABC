@@ -29,6 +29,14 @@ class PageController extends Controller
         ]);
     }
 
+    public function carte(): Response
+    {
+        return Inertia::render('Carte', [
+            'meta' => $this->stats->meta(),
+            'isAdmin' => auth()->check() && auth()->user()->hasRole('admin'),
+        ]);
+    }
+
     public function verify(): Response
     {
         return Inertia::render('Verify', $this->verifications->list(true));

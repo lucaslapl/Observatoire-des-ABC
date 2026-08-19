@@ -6,9 +6,10 @@ defineProps({
     title: String,
 });
 const pages = [
-    { name: 'home', label: 'Carte', icon: 'bi-map' },
-    { name: 'verify', label: 'Vérification', icon: 'bi-clipboard-check' },
-    { name: 'actualites', label: 'Actualités', icon: 'bi-newspaper' },
+    { name: 'home', component: 'Map', label: 'Accueil', icon: 'bi-house', href: '/' },
+    { name: 'Carte', component: 'Carte', label: 'Carte des ABC', icon: 'bi-map', href: '/carte' },
+    { name: 'verify', component: 'Verify', label: 'Vérification', icon: 'bi-clipboard-check', href: '/verify' },
+    { name: 'actualites', component: 'Actualites', label: 'Actualités', icon: 'bi-newspaper', href: '/actualites' },
 ];
 </script>
 
@@ -23,8 +24,8 @@ const pages = [
                 <div class="collapse navbar-collapse" id="navAbc">
                     <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
                         <li v-for="p in pages" :key="p.name" class="nav-item">
-                            <Link :href="p.name === 'home' ? '/' : '/' + p.name"
-                                class="nav-link px-2 d-flex align-items-center gap-2" :class="{ active: $page.component === p.name }">
+                            <Link :href="p.href"
+                                class="nav-link px-2 d-flex align-items-center gap-2" :class="{ active: $page.component === p.component }">
                                 <i :class="['bi', p.icon]"></i> {{ p.label }}
                             </Link>
                         </li>
@@ -42,10 +43,32 @@ const pages = [
             <slot />
         </main>
 
+        <footer class="site-footer py-3">
+            <div class="container small text-center">
+                <div class="mb-1">
+                    Observatoire des ABC — données réutilisées en lisant
+                    <a href="https://data.gouv.fr" rel="noopener">data.gouv.fr</a>.
+                </div>
+                <div class="mb-1">
+                    Développé par <a href="https://lucaslaplanche.fr" target="_blank" rel="noopener">Lucas LAPLANCHE</a>
+                    · Code source sur <a href="https://github.com/lucaslapl/Observatoire-des-ABC" target="_blank" rel="noopener">GitHub</a>
+                </div>
+                <div>
+                    <Link href="/carte">Carte</Link>&nbsp;·
+                    <Link href="/actualites">Actualités</Link>&nbsp;·
+                    <Link href="/mentions-legales">Mentions légales</Link>&nbsp;·
+                    <Link href="/confidentialite">Confidentialité</Link>
+                </div>
+            </div>
+        </footer>
+
         <ConsentBanner />
     </div>
 </template>
 
 <style>
 .navbar-abc { background: #14532d; }
+.site-footer { background: #14532d; color: #e8f5e9; }
+.site-footer a { color: #fff; }
+.site-footer a:hover { color: #f0fdf4; }
 </style>

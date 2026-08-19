@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [PageController::class, 'index'])->name('home');
+Route::get('/carte', [PageController::class, 'carte'])->name('carte');
 
 Route::get('/robots.txt', fn () => response(
     implode("\n", [
