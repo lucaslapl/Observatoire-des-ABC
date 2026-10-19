@@ -40,6 +40,12 @@ const site = computed(() => page.props.site || {});
                 (Registre OFB, Fonds vert). Elles sont réutilisées telles que publiées par leurs producteurs.
                 L'Observatoire n'est pas l'auteur de ces données et n'en modifie pas la licence d'origine.
             </p>
+            <h2 class="h6">Code source</h2>
+            <p>
+                Le code source de l'Observatoire est publié sous licence libre
+                <strong>AGPL-3.0</strong>. Les versions modifiées diffusées en ligne doivent
+                publier leurs sources.
+            </p>
         </div>
     </Layout>
 </template>

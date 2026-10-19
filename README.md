@@ -361,4 +361,10 @@ CI
 
 ## Licence
 
-GPL-3.0 — voir `LICENSE` (projet d'origine « Observatoire des ABC »).
+**AGPL-3.0** (GNU Affero General Public License v3) — voir `LICENSE`.
+
+Le code de l'Observatoire est libre : vous pouvez l'utiliser, l'étudier, le
+modifier et le redistribuer, à condition de publier les sources des versions
+modifiées mises à disposition en ligne (section 13, « Remote Network
+Interaction »). Les données restent sous la licence de leurs producteurs
+(data.gouv.fr, Licence Ouverte).

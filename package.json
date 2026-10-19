@@ -27,5 +27,6 @@
         "jspdf": "^4.2.1",
         "leaflet": "^1.9.4",
         "vue": "^3.5.41"
-    }
+    },
+    "license": "AGPL-3.0-only"
 }

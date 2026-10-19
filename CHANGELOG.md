@@ -70,9 +70,10 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
   tests JS ajoutés ; référence à la branche obsolète `laravel-migration` supprimée.
 - `data/cache/` (16 Mo de CSV hérités) retiré du suivi git (régénérable par le
   collect ; `data/abc.db` reste suivi, source de `abc:import-legacy`).
-- Licence du projet : passage de MIT à « **Tous droits réservés** » (propriétaire).
-  Aucune réutilisation autorisée tant que le projet n'est pas viable et autonome
-  (`LICENSE`, `package.json`, `README`).
+- **Licence du projet : AGPL-3.0** (GNU Affero GPL v3) — alignement de
+  `LICENSE` (texte officiel), `composer.json`, `package.json` et `README`,
+  jusqu'alors incohérents (MIT / GPL-3.0 / « tous droits réservés »).
+  Les données sources restent sous la Licence Ouverte de data.gouv.fr.
 
 ### À venir
 - En réflexion.
