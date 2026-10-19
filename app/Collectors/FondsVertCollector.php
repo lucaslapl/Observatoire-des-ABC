@@ -4,6 +4,7 @@ namespace App\Collectors;
 
 use App\Services\CommuneCorrectionsService;
 use App\Services\CsvReaderService;
+use App\Services\DataGouvResolver;
 use App\Services\DownloadService;
 use App\Services\ProjectIdService;
 use App\Services\ProjetRepository;
@@ -20,18 +21,19 @@ class FondsVertCollector
         private ProjetRepository $projects,
         private ProjectIdService $ids,
         private CommuneCorrectionsService $corrections,
+        private DataGouvResolver $resolver,
     ) {}
 
     public function collect(): array
     {
         $specs = [
-            ['url' => config('abc.sources.fondsvert2024'), 'year' => 2024, 'rich' => false],
-            ['url' => config('abc.sources.fondsvert2025'), 'year' => 2025, 'rich' => true],
+            ['key' => 'fondsvert2024', 'year' => 2024, 'rich' => false],
+            ['key' => 'fondsvert2025', 'year' => 2025, 'rich' => true],
         ];
 
         $byYear = [];
         foreach ($specs as $s) {
-            $file = $this->download->downloadToCache($s['url'], "Fonds vert biodiversité {$s['year']}");
+            $file = $this->download->downloadToCache($this->resolver->resolve($s['key']), "Fonds vert biodiversité {$s['year']}");
             $rows = $this->csv->read($file, ',');
             $hits = array_filter($rows, fn ($r) => $this->isAbc($r));
             $byYear[$s['year']] = count($hits);
@@ -76,9 +78,6 @@ class FondsVertCollector
     private function isAbc(array $r): bool
     {
         $hay = ($r['nom_du_projet'] ?? '').' '.($r['resume_du_projet'] ?? '').' '.($r['demarche'] ?? '');
-        if (! $hay) {
-            return false;
-        }
         if (preg_match('/abc\s*terre/i', $hay)) {
             return false; // "ABC Terre" : carbone des sols, à exclure
         }

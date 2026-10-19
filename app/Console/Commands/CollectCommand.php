@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 class CollectCommand extends Command
 {
-    protected $signature = 'abc:collect {--init : Mode installation/synchronisation : ne purge pas (pas de superuser requis)}';
+    protected $signature = 'abc:collect {--init : Obsolète (synchronisation par défaut) : conservé pour compatibilité}';
 
     protected $description = 'Collecte des 4 sources (registre, wayback, fonds vert) puis statuts, géocodage et anomalies';
 
@@ -16,9 +16,6 @@ class CollectCommand extends Command
     {
         $this->line('Collect complet en cours…');
         $s = $service->collectAll($this->option('init'));
-        if ($this->option('init')) {
-            $this->line('(mode --init : pas de purge — les projets supprimés à la source ne sont pas retirés)');
-        }
 
         $this->line("data.gouv : {$s['sources']['datagouv']['projets']} projets / {$s['sources']['datagouv']['communes']} communes");
         $this->line("wayback : {$s['sources']['wayback']['projets']} projets uniquement issus des archives (instantané 2022-12-06) + snapshots historiques");
@@ -27,6 +24,7 @@ class CollectCommand extends Command
         }
         $g = $s['geocoding'];
         $this->line("géocodage : {$g['distinct']} communes distinctes, {$g['fetched']} à récupérer, {$g['updated']} avec coordonnées");
+        $this->line("suppression ciblée : {$s['stale_deleted']} projet(s) disparus des sources et sans travail humain");
 
         $this->line("\n=== {$s['total']} projets / {$s['communes']} lignes communes / {$s['geocoded']} géo ===");
         foreach ($s['statuses'] as $statut => $n) {

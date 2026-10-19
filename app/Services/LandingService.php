@@ -123,8 +123,8 @@ class LandingService
             ->whereNotNull('libelle_epci')
             ->distinct()
             ->orderBy('libelle_epci')
+            ->limit(5)
             ->pluck('libelle_epci')
-            ->take(5)
             ->all();
 
         $projets = $rows

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Contribution extends Model
 {
@@ -19,7 +20,7 @@ class Contribution extends Model
         ];
     }
 
-    public function projet()
+    public function projet(): BelongsTo
     {
         return $this->belongsTo(Projet::class, 'projet_id', 'id');
     }

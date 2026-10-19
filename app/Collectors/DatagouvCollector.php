@@ -5,6 +5,7 @@ namespace App\Collectors;
 use App\Models\Projet;
 use App\Services\CommuneCorrectionsService;
 use App\Services\CsvReaderService;
+use App\Services\DataGouvResolver;
 use App\Services\DownloadService;
 use App\Services\ProjectIdService;
 use App\Services\ProjetRepository;
@@ -16,8 +17,6 @@ use App\Services\StatusService;
  */
 class DatagouvCollector
 {
-    private const SNAPSHOT_DATE = null; // date dynamique au runtime
-
     public function __construct(
         private DownloadService $download,
         private CsvReaderService $csv,
@@ -26,13 +25,14 @@ class DatagouvCollector
         private CommuneCorrectionsService $corrections,
         private RegionService $regions,
         private StatusService $status,
+        private DataGouvResolver $resolver,
     ) {}
 
     public function collect(): array
     {
         $snapshotDate = date('Y-m-d');
         $file = $this->download->downloadToCache(
-            config('abc.sources.datagouv'),
+            $this->resolver->resolve('datagouv'),
             'registre ABC (data.gouv)',
         );
         $rows = $this->csv->read($file, ';');

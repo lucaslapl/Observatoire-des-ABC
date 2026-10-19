@@ -4,6 +4,8 @@ import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
+import { STATUT_LABEL, SRC_LABEL, VERDICT } from '../map/constants.js';
+import { parsePayload, payloadLines } from '../utils/contributionDisplay.js';
 
 const props = defineProps({
     meta: {
@@ -26,21 +28,6 @@ const props = defineProps({
 
 const ETAT_LABEL = { en_attente: 'en attente', validee: 'validée', refusee: 'refusée', retiree: 'retirée' };
 const TYPE_LABEL = { statut: 'Statut', date_debut: 'Date de début', note: 'Note', lien: 'Lien', autre: 'Autre info' };
-const STATUT_LABEL = { en_cours: 'En cours', a_venir: 'Va débuter', termine: 'Terminé', inconnu: 'Statut inconnu' };
-const SOURCE_LABEL = {
-    'data.gouv': 'Registre OFB',
-    wayback: 'Archives 2022',
-    'fondsvert-p113-2024': 'Fonds vert 2024',
-    'fondsvert-p113-2025': 'Fonds vert 2025',
-};
-const VERDICT_LABEL = {
-    confirme_termine: '✓ Vérifié : Terminé',
-    confirme_en_cours: '✓ Vérifié : En cours',
-    toujours_a_venir: '✓ Vérifié : Va débuter',
-    confirme_date: '✓ Vérifié : Date confirmée',
-    introuvable: '⚠ Vérifié : introuvable',
-    douteux: '⚠ Vérifié : incertain',
-};
 
 const activeTab = ref('en_attente');
 const busy = ref(false);
@@ -173,35 +160,10 @@ const tabs = [
 const etatLabel = (s) => ETAT_LABEL[s] || s;
 const typeLabel = (t) => TYPE_LABEL[t] || t;
 const statutLabel = (s) => STATUT_LABEL[s] || s;
-const sourceLabel = (s) => SOURCE_LABEL[s] || s;
-const verdictLabel = (v) => VERDICT_LABEL[v] || v;
+const sourceLabel = (s) => SRC_LABEL[s] || s;
+const verdictLabel = (v) => (VERDICT[v] || {}).label || v;
 
 const errMsg = (e) => (e && e.response && e.response.data && (e.response.data.error || e.response.data.message)) || (e && e.message) || 'Erreur';
-
-function parsePayload(p) {
-    if (p && typeof p === 'object') return p;
-    try {
-        return JSON.parse(p || '{}');
-    } catch (e) {
-        return {};
-    }
-}
-
-function payloadLines(payload) {
-    const p = payload || {};
-    const labels = { termine: 'Terminé', en_cours: 'En cours', va_debuter: 'Va débuter' };
-    const lines = [];
-    if (p.statut_suggere) lines.push({ label: 'Statut suggéré', value: labels[p.statut_suggere] || p.statut_suggere });
-    if (p.annee_debut_suggeree || p.annee_fin_suggeree) {
-        const d = p.annee_fin_suggeree ? `${p.annee_debut_suggeree}–${p.annee_fin_suggeree}` : String(p.annee_debut_suggeree);
-        lines.push({ label: 'Dates suggérées', value: d });
-    }
-    if (p.source) lines.push({ label: 'Source', value: p.source });
-    if (p.note) lines.push({ label: 'Note', value: p.note });
-    if (p.lien) lines.push({ label: 'Lien', value: p.lien, link: true });
-    if (p.texte) lines.push({ label: 'Texte', value: p.texte });
-    return lines;
-}
 
 const cards = computed(() =>
     (props.contributions || []).map((c) => ({

@@ -15,11 +15,46 @@ services:
             DB_HOST: postgis
             DB_PORT: 5432
             APP_URL: http://localhost:8000
+            # Avec le profil ssr : INERTIA_SSR_URL=http://ssr:13714
+            INERTIA_SSR_URL: ${INERTIA_SSR_URL:-http://127.0.0.1:13714}
         ports:
             - "8000:8000"
         volumes:
             - .:/var/www/html
             - abc_vendor:/var/www/html/vendor
+
+    # --- SSR Inertia (profil ssr) : rendu serveur comme en production ---
+    # Usage : docker compose --profile ssr up -d app ssr
+    ssr:
+        image: node:24-bookworm-slim
+        profiles: ["ssr"]
+        working_dir: /var/www/html
+        ports:
+            - "13714:13714"
+        volumes:
+            - .:/var/www/html
+            - abc_node_modules:/var/www/html/node_modules
+        command: sh -c "npm install --no-audit --no-fund && npm run build && node bootstrap/ssr/ssr.js"
+
+    # --- Scheduler (profil scheduler) : reproduit le CRON de production ---
+    # Usage : docker compose --profile scheduler up -d scheduler
+    scheduler:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        profiles: ["scheduler"]
+        restart: unless-stopped
+        depends_on:
+            postgis:
+                condition: service_healthy
+        environment:
+            DB_HOST: postgis
+            DB_PORT: 5432
+            APP_URL: http://localhost:8000
+        volumes:
+            - .:/var/www/html
+            - abc_vendor:/var/www/html/vendor
+        command: php artisan schedule:work
 
     # --- Frontend : build one-shot des assets (npm run build) ---
     # Usage : docker compose --profile build run --rm assets

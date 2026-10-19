@@ -5,12 +5,37 @@ return [
     /**
      * Sources de données (fichiers CSV téléchargés, cache local).
      * Clé = identifiant utilisé dans les colonnes `source`/`snapshots.source`.
+     *
+     * Les URLs ci-dessous sont des révisions PINNÉES (valeur de repli) : les
+     * clés listées dans `source_resolution` sont re-résolues à chaque collect
+     * via l'API data.gouv pour suivre la dernière révision publiée.
      */
     'sources' => [
         'datagouv' => 'https://static.data.gouv.fr/resources/atlas-de-la-biodiversite-communale-abc/20260709-081207/atlas-biodiversite.csv',
         'wayback' => 'https://web.archive.org/web/20221206082701/https://abc.naturefrance.fr/abcexport?page&_format=csv',
         'fondsvert2024' => 'https://static.data.gouv.fr/resources/fonds-vert-liste-des-projets-subventionnes/20250731-100849/fonds-vert-p113-2024-export.csv',
         'fondsvert2025' => 'https://static.data.gouv.fr/resources/fonds-vert-liste-des-projets-subventionnes/20260728-085038/fonds-vert-p113-2025-export.csv.csv',
+    ],
+
+    /**
+     * Résolution automatique des URLs sources via l'API data.gouv
+     * (DataGouvResolver). `match` = fragment de l'URL de la ressource.
+     * wayback = archive figée, jamais re-résolue.
+     */
+    'auto_resolve_sources' => (bool) env('SOURCES_AUTO_RESOLVE', true),
+    'source_resolution' => [
+        'datagouv' => [
+            'dataset' => 'atlas-de-la-biodiversite-communale-abc',
+            'match' => 'atlas-biodiversite.csv',
+        ],
+        'fondsvert2024' => [
+            'dataset' => 'fonds-vert-liste-des-projets-subventionnes',
+            'match' => 'fonds-vert-p113-2024-export.csv',
+        ],
+        'fondsvert2025' => [
+            'dataset' => 'fonds-vert-liste-des-projets-subventionnes',
+            'match' => 'fonds-vert-p113-2025-export.csv',
+        ],
     ],
 
     /**
@@ -52,6 +77,16 @@ return [
      * Nombre de sauvegardes quotidiennes conservées (rotation).
      */
     'backup_retention' => 14,
+
+    /**
+     * Commande exécutée après chaque sauvegarde réussie (copie distante
+     * obligatoire : un dump sur le même disque que la base n'est pas une
+     * sauvegarde). `{file}` est remplacé par le chemin du dump.
+     * Exemples : "rclone copy {file} remote:observatoire-abc"
+     *            "scp {file} backup@nas:/srv/backups/"
+     * Vide = aucun envoi.
+     */
+    'backup_upload_cmd' => env('BACKUP_UPLOAD_CMD'),
 
     /**
      * Collect mensuel automatique (désactivable en prod : COLLECT_AUTOMATIC=false).

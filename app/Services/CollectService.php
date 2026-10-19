@@ -6,12 +6,19 @@ use App\Collectors\DatagouvCollector;
 use App\Collectors\FondsVertCollector;
 use App\Collectors\WaybackCollector;
 use App\Models\Commune;
+use App\Models\Contribution;
 use App\Models\Projet;
-use App\Models\Snapshot;
-use Illuminate\Support\Facades\DB;
+use App\Models\Verification;
+use Carbon\CarbonInterface;
 
 /**
  * Orchestration du collect complet (port de src/collect.ts).
+ *
+ * Stratégie de synchronisation (v2) : les sources sont ré-ingérées par upsert,
+ * puis les projets disparus des sources SANS travail humain sont supprimés
+ * ciblé. Les tables verifications / contributions / audit_log ne sont jamais
+ * purgées, et aucun superuser Postgres n'est requis (l'ancienne purge via
+ * `session_replication_role = replica` a été supprimée).
  */
 class CollectService
 {
@@ -24,23 +31,21 @@ class CollectService
         private AnomalyService $anomalies,
     ) {}
 
-    /**
-     * @param  bool  $init  true = mode installation/synchronisation : ne purge
-     *                      pas (pas de désactivation FK, donc pas de superuser
-     *                      requis) — adapté aux hébergements sans superuser.
-     */
     public function collectAll(bool $init = false): array
     {
-        // Purge des données re-collectables (les tables de travail humain —
-        // verifications, contributions, audit_log — ne sont PAS touchées).
         ProjetRepository::refreshExclusions();
-        if (! $init) {
-            $this->purgeReplicableData();
-        }
+
+        // Horodatage du début du collect : tout projet upserté pendant le
+        // collect aura updated_at >= $marker. Les autres sont des candidats
+        // à la suppression (disparus des sources).
+        $marker = now();
 
         $datagouv = $this->datagouv->collect();
         $wayback = $this->wayback->collect();
         $fondsVert = $this->fondsVert->collect();
+
+        $stale = $this->deleteStaleProjects($marker);
+
         $this->recompute->recomputeStatuses();
         $geocoding = $this->geocode->enrichGeocoding();
         $anomalies = $this->anomalies->computeAnomalies();
@@ -61,6 +66,7 @@ class CollectService
             'total' => $total,
             'communes' => $communes,
             'geocoded' => $geocoded,
+            'stale_deleted' => $stale,
             'anomalies' => $anomalies,
             'statuses' => $statuses,
             'geocoding' => $geocoding,
@@ -73,33 +79,29 @@ class CollectService
     }
 
     /**
-     * Purge les tables re-collectables en désactivant temporairement les
-     * contraintes de clé étrangère (équivalent de `PRAGMA foreign_keys = OFF`
-     * du collect Node). Sans cela, le DELETE sur `projets` déclencherait les
-     * CASCADE Postgres et effacerait verifications/contributions (travail humain).
+     * Supprime les projets non ré-ingérés depuis $marker (disparus des
+     * sources), SAUF ceux qui portent du travail humain (verifications,
+     * contributions) : le delete en cascade emporterait ce travail. Les
+     * communes et snapshots des projets supprimés partent en cascade.
      *
-     * Postgres : `session_replication_role = replica` exige un rôle superuser.
+     * @return int nombre de projets supprimés
      */
-    public function purgeReplicableData(): void
+    public function deleteStaleProjects(CarbonInterface $marker): int
     {
-        $driver = DB::connection()->getDriverName();
+        $stale = Projet::query()
+            ->where('updated_at', '<', $marker)
+            ->whereNotIn('id', Verification::select('projet_id'))
+            ->whereNotIn('id', Contribution::select('projet_id'))
+            ->pluck('id');
 
-        if ($driver === 'pgsql') {
-            DB::statement('SET session_replication_role = replica;');
-        } else {
-            DB::statement('PRAGMA foreign_keys = OFF;');
+        if ($stale->isEmpty()) {
+            return 0;
         }
 
-        try {
-            Snapshot::query()->delete();
-            Commune::query()->delete();
-            Projet::query()->delete();
-        } finally {
-            if ($driver === 'pgsql') {
-                DB::statement('SET session_replication_role = DEFAULT;');
-            } else {
-                DB::statement('PRAGMA foreign_keys = ON;');
-            }
-        }
+        // Le cascade ne touchera que communes et snapshots : les lignes
+        // humaines ont été exclues par les whereNotIn ci-dessus.
+        Projet::whereIn('id', $stale)->delete();
+
+        return $stale->count();
     }
 }

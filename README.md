@@ -4,9 +4,9 @@ Observatoire national des Atlas de la Biodiversité Communale (ABC). Suivi des
 projets financés (data.gouv / Fonds vert), archives 2022 (Wayback), vérifications
 manuelles, contributions du public et export cartographique.
 
-Application **Laravel 12 + Vue 3 (Inertia) + PostgreSQL/PostGIS**, migration de
-l'ancien serveur Node/TS/SQLite (fichiers `server/` et `src/` conservés comme
-filet de secours et source de vérité).
+Application **Laravel 12 + Vue 3 (Inertia) + PostgreSQL/PostGIS**, migrée
+depuis un ancien serveur Node/TS/SQLite (le code Node a été retiré du dépôt ;
+`data/abc.db` conserve les données historiques).
 
 ## Prérequis
 
@@ -88,25 +88,30 @@ d'un collect à l'autre et jamais écrasées.
 | Commande | Rôle |
 | --- | --- |
 | `abc:import-legacy` | Importe `data/abc.db` (SQLite) vers PostgreSQL |
-| `abc:collect` | Collecte des 4 sources puis statuts, géocodage, anomalies |
-| `abc:collect --init` | Même collect mais **sans purge** (upsert = synchronisation, pas de superuser requis) |
+| `abc:collect` | Collecte des 4 sources puis statuts, géocodage, anomalies (synchronisation : aucun superuser requis) |
 | `abc:export-deploy` | Export portable (SQL, sans `geom`) pour hébergement sans PostGIS |
 | `abc:status` | Recalcule les statuts et les anomalies |
 | `abc:geocode` | Géocode les communes manquantes (geo.api.gouv.fr) |
 | `abc:export --fmt=csv\|geojson` | Export CSV ou GeoJSON (`storage/app/abc/exports`) |
 | `abc:verify` | Worklist de vérification (CSV) |
-| `abc:backup` | Sauvegarde pg_dump avec rotation (14) |
+| `abc:backup` | Sauvegarde pg_dump avec rotation (14) puis copie distante (`BACKUP_UPLOAD_CMD`) |
 
-> **`abc:collect` et la purge** : le collect vide puis ré-ingère les tables
-> *re-collectables* (`projets`, `communes`, `snapshots`) sans toucher au travail
-> humain (`verifications`, `contributions`, `audit_log`). Pour cela il
-> désactive temporairement les contraintes de clé étrangère — via
-> `SET session_replication_role = replica` sur PostgreSQL, ce qui **exige un
-> rôle superuser** pour la collecte en production.
+> **`abc:collect` (synchronisation)** : les sources sont ré-ingérées par
+> upsert, puis les projets **disparus des sources et sans travail humain**
+> sont supprimés ciblé. Les tables `verifications`, `contributions`,
+> `audit_log` ne sont jamais purgées ; un projet disparu des sources mais
+> porteur de vérifications ou de contributions est conservé. L'ancienne purge
+> via `session_replication_role = replica` (qui exigeait un **superuser**
+> Postgres) a été supprimée : le collect tourne sur n'importe quel hébergement.
 >
-> **Source Fonds vert** : les exports `fonds-vert-p113-*.csv` actuellement pinnés
-> ne listent que **65 projets ABC** (16 en 2024, 49 en 2025). L'ancienne base
-> `data/abc.db` en contenait 140 — issue d'une version plus riche de ces
+> **Résolution automatique des sources** : les URLs CSV de data.gouv sont
+> re-résolues à chaque collect via l'API data.gouv (`DataGouvResolver`) pour
+> suivre la dernière révision publiée ; l'URL pinnée de
+> `config/abc.php` sert de repli. Désactivable via `SOURCES_AUTO_RESOLVE=false`.
+>
+> **Source Fonds vert** : les exports `fonds-vert-p113-*.csv` actuellement
+> pinnés ne listent que **65 projets ABC** (16 en 2024, 49 en 2025). L'ancienne
+> base `data/abc.db` en contenait 140 — issue d'une version plus riche de ces
 > exports qui n'est plus disponible. Le collect reflète donc désormais les
 > sources en ligne (1263 projets au total, soit 75 « à venir » de moins que
 > l'ancien jeu de données).
@@ -114,11 +119,6 @@ d'un collect à l'autre et jamais écrasées.
 > **Exclusions** : un projet supprimé depuis la carte (admin) est enregistré
 > dans `project_exclusions` ; le collect **ne le ré-importe pas** tant que
 > l'exclusion n'est pas levée depuis le panneau admin.
->
-> **Hébergements sans superuser** : le collect classique purge via
-> `session_replication_role = replica` (réservé superuser). Sur de tels
-> hébergements, utiliser `abc:collect --init` (synchro sans purge) et
-> `COLLECT_AUTOMATIC=false` (le scheduler lancera alors `abc:collect --init`).
 
 ## Planification (CRON)
 
@@ -131,7 +131,8 @@ Sur le serveur, un seul CRON suffit (Laravel scheduler) :
 Tâches planifiées (`routes/console.php`) :
 
 - `abc:backup` tous les jours à 04:00
-- `abc:collect --init` le 1er de chaque mois à 03:00 (si `COLLECT_AUTOMATIC=true`)
+- `abc:collect` le 1er de chaque mois à 03:00 (si `COLLECT_AUTOMATIC=true`)
+- Les deux tâches tournent en arrière-plan (le cron n'est jamais bloqué)
 
 ## Déploiement en production
 
@@ -250,7 +251,7 @@ même : **PHP 8.3+, PostgreSQL, Vite**.
    vérifications, contributions, geo_cache, utilisateur/admin, …).
 4. Synchroniser le cache du collect (offline) :
    `data/cache/*` → `storage/app/abc/cache/` (copie en ligne de commande).
-5. Mises à jour ultérieures : `abc:collect --init` (sync sans purge) ou
+5. Mises à jour ultérieures : `abc:collect` (synchronisation) ou
    re-générer/importer un nouveau `abc-deploy.sql`.
 
 ## Référencement (SEO)

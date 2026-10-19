@@ -7,11 +7,48 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ## [Unreleased]
 
 ### Ajouté
+- **Résolution automatique des sources data.gouv** (`DataGouvResolver`) : à
+  chaque collect, les URLs CSV du registre ABC et du Fonds vert sont
+  re-résolues via l'API data.gouv pour suivre la dernière révision publiée,
+  avec repli sur l'URL pinnée. Désactivable : `SOURCES_AUTO_RESOLVE=false`.
+- **Copie distante des sauvegardes** : `BACKUP_UPLOAD_CMD` exécuté après
+  chaque `abc:backup` (`{file}` = chemin du dump, ex. rclone/scp).
+- **Analyse statique** : PHPStan/Larastan niveau 5 (0 erreur), ajoutée à la CI.
+- **Tests front** (`npm run test:js`, node --test sans dépendance) pour les
+  modules purs extraits de la carte et de l'admin.
+- **Tests PHP** : DataGouvResolver, GeocodeService, BackupService (rotation,
+  upload), ExportService, synchronisation du collect (suppression ciblée).
+- **Docker** : profils `ssr` (rendu serveur Inertia) et `scheduler`
+  (reproduit le CRON de production) ; `INERTIA_SSR_URL` configurable.
 - **Développement local 100 % Docker** : `docker compose up -d app` (PHP 8.3,
   PostGIS 16), profils `build` (assets Vite) et `hmr` (hot reload), entrypoint
   automatique (composer, `APP_KEY`, migrations, seed, import legacy si base
   vide). Plus besoin de WAMP (`docker/`, `docker-compose.yml`, `AGENTS.md`).
 - **AGENTS.md** : contexte projet, commandes, invariants critiques, conventions.
+
+### Changé
+- **`abc:collect` : synchronisation sans superuser** — la purge via
+  `session_replication_role = replica` (réservée aux superuser Postgres) est
+  remplacée par des upserts + une suppression ciblée des projets disparus des
+  sources ET sans travail humain (verifications/contributions). Le collect
+  tourne désormais sur tout hébergement mutualisé. `--init` devient obsolète
+  (accepté pour compatibilité).
+- **Front** : `MapExplorer.vue` (1104 → ~930 lignes) et `Admin.vue` réduits —
+  logique extraite dans des modules testés (`resources/js/map/` :
+  constantes, popupBuilders, exportImage ; `utils/contributionDisplay.js`).
+  **html2canvas/jspdf (~700 Ko) chargés uniquement à l'export** (import
+  dynamique à la demande) au lieu du montage de la carte.
+- **Scheduler** : `abc:backup` et `abc:collect` en arrière-plan
+  (`runInBackground`, `withoutOverlapping`, `onOneServer`) — le cron
+  n'est plus bloqué pendant un dump ou un collect.
+- **Dépendances** : 5 avis de sécurité corrigés (laravel/framework XSS debug
+  page, league/commonmark ×3, league/flysystem, symfony/http-foundation) ;
+  `composer audit` est propre.
+- **`GET /api/abc.geojson` : cache HTTP** — ETag (état des tables
+  `projets`/`communes`), `Cache-Control: public, max-age=3600`, réponse 304
+  immédiate si l'ETag correspond (~4 Mo économisés par visite répétée).
+- **`/api/meta` : 5 requêtes SQL sur `projets` regroupées en une seule**
+  (agrégats conditionnels), sortie strictement identique (parité API).
 
 ### Sécurité
 - **Anti brute-force sur `/login`** : rate limit 5 essais/min par couple
@@ -22,22 +59,20 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
   l'IP réelle (`X-Forwarded-For`) et le schéma https est respecté.
 - **`COOKIE_SECURE=1`** en production : cookie de session en `Secure`.
 
-### Changé
-- **`GET /api/abc.geojson` : cache HTTP** — ETag (état des tables
-  `projets`/`communes`), `Cache-Control: public, max-age=3600`, réponse 304
-  immédiate si l'ETag correspond (~4 Mo économisés par visite répétée).
-- **`/api/meta` : 5 requêtes SQL sur `projets` regroupées en une seule**
-  (agrégats conditionnels), sortie strictement identique (parité API).
+### Supprimé (legacy Node)
+- `src/`, `server/`, `dist/`, `tsconfig*.json`, `scripts/start-*.sh` et
+  `scripts/stop-server.sh` : l'ancienne application Node/TS est retirée du
+  dépôt. `data/abc.db` (données historiques) et les tests de parité restent
+  la source de vérité. Les `ExampleTest` du squelette Laravel sont supprimés.
+
+### Hygiène du dépôt
+- CI : un seul workflow (jobs `php` tests + style + PHPStan, `node` build) ;
+  tests JS ajoutés ; référence à la branche obsolète `laravel-migration` supprimée.
+- `data/cache/` (16 Mo de CSV hérités) retiré du suivi git (régénérable par le
+  collect ; `data/abc.db` reste suivi, source de `abc:import-legacy`).
 - Licence du projet : passage de MIT à « **Tous droits réservés** » (propriétaire).
   Aucune réutilisation autorisée tant que le projet n'est pas viable et autonome
   (`LICENSE`, `package.json`, `README`).
-
-### Hygiène du dépôt
-- CI : fusion de `ci.yml` et `tests.yml` en un seul workflow (jobs `php`
-  tests + style, `node` build) ; suppression de la référence à la branche
-  obsolète `laravel-migration`.
-- `data/cache/` (16 Mo de CSV hérités) retiré du suivi git (régénérable par le
-  collect ; `data/abc.db` reste suivi, source de `abc:import-legacy`).
 
 ### À venir
 - En réflexion.

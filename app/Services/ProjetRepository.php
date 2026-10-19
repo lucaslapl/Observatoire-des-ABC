@@ -18,16 +18,16 @@ class ProjetRepository
 
     public static function refreshExclusions(): void
     {
-        static::$excludedIds = ProjectExclusion::query()->pluck('projet_id')->all();
+        self::$excludedIds = ProjectExclusion::query()->pluck('projet_id')->all();
     }
 
     public function isExcluded(string $id): bool
     {
-        if (static::$excludedIds === null) {
-            static::$excludedIds = ProjectExclusion::query()->pluck('projet_id')->all();
+        if (self::$excludedIds === null) {
+            self::$excludedIds = ProjectExclusion::query()->pluck('projet_id')->all();
         }
 
-        return in_array($id, static::$excludedIds, true);
+        return in_array($id, self::$excludedIds, true);
     }
 
     public function upsertProjet(array $p): void

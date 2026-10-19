@@ -62,7 +62,7 @@ class VerifyCommand extends Command
                 $motifs[] = 'date début inconnue';
             }
             $place = trim(preg_replace('/ABC\s*/i', '', (string) ($p->structure_porteuse ?? $p->nom)));
-            $q = trim('"atlas de la biodiversité communale" "'.$place.'" '.trim(explode(',', (string) $communesStr)[0] ?? ''));
+            $q = trim('"atlas de la biodiversité communale" "'.$place.'" '.trim(explode(',', (string) $communesStr)[0]));
 
             $lines[] = str_replace("\n", ' ', implode(';', [
                 $p->nom,

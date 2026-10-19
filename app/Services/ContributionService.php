@@ -87,6 +87,7 @@ class ContributionService
 
         if ($c->type === 'date_debut') {
             $payload = $c->payload_json ?? [];
+            $payload = is_array($payload) ? $payload : (json_decode((string) $payload, true) ?: []);
             $debut = isset($payload['annee_debut_suggeree']) ? (int) $payload['annee_debut_suggeree'] : null;
             $fin = isset($payload['annee_fin_suggeree']) ? (int) $payload['annee_fin_suggeree'] : null;
             $debutInt = is_int($debut) ? $debut : null;

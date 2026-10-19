@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
+/**
+ * Alias de requêtes (selectRaw) documentés pour l'analyse statique.
+ *
+ * @property int|null $n
+ * @property int|null $nb_communes
+ * @property string|null $departement
+ * @property string|null $region
+ */
 class Projet extends Model
 {
     public $incrementing = false;
@@ -58,26 +66,31 @@ class Projet extends Model
         ];
     }
 
+    /** @return HasMany<Commune, $this> */
     public function communes(): HasMany
     {
         return $this->hasMany(Commune::class, 'projet_id', 'id');
     }
 
+    /** @return HasMany<Snapshot, $this> */
     public function snapshots(): HasMany
     {
         return $this->hasMany(Snapshot::class, 'projet_id', 'id');
     }
 
+    /** @return HasOne<Enrichissement, $this> */
     public function enrichissement(): HasOne
     {
         return $this->hasOne(Enrichissement::class, 'projet_id', 'id');
     }
 
+    /** @return HasOne<Verification, $this> */
     public function verification(): HasOne
     {
         return $this->hasOne(Verification::class, 'projet_id', 'id');
     }
 
+    /** @return HasMany<Contribution, $this> */
     public function contributions(): HasMany
     {
         return $this->hasMany(Contribution::class, 'projet_id', 'id');

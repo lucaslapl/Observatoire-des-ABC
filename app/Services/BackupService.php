@@ -98,7 +98,7 @@ class BackupService
         return ['path' => $path, 'kept' => $kept];
     }
 
-    private function rotate(string $dir): int
+    public function rotate(string $dir): int
     {
         $retention = (int) config('abc.backup_retention');
         $files = glob($dir.'/abc-*.{dump,db}', GLOB_BRACE) ?: [];
@@ -109,5 +109,21 @@ class BackupService
         }
 
         return count($files) - count($toDelete);
+    }
+
+    /**
+     * Copie distante du dump (BACKUP_UPLOAD_CMD, `{file}` remplacé).
+     * Un dump resté sur le même disque que la base n'est pas une sauvegarde.
+     *
+     * @return array{0: int, 1: string} [code de sortie, sortie]
+     */
+    public function upload(string $path): array
+    {
+        $cmd = (string) config('abc.backup_upload_cmd');
+        if ($cmd === '') {
+            return [0, ''];
+        }
+
+        return $this->run(str_replace('{file}', escapeshellarg($path), $cmd));
     }
 }

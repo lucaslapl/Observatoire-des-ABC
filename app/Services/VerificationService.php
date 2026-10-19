@@ -87,7 +87,7 @@ class VerificationService
             $communesAnormalesStr = $communesAnormales->implode(', ');
 
             $place = trim(preg_replace('/ABC\s*/i', '', $p->structure_porteuse ?? $p->nom));
-            $cible = trim($communesAnormalesStr !== '' ? $communesAnormalesStr : (explode(',', $communesStr)[0] ?? ''));
+            $cible = trim($communesAnormalesStr !== '' ? $communesAnormalesStr : explode(',', $communesStr)[0]);
             $requete = trim("\"atlas de la biodiversité communale\" \"{$place}\" {$cible}");
 
             return [

@@ -73,9 +73,9 @@ class StatusRecomputeService
                 || $estime !== (int) $p->estime_termine
             ) {
                 $p->statut = $s;
-                $p->potentiellement_termine = $pt;
-                $p->potentiellement_en_cours = $pec;
-                $p->estime_termine = $estime;
+                $p->potentiellement_termine = (bool) $pt;
+                $p->potentiellement_en_cours = (bool) $pec;
+                $p->estime_termine = (bool) $estime;
                 $p->save();
                 $changed++;
             }

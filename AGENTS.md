@@ -11,17 +11,19 @@ Application **Laravel 12 + Vue 3 (Inertia, SSR optionnel) + PostgreSQL/PostGIS**
 migrée depuis un ancien serveur **Node/TypeScript/SQLite**.
 
 - `app/` — le vrai code : Collectors, Services, Models, Commands artisan, Controllers.
-- `resources/js/` — front Vue 3 (Pages Inertia, Components).
+- `resources/js/` — front Vue 3 (Pages Inertia, Components, modules `map/`).
+- `resources/js/map/` — constantes, builders de popup et export d'image,
+  testés par `tests/js/*.test.mjs` (`npm run test:js`).
 - `routes/web.php` (Inertia/HTML), `routes/api.php` (contrats compatibles avec
   l'ancien serveur Node), `routes/console.php` (scheduler).
-- `config/abc.php` — config métier : URLs des sources CSV, seuils d'anomalie,
-  durée ABC, compte admin seedé.
-- `server/` et `src/` — **ancienne application Node (legacy)** conservée comme
-  filet de secours et source de vérité des contrats. **Ne pas modifier** sans
-  comprendre que la parité API (`tests/Feature/GeoJsonParityTest.php`) repose
-  dessus.
+- `config/abc.php` — config métier : URLs des sources CSV (pinnées, re-résolues
+  via l'API data.gouv à chaque collect), seuils d'anomalie, durée ABC, compte
+  admin seedé, commande de copie des sauvegardes.
 - `data/abc.db` — base SQLite historique, source de `abc:import-legacy`.
-- `dist/` — sortie de l'ancien build TS (obsolète côté Laravel).
+
+> L'ancienne application Node (`server/`, `src/`, `dist/`, tsconfig) a été
+> **retirée du dépôt**. La parité des contrats API est garantie par
+> `tests/Feature/GeoJsonParityTest.php` (fixtures autonomes).
 
 ## Stack & versions
 
@@ -64,7 +66,7 @@ docker compose exec app composer pint          # style
 
 | Commande | Rôle |
 | --- | --- |
-| `abc:collect [--init]` | Collecte des 4 sources (data.gouv, Wayback, Fonds vert 2024/2025), puis statuts, géocodage, anomalies. Sans `--init` : purge via `session_replication_role = replica` (superuser requis). Avec `--init` : upsert sans purge. |
+| `abc:collect` | Collecte des 4 sources (data.gouv, Wayback, Fonds vert 2024/2025), puis statuts, géocodage, anomalies. **Synchronisation** : upserts + suppression ciblée des projets disparus sans travail humain — aucun superuser requis. |
 | `abc:import-legacy` | Importe `data/abc.db` (SQLite) vers PostgreSQL (une seule fois). |
 | `abc:status` | Recalcule statuts + anomalies. |
 | `abc:geocode` | Géocode les communes manquantes (geo.api.gouv.fr). |
@@ -77,8 +79,9 @@ docker compose exec app composer pint          # style
 ## Invariants critiques (ne jamais casser)
 
 1. **Le collect ne touche jamais le travail humain** : tables
-   `verifications`, `contributions`, `audit_log` — seules `projets`,
-   `communes`, `snapshots` sont purgées puis ré-ingérées.
+   `verifications`, `contributions`, `audit_log`. La synchronisation
+   (`CollectService::deleteStaleProjects`) supprime uniquement les projets
+   disparus des sources ET sans verifications/contributions.
 2. **Parité API avec l'ancien serveur Node** : `/api/abc.geojson`, `/api/meta`,
    etc. Garantie par `tests/Feature/GeoJsonParityTest.php`.
 3. **Exclusions** : un projet supprimé par un admin va dans `project_exclusions`
@@ -108,6 +111,12 @@ vendor/bin/pint --test      # style sans écriture
 ```
 
 Suites : `tests/Unit` (AnomalyService, StatusService, ProjectIdService,
-CsvReaderService) et `tests/Feature` (collect, flux contribution, exclusions,
-SEO landing pages, parité GeoJSON, watchdog SSR). PHPUnit utilise SQLite
-`:memory:` — écrire les tests sans dépendre de PostGIS quand c'est possible.
+CsvReaderService, DataGouvResolver, GeocodeService, BackupService,
+ExportService) et `tests/Feature` (collect/sync, flux contribution,
+exclusions, SEO landing pages, parité GeoJSON, cache HTTP, throttle login,
+watchdog SSR). PHPUnit utilise SQLite `:memory:` — écrire les tests sans
+dépendre de PostGIS quand c'est possible.
+
+Front : `npm run test:js` (node --test, modules purs de `resources/js/map/`
+et `utils/`). Dans Docker :
+`docker compose --profile build run --rm --no-deps assets node --test tests/js/*.test.mjs`.

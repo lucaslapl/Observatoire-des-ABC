@@ -1,11 +1,11 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
-import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import { COLOR, METRO, dStatut, fmtCount, visible } from '../map/constants.js';
+import { buildPopup as buildPopupHtml, buildMultiRow, buildMultiHeader } from '../map/popupBuilders.js';
+import { exportMap as exportMapImage } from '../map/exportImage.js';
 
 let L = null;
-let html2canvas = null;
-let jsPDF = null;
 
 const props = defineProps({
     meta: {
@@ -50,65 +50,11 @@ const tiles = [
     { name: 'Satellite', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr: '© Esri' },
 ];
 
-const COLOR = { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' };
-const METRO = [[41.0, -5.6], [51.5, 10.0]];
-const STATUT_SUGG = [['termine', 'Terminé'], ['en_cours', 'En cours'], ['va_debuter', 'Va débuter']];
-const VERDICT = {
-    confirme_termine: { label: '✓ Vérifié : Terminé', color: '#1b5e20' },
-    confirme_en_cours: { label: '✓ Vérifié : En cours', color: '#2e7d32' },
-    toujours_a_venir: { label: '✓ Vérifié : Va débuter', color: '#b45309' },
-    confirme_date: { label: '✓ Vérifié : Date confirmée', color: '#0d9488' },
-    introuvable: { label: '⚠ Vérifié : introuvable', color: '#7f1d1d' },
-    douteux: { label: '⚠ Vérifié : incertain', color: '#7f1d1d' },
-};
-const SRC_LABEL = {
-    'data.gouv': 'Registre OFB',
-    wayback: 'Archives 2022',
-    'fondsvert-p113-2024': 'Fonds vert 2024',
-    'fondsvert-p113-2025': 'Fonds vert 2025',
-};
-const srcLabel = (s) => SRC_LABEL[s] || s || '—';
-
-// Badge de source : « Archives 2022 » est un instantané figé (dépréciable).
-function srcChip(p) {
-    const l = srcLabel(p.source);
-    if (p.donnees_2022 || p.source === 'wayback') {
-        return `<span class="multi-badge multi-src src-stale" title="Projet figé à l'instantané de 2022 — statut possiblement obsolète">${l}</span>`;
-    }
-    return `<span class="multi-badge multi-src">${l}</span>`;
-}
-
-// Bouton de suppression admin pour un projet.
-function delBtn(p) {
-    if (!props.isAdmin) return '';
-    const nom = (p.nom || '').replace(/"/g, '&quot;');
-    return `<button type="button" class="btn-del" data-del-pid="${p.projet_id}" data-del-nom="${nom}" title="Supprimer ce projet (admin)">🗑</button>`;
-}
-
 let map = null;
 let tileLayer = null;
 let layer = null;
 let all = [];
 let allProjs = new Set();
-
-const dStatut = (p) => p.statut_affichage || p.statut;
-
-function visible(f, s) {
-    const p = f.properties;
-    if (s.statut && dStatut(p) !== s.statut) return false;
-    if (s.region && p.region !== s.region) return false;
-    if (s.yearFrom || s.yearTo) {
-        if (p.annee_debut == null) return false;
-        const y = Number(p.annee_debut);
-        if (s.yearFrom && y < Number(s.yearFrom)) return false;
-        if (s.yearTo && y > Number(s.yearTo)) return false;
-    }
-    if (s.q) {
-        const hay = `${p.nom || ''} ${p.commune || ''} ${p.structure_porteuse || ''} ${p.departement || ''}`.toLowerCase();
-        if (!hay.includes(s.q)) return false;
-    }
-    return true;
-}
 
 function inViewport(f) {
     if (!map) return false;
@@ -120,50 +66,8 @@ function visibleIn(f, s) {
     return visible(f, s) && inViewport(f);
 }
 
-function buildPopup(p) {
-    const src = p.source || '';
-    const srcFr = { 'data.gouv': 'Registre OFB', 'wayback': 'Registre OFB (archives 2022)', 'fondsvert-p113-2024': 'Fonds vert 2024', 'fondsvert-p113-2025': 'Fonds vert 2025' }[src] || src;
-    const v = VERDICT[p.verif_etat];
-    const confirme = v && ['confirme_termine', 'confirme_en_cours', 'toujours_a_venir', 'confirme_date'].includes(p.verif_etat);
-    const verifNote = v
-        ? `<br><b style="color:${v.color}">${v.label}</b>` +
-        (p.verif_note ? `<br><small>${p.verif_note}</small>` : '') +
-        (p.verif_lien ? `<br><small><a href="${p.verif_lien.replace(/"/g, '&quot;')}" target="_blank" rel="noopener">Lien source</a></small>` : '')
-        : '';
-    const info = [
-        `<b>${p.nom}</b><br>${p.commune}${p.departement ? ' (' + p.departement + ')' : ''}<br>`,
-        `Structure : ${p.structure_porteuse || '—'}<br>Année : ${p.annee_debut ? (p.annee_fin ? p.annee_debut + '–' + p.annee_fin : p.annee_debut) : '—'}<br>`,
-        `<b>${p.categorie}</b>`,
-        !confirme && p.potentiellement_termine ? `<br><b style="color:#8d6e63">⚠ Potentiellement terminé</b><br><small>Début ${p.annee_debut}, durée d'un ABC ≈ 3 ans</small>` : '',
-        !confirme && p.potentiellement_en_cours ? `<br><b style="color:#b45309">⏳ Potentiellement en cours</b><br><small>Début annoncé ${p.annee_debut}, toujours « va débuter »</small>` : '',
-        !confirme && p.donnees_2022 ? `<br><b style="color:#7f1d1d">🕓 Statut issu des archives 2022</b><br><small>À vérifier — site officiel hors ligne</small>` : '',
-        !confirme && p.estime_termine ? `<br><b style="color:#1b5e20">✓ Terminé (estimation)</b><br><small>Statut officiel inconnu, projet débuté en ${p.annee_debut} (> 5 ans)</small>` : '',
-        p.anomalie ? `<br><b style="color:#b91c1c">⚠ Commune incohérente</b><br><small>À ${Math.round(p.distance_km)} km de son groupe — non reliée, à vérifier</small>` : '',
-        verifNote,
-        `<br><small>${p.verifie ? 'Source initiale' : 'Source'} : ${srcFr}</small>`,
-        delBtn(p),
-    ].join('');
-    const sugg =
-        `<div class="pop-contrib" data-sugg data-pid="${p.projet_id}">` +
-        `<button class="contrib-toggle" data-suggest role="button">💡 Signaler une correction</button>` +
-        `<div class="contrib-form" data-sform hidden>` +
-        `<select data-s-type class="form-select form-select-sm">` +
-        `<option value="statut">Statut</option><option value="date_debut">Date de début</option><option value="note">Note</option><option value="lien">Lien</option><option value="autre">Autre info</option>` +
-        `</select>` +
-        `<select data-s-statut class="form-select form-select-sm" hidden>${STATUT_SUGG.map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select>` +
-        `<div data-s-date hidden class="d-flex gap-1 flex-wrap">` +
-        `<input type="number" data-s-annee min="1990" max="2040" placeholder="Début (ex. 2023)" class="form-control form-control-sm" style="width:110px" />` +
-        `<input type="number" data-s-annee-fin min="1990" max="2040" placeholder="Fin (optionnel)" class="form-control form-control-sm" style="width:110px" />` +
-        `<input type="text" data-s-source placeholder="Source (organisme, article…)" class="form-control form-control-sm" style="min-width:160px" />` +
-        `</div>` +
-        `<input type="text" data-s-note placeholder="Note" class="form-control form-control-sm" hidden />` +
-        `<input type="text" data-s-lien placeholder="Lien (URL)" class="form-control form-control-sm" hidden />` +
-        `<input type="text" data-s-texte placeholder="Votre information" class="form-control form-control-sm" hidden />` +
-        `<input type="text" data-s-commentaire placeholder="Commentaire (optionnel)" class="form-control form-control-sm" />` +
-        `<button type="button" class="btn btn-sm btn-success" data-send>Envoyer la suggestion</button>` +
-        `<span data-s-result class="saved"></span>` +
-        `</div></div>`;
-    return info + sugg;
+function popupHtml(p) {
+    return buildPopupHtml(p, props.isAdmin);
 }
 
 function renderFeature(f, onLayer) {
@@ -175,7 +79,7 @@ function renderFeature(f, onLayer) {
         weight: p.anomalie || p.verifie ? 2 : 1,
         fillColor: COLOR[dStatut(p)] || COLOR.inconnu,
         fillOpacity: 0.9,
-    }).bindPopup(buildPopup(f.properties)).addTo(onLayer || layer);
+    }).bindPopup(popupHtml(f.properties)).addTo(onLayer || layer);
     m.bindTooltip(`<b>${p.commune}</b>`, { direction: 'top', offset: [0, -8], className: 'map-tooltip' });
     m.on('mouseover', function () { this.setStyle({ radius: 8, weight: 3 }); });
     m.on('mouseout', function () { this.setStyle({ radius: 6, weight: p.anomalie || p.verifie ? 2 : 1 }); });
@@ -299,10 +203,6 @@ function toggleAggregate(key) {
     }
 }
 
-function fmtCount(n, s) { return n + ' ' + (n > 1 ? s : s.replace(/s$/, '')); }
-
-const STATUT_LABEL = { en_cours: 'En cours', a_venir: 'Va débuter', termine: 'Terminé', inconnu: 'Statut inconnu' };
-
 // Marqueur agrégé : quand plusieurs ABSC distincts partagent le même point
 // (ex. deux démarches sur la même commune, ou deux sources du même territoire),
 // on affiche un seul marqueur dont le popup liste chaque projet avec son propre
@@ -326,30 +226,8 @@ function buildMultiMarker(group) {
         return COLOR[top] || COLOR.inconnu;
     })();
 
-    const rows = group.map(e => e.feats[0].properties).map(p => {
-        const s = dStatut(p);
-        const color = COLOR[s] || COLOR.inconnu;
-        const sLabel = STATUT_LABEL[s] || s;
-        const year = p.annee_debut ? ` · ${p.annee_debut}${p.annee_fin ? '–' + p.annee_fin : ''}` : '';
-        const v = VERDICT[p.verif_etat];
-        const verdict = v ? `<span class="multi-badge multi-verdict" style="border-color:${v.color};color:${v.color}">${v.label}</span>` : '';
-        const figee = (p.donnees_2022 || p.source === 'wayback')
-            ? `<div class="multi-srcnote">Statut figé à l'instantané 2022 → à vérifier (site hors ligne).</div>`
-            : '';
-        return `<div class="multi-row">` +
-            `<span class="multi-chip" style="background:${color}"></span>` +
-            `<div class="multi-main"><div class="multi-name">${p.nom}</div>` +
-            `<div class="multi-tags"><span class="multi-badge" style="border-color:${color};color:${color}">${sLabel}${year}</span>` +
-            srcChip(p) + verdict + `</div>${figee}</div>` +
-            delBtn(p) +
-            `</div>`;
-    }).join('');
-
-    const header =
-        `<div class="multi-head"><span class="multi-count">${count}</span> ABC sur ce territoire` +
-        (nbCommunes ? ` · ${nbCommunes} commune${nbCommunes > 1 ? 's' : ''}` : '') +
-        (props.isAdmin ? '<div class="multi-adminnote">Admin : 🗑 supprime un projet jugé erroné.</div>' : '') +
-        `</div>`;
+    const rows = group.map(e => buildMultiRow(e.feats[0].properties, props.isAdmin)).join('');
+    const header = buildMultiHeader(count, nbCommunes, props.isAdmin);
 
     const marker = L.circleMarker([lat, lon], {
         radius: 7 + Math.min(count, 4) * 0.4,
@@ -665,73 +543,20 @@ async function onDocClick(e) {
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
-async function exportMap(format) {
-    const legendEl = legendRef.value;
-    const sidebarEl = sidebarRef.value;
-    const navEl = navRef.value;
-    const zoomCtrl = document.querySelector('.leaflet-control-zoom');
-    const scaleCtrl = document.querySelector('.leaflet-control-scale');
-    const wasRetracted = legendRetracted.value;
-    legendRetracted.value = false;
-    if (zoomCtrl) zoomCtrl.style.display = 'none';
-    navEl.style.visibility = 'hidden';
-    if (sidebarEl) sidebarEl.style.visibility = 'hidden';
-    const legendHead = legendEl.querySelector('.legend-head');
-    const origLegendBg = legendEl.style.background;
-    const origLegendMaxW = legendEl.style.maxWidth;
-    const origLegendW = legendEl.style.width;
-    const origLegendShadow = legendEl.style.boxShadow;
-    const origHeadBg = legendHead ? legendHead.style.background : null;
-    const origScaleMargin = scaleCtrl ? scaleCtrl.style.marginLeft : null;
-    if (scaleCtrl) scaleCtrl.style.marginLeft = '400px';
-    legendEl.style.background = '#fff';
-    legendEl.style.maxWidth = 'none';
-    legendEl.style.width = '280px';
-    legendEl.style.boxShadow = 'none';
-    if (legendHead) legendHead.style.background = '#fff';
-    exporting.value = true;
-    try {
-        await new Promise(r => requestAnimationFrame(r));
-        const canvas = await html2canvas(mapRef.value, {
-            useCORS: true, backgroundColor: '#fff', scale: 1, logging: false,
-        });
-        if (format === 'png') {
-            const link = document.createElement('a');
-            link.download = 'carte-abc.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        } else if (format === 'pdf') {
-            const pdf = new jsPDF('landscape', 'mm', 'a4');
-            const pw = pdf.internal.pageSize.getWidth();
-            const ph = pdf.internal.pageSize.getHeight();
-            const r = Math.min(pw / canvas.width, ph / canvas.height);
-            pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (pw - canvas.width * r) / 2, (ph - canvas.height * r) / 2, canvas.width * r, canvas.height * r);
-            pdf.save('carte-abc.pdf');
-        }
-    } finally {
-        exporting.value = false;
-        if (zoomCtrl) zoomCtrl.style.display = '';
-        if (scaleCtrl) scaleCtrl.style.marginLeft = origScaleMargin;
-        navEl.style.visibility = '';
-        if (sidebarEl) sidebarEl.style.visibility = '';
-        legendEl.style.background = origLegendBg;
-        legendEl.style.maxWidth = origLegendMaxW;
-        legendEl.style.width = origLegendW;
-        legendEl.style.boxShadow = origLegendShadow;
-        if (legendHead) legendHead.style.background = origHeadBg;
-        if (wasRetracted) legendRetracted.value = true;
-    }
+function exportMap(format) {
+    return exportMapImage(format, {
+        mapEl: mapRef.value,
+        legendEl: legendRef.value,
+        navEl: navRef.value,
+        sidebarEl: sidebarRef.value,
+        legendRetracted,
+        exporting,
+    });
 }
 
 onMounted(async () => {
-    const [{ default: leaf }, { default: hc }, jspdfMod] = await Promise.all([
-        import('leaflet'),
-        import('html2canvas'),
-        import('jspdf'),
-    ]);
+    const [{ default: leaf }] = await Promise.all([import('leaflet')]);
     L = leaf;
-    html2canvas = hc;
-    jsPDF = jspdfMod.jsPDF;
 
     map = L.map(mapRef.value, {
         preferCanvas: true,
