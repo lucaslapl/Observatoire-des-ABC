@@ -45,7 +45,7 @@ Route::get('/confidentialite', [PageController::class, 'confidentialite'])->name
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
-    Route::post('/login', [AuthController::class, 'store']);
+    Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:login');
 });
 
 Route::middleware('auth')->group(function () {

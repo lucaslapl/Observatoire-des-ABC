@@ -6,7 +6,8 @@ on:
   pull_request:
 
 jobs:
-  build:
+  php:
+    name: PHP 8.3 (tests + style)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -18,13 +19,42 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, intl, dom, xml
           coverage: none
 
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Copy environment
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Run PHPUnit
+        run: php artisan test
+
+      - name: Run Pint (style)
+        run: ./vendor/bin/pint --test
+
+  node:
+    name: Node 24 (build Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund
+
       - run: npm run build

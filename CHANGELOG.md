@@ -6,10 +6,38 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Ajouté
+- **Développement local 100 % Docker** : `docker compose up -d app` (PHP 8.3,
+  PostGIS 16), profils `build` (assets Vite) et `hmr` (hot reload), entrypoint
+  automatique (composer, `APP_KEY`, migrations, seed, import legacy si base
+  vide). Plus besoin de WAMP (`docker/`, `docker-compose.yml`, `AGENTS.md`).
+- **AGENTS.md** : contexte projet, commandes, invariants critiques, conventions.
+
+### Sécurité
+- **Anti brute-force sur `/login`** : rate limit 5 essais/min par couple
+  email+IP et 20/min par IP (`throttle:login`).
+- **`GET /api/contributions` ne publie que les contributions `validee`** ;
+  les contributions `en_attente`/`refusee` restent visibles côté admin.
+- **`TRUST_PROXY=1`** derrière un reverse proxy : `request()->ip()` lit
+  l'IP réelle (`X-Forwarded-For`) et le schéma https est respecté.
+- **`COOKIE_SECURE=1`** en production : cookie de session en `Secure`.
+
 ### Changé
+- **`GET /api/abc.geojson` : cache HTTP** — ETag (état des tables
+  `projets`/`communes`), `Cache-Control: public, max-age=3600`, réponse 304
+  immédiate si l'ETag correspond (~4 Mo économisés par visite répétée).
+- **`/api/meta` : 5 requêtes SQL sur `projets` regroupées en une seule**
+  (agrégats conditionnels), sortie strictement identique (parité API).
 - Licence du projet : passage de MIT à « **Tous droits réservés** » (propriétaire).
   Aucune réutilisation autorisée tant que le projet n'est pas viable et autonome
   (`LICENSE`, `package.json`, `README`).
+
+### Hygiène du dépôt
+- CI : fusion de `ci.yml` et `tests.yml` en un seul workflow (jobs `php`
+  tests + style, `node` build) ; suppression de la référence à la branche
+  obsolète `laravel-migration`.
+- `data/cache/` (16 Mo de CSV hérités) retiré du suivi git (régénérable par le
+  collect ; `data/abc.db` reste suivi, source de `abc:import-legacy`).
 
 ### À venir
 - En réflexion.

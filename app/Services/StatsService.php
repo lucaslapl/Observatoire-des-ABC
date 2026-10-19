@@ -18,32 +18,34 @@ class StatsService
 
     public function meta(): array
     {
-        $countPt = Projet::where('potentiellement_termine', true)->count();
-        $countPec = Projet::where('potentiellement_en_cours', true)->count();
-        $countEstimes = Projet::where('estime_termine', true)->count();
-        $countStale = Projet::where('source', 'wayback')->count();
-        $countVerifies = Verification::where('etat', '!=', 'a_verifier')->count();
-        $countAnomalies = Commune::where('anomalie', true)->count();
-        $countContributionsEnAttente = Contribution::where('statut', 'en_attente')->count();
+        // Une seule requête groupée remplace cinq COUNT(*) sur `projets`
+        // (la sortie doit rester strictement identique : parité API).
+        $rows = Projet::query()
+            ->selectRaw(
+                'statut, COUNT(*) as n, '
+                .'SUM(CASE WHEN potentiellement_termine THEN 1 ELSE 0 END) as pt, '
+                .'SUM(CASE WHEN potentiellement_en_cours THEN 1 ELSE 0 END) as pec, '
+                .'SUM(CASE WHEN estime_termine THEN 1 ELSE 0 END) as et, '
+                ."SUM(CASE WHEN source = 'wayback' THEN 1 ELSE 0 END) as wayback"
+            )
+            ->groupBy('statut')
+            ->orderBy('statut')
+            ->get();
 
         return [
             'sources' => config('abc.source_dates'),
-            'stats' => Projet::query()
-                ->select('statut', DB::raw('COUNT(*) as n'))
-                ->groupBy('statut')
-                ->orderBy('statut')
-                ->get()
+            'stats' => $rows
                 ->map(fn ($r) => ['statut' => $r->statut, 'n' => (int) $r->n])
                 ->values()
                 ->all(),
-            'countProjets' => Projet::count(),
-            'countPotentiellementTermines' => $countPt,
-            'countPotentiellementEnCours' => $countPec,
-            'countDonnees2022' => $countStale,
-            'countEstimes' => $countEstimes,
-            'countVerifies' => $countVerifies,
-            'countAnomalies' => $countAnomalies,
-            'countContributionsEnAttente' => $countContributionsEnAttente,
+            'countProjets' => (int) $rows->sum('n'),
+            'countPotentiellementTermines' => (int) $rows->sum('pt'),
+            'countPotentiellementEnCours' => (int) $rows->sum('pec'),
+            'countDonnees2022' => (int) $rows->sum('wayback'),
+            'countEstimes' => (int) $rows->sum('et'),
+            'countVerifies' => Verification::where('etat', '!=', 'a_verifier')->count(),
+            'countAnomalies' => Commune::where('anomalie', true)->count(),
+            'countContributionsEnAttente' => Contribution::where('statut', 'en_attente')->count(),
         ];
     }
 

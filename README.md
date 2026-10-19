@@ -42,6 +42,11 @@ Pour repartir de zéro : `docker compose down -v`.
 > le conteneur lirait `DB_HOST` dans le `.env` hôte (127.0.0.1) au lieu de
 > l'alias Docker `postgis`.
 
+> **Attention HMR** : si le conteneur Vite est arrêté brutalement
+> (`docker compose stop vite`), le fichier `public/hot` reste en place et le
+> site affiche une **page blanche** (les assets pointent vers un serveur
+> éteint). Supprimer `public/hot` pour revenir aux assets compilés.
+
 ## Installation (développement local)
 
 ```bash

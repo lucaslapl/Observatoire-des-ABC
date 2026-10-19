@@ -169,7 +169,9 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // COOKIE_SECURE (variable historique du projet) ou SESSION_SECURE_COOKIE.
+    // En production HTTPS : 1.
+    'secure' => env('COOKIE_SECURE', env('SESSION_SECURE_COOKIE')),
 
     /*
     |--------------------------------------------------------------------------

@@ -18,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Derrière un reverse proxy TLS (nginx, Plesk…) : TRUST_PROXY=1 pour
+        // que request()->ip() lise l'IP réelle dans X-Forwarded-For.
+        if (filter_var(env('TRUST_PROXY', false), FILTER_VALIDATE_BOOLEAN)) {
+            $middleware->trustProxies(at: '*');
+        }
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

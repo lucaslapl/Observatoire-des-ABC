@@ -15,6 +15,7 @@
 /auth.json
 /dist
 /data/backups/
+/data/cache/
 /data/exports/
 /data/server.pid
 /node_modules

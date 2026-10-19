@@ -14,8 +14,12 @@ class ContributionController extends Controller
 {
     public function index(Request $request): array
     {
+        // Endpoint public : seules les contributions validées par un admin sont
+        // publiées. Les contributions en attente ou refusées restent visibles
+        // côté admin (GET /api/admin/contributions, panneau /admin).
         $rows = Contribution::query()
             ->select('projet_id', 'type', 'payload_json', 'commentaire', 'created_at', 'statut')
+            ->where('statut', 'validee')
             ->orderByDesc('created_at')
             ->get();
 

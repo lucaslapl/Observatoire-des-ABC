@@ -57,6 +57,36 @@ class ContributionFlowTest extends TestCase
         ])->assertStatus(422);
     }
 
+    public function test_public_contributions_list_only_shows_validated(): void
+    {
+        Contribution::create([
+            'projet_id' => $this->projetId,
+            'type' => 'statut',
+            'payload_json' => ['statut_suggere' => 'termine'],
+            'statut' => 'en_attente',
+        ]);
+        Contribution::create([
+            'projet_id' => $this->projetId,
+            'type' => 'note',
+            'payload_json' => ['note' => 'Note refusée'],
+            'statut' => 'refusee',
+        ]);
+        Contribution::create([
+            'projet_id' => $this->projetId,
+            'type' => 'note',
+            'payload_json' => ['note' => 'Note validée'],
+            'statut' => 'validee',
+        ]);
+
+        $response = $this->getJson('/api/contributions');
+        $response->assertOk();
+
+        $rows = $response->json('contributions');
+        $this->assertCount(1, $rows);
+        $this->assertSame('validee', $rows[0]['statut']);
+        $this->assertSame('Note validée', $rows[0]['payload_json']['note']);
+    }
+
     public function test_contribution_unknown_projet_returns_404(): void
     {
         $this->postJson('/api/contributions', [

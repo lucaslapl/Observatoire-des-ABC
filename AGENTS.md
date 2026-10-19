@@ -42,6 +42,10 @@ docker compose run --rm app php artisan test     # PHPUnit
 docker compose down               # les volumes (DB, vendor, node_modules) persistent
 ```
 
+Après un arrêt du conteneur Vite (`--profile hmr`), supprimer `public/hot`
+s'il traîne : sinon le site sert des assets pointant vers le serveur HMR
+éteint et affiche une page blanche.
+
 Au premier démarrage, `docker/php/entrypoint.sh` fait tout seul : `composer
 install` (volume `abc_vendor`), `APP_KEY` si absente, `migrate`, `db:seed`
 (admin depuis `ADMIN_*` du `.env`), puis `abc:import-legacy` si la table
