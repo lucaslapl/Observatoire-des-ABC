@@ -109,12 +109,14 @@ d'un collect à l'autre et jamais écrasées.
 > suivre la dernière révision publiée ; l'URL pinnée de
 > `config/abc.php` sert de repli. Désactivable via `SOURCES_AUTO_RESOLVE=false`.
 >
-> **Source Fonds vert** : les exports `fonds-vert-p113-*.csv` actuellement
-> pinnés ne listent que **65 projets ABC** (16 en 2024, 49 en 2025). L'ancienne
-> base `data/abc.db` en contenait 140 — issue d'une version plus riche de ces
-> exports qui n'est plus disponible. Le collect reflète donc désormais les
-> sources en ligne (1263 projets au total, soit 75 « à venir » de moins que
-> l'ancien jeu de données).
+> **Source Fonds vert** : le lot biodiversité (P113) est la bonne source —
+> l'export général `fonds-vert-2025-export.csv` (5 590 lignes, tous lots)
+> ne contient que des faux positifs « ABC » (bâtiments, etc.). Les exports
+> `fonds-vert-p113-*.csv` actuels ne listent que **65 projets ABC** (16 en
+> 2024, 49 en 2025). L'ancienne base `data/abc.db` en contenait 140 — issue
+> d'une version plus riche de ces exports qui n'est plus disponible. Le
+> collect reflète donc les sources en ligne (1263 projets au total, soit
+> 75 « à venir » de moins que l'ancien jeu de données).
 >
 > **Exclusions** : un projet supprimé depuis la carte (admin) est enregistré
 > dans `project_exclusions` ; le collect **ne le ré-importe pas** tant que
