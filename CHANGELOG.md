@@ -6,6 +6,23 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Corrigé
+- **Incident du 2026-10-19 (production) — `abc:collect` supprimait les projets
+  aux données inchangées** : la suppression ciblée détectait les « disparus
+  des sources » via `updated_at < début du collect`, or un upsert sans
+  changement de données ne rafraîchit PAS `updated_at` (comportement
+  d'Eloquent). ~1000 projets ont été supprimés en production avant
+  restauration depuis la sauvegarde. Nouvelle détection fondée sur les ids
+  réellement vus dans les sources (`ProjetRepository::markIngested`), y
+  compris les projets wayback déjà connus (le collector n'upsert que les
+  nouveaux).
+- **Garde-fous** : une source répondant une page HTML (ex. archive.org en
+  rate-limit) est refusée et jamais mise en cache (`DownloadService`) ; une
+  suppression ciblée portant sur plus de la moitié des projets est refusée
+  sauf `--force` ; un collect sans aucun projet ingéré est refusé.
+- Tests de régression pour ces trois cas (CollectServiceTest,
+  DownloadServiceTest).
+
 ### Ajouté
 - **Résolution automatique des sources data.gouv** (`DataGouvResolver`) : à
   chaque collect, les URLs CSV du registre ABC et du Fonds vert sont

@@ -84,7 +84,7 @@ compte est supprimé — le travail humain n'est jamais perdu.
 
 | Commande | Rôle |
 | --- | --- |
-| `abc:collect` | Collecte des 4 sources (data.gouv, Wayback, Fonds vert 2024/2025), puis statuts, géocodage, anomalies. **Synchronisation** : upserts + suppression ciblée des projets disparus sans travail humain — aucun superuser requis. |
+| `abc:collect` | Collecte des 4 sources (data.gouv, Wayback, Fonds vert 2024/2025), puis statuts, géocodage, anomalies. **Synchronisation** : upserts + suppression ciblée des projets disparus sans travail humain — aucun superuser requis. Garde-fous : sources HTML refusées, suppression massive refusée sans `--force`. |
 | `abc:import-legacy` | Importe `data/abc.db` (SQLite) vers PostgreSQL (une seule fois). |
 | `abc:status` | Recalcule statuts + anomalies. |
 | `abc:geocode` | Géocode les communes manquantes (geo.api.gouv.fr). |

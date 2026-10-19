@@ -67,17 +67,22 @@ class WaybackCollector
                 $this->projects->upsertProjet([
                     'id' => $key,
                     'nom' => $first['nom'] ?? '',
-                    'structure_porteuse' => $first['structure_porteuse'] ?: null,
-                    'type_de_structure_porteuse' => $first['type_de_structure_porteuse'] ?: null,
+                    'structure_porteuse' => ($first['structure_porteuse'] ?? '') ?: null,
+                    'type_de_structure_porteuse' => ($first['type_de_structure_porteuse'] ?? '') ?: null,
                     'annee_debut' => $this->toInt($first['annee_debut'] ?? null),
                     'avancement_raw' => $first['avancement'] ?? null,
                     'statut' => $this->status->avancementToStatut($first['avancement'] ?? null),
                     'ami_ofb' => $this->parseAmi($first['ami_ofb'] ?? null),
                     'source' => 'wayback',
-                    'url_page' => $first['ressource_documentaire'] ?: null,
+                    'url_page' => ($first['ressource_documentaire'] ?? '') ?: null,
                     'communes' => $communes,
                 ]);
                 $projects++;
+            } else {
+                // Projet déjà connu : pas de ré-upsert, mais il est bien
+                // présent dans la source (il ne doit pas être considéré
+                // comme disparu lors de la suppression ciblée).
+                $this->projects->markIngested($key);
             }
 
             if (($first['avancement'] ?? null) !== null && $first['avancement'] !== '') {

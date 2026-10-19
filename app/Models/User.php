@@ -19,6 +19,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected $hidden = ['password', 'remember_token'];
 
+    /** @return HasMany<Contribution, $this> */
     public function contributions(): HasMany
     {
         return $this->hasMany(Contribution::class);

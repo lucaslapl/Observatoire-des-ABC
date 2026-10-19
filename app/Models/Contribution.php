@@ -20,6 +20,7 @@ class Contribution extends Model
         ];
     }
 
+    /** @return BelongsTo<Projet, $this> */
     public function projet(): BelongsTo
     {
         return $this->belongsTo(Projet::class, 'projet_id', 'id');

@@ -16,6 +16,38 @@ class ProjetRepository
     /** Ids exclus, chargés une fois par collect (mémoire). */
     private static ?array $excludedIds = null;
 
+    /** Ids vus dans les sources pendant le collect courant (mémoire). */
+    private static array $ingestedIds = [];
+
+    /**
+     * Démarre une nouvelle fenêtre de collect : vide les ids ingérés.
+     * À appeler avant les collectors.
+     */
+    public static function resetIngested(): void
+    {
+        self::$ingestedIds = [];
+    }
+
+    /**
+     * Ids vus dans les sources depuis resetIngested().
+     *
+     * @return array<int, string>
+     */
+    public static function ingestedIds(): array
+    {
+        return array_keys(self::$ingestedIds);
+    }
+
+    /**
+     * Marque un projet comme présent dans la source courante — même s'il
+     * n'est pas ré-upserté (ex. wayback : apporte seulement les projets
+     * inconnus, mais les projets existants restent vus dans la source).
+     */
+    public function markIngested(string $id): void
+    {
+        self::$ingestedIds[$id] = true;
+    }
+
     public static function refreshExclusions(): void
     {
         self::$excludedIds = ProjectExclusion::query()->pluck('projet_id')->all();
@@ -32,6 +64,8 @@ class ProjetRepository
 
     public function upsertProjet(array $p): void
     {
+        $this->markIngested($p['id']);
+
         if ($this->isExcluded($p['id'])) {
             return;
         }

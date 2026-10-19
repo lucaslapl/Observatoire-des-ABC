@@ -9,16 +9,16 @@ use App\Models\Commune;
 use App\Models\Contribution;
 use App\Models\Projet;
 use App\Models\Verification;
-use Carbon\CarbonInterface;
+use RuntimeException;
 
 /**
  * Orchestration du collect complet (port de src/collect.ts).
  *
- * Stratégie de synchronisation (v2) : les sources sont ré-ingérées par upsert,
- * puis les projets disparus des sources SANS travail humain sont supprimés
- * ciblé. Les tables verifications / contributions / audit_log ne sont jamais
- * purgées, et aucun superuser Postgres n'est requis (l'ancienne purge via
- * `session_replication_role = replica` a été supprimée).
+ * Stratégie de synchronisation (v2.1) : les sources sont ré-ingérées par
+ * upsert, et chaque projet vu dans une source est enregistré
+ * (ProjetRepository::markIngested). Ne sont supprimés que les projets
+ * ABSENTS des sources ET sans travail humain. Ne jamais se fier à
+ * updated_at : un upsert sans changement de données ne le rafraîchit pas.
  */
 class CollectService
 {
@@ -31,20 +31,16 @@ class CollectService
         private AnomalyService $anomalies,
     ) {}
 
-    public function collectAll(bool $init = false): array
+    public function collectAll(bool $init = false, bool $force = false): array
     {
         ProjetRepository::refreshExclusions();
-
-        // Horodatage du début du collect : tout projet upserté pendant le
-        // collect aura updated_at >= $marker. Les autres sont des candidats
-        // à la suppression (disparus des sources).
-        $marker = now();
+        ProjetRepository::resetIngested();
 
         $datagouv = $this->datagouv->collect();
         $wayback = $this->wayback->collect();
         $fondsVert = $this->fondsVert->collect();
 
-        $stale = $this->deleteStaleProjects($marker);
+        $stale = $this->deleteStaleProjects(ProjetRepository::ingestedIds(), $force);
 
         $this->recompute->recomputeStatuses();
         $geocoding = $this->geocode->enrichGeocoding();
@@ -79,29 +75,49 @@ class CollectService
     }
 
     /**
-     * Supprime les projets non ré-ingérés depuis $marker (disparus des
-     * sources), SAUF ceux qui portent du travail humain (verifications,
-     * contributions) : le delete en cascade emporterait ce travail. Les
-     * communes et snapshots des projets supprimés partent en cascade.
+     * Supprime les projets absents des sources (ids non ingérés), SAUF ceux
+     * qui portent du travail humain (verifications, contributions) : le
+     * delete en cascade emporterait ce travail. Les communes et snapshots
+     * des projets supprimés partent en cascade.
      *
+     * Garde-fous :
+     * - ids ingérés vides → erreur (sources indisponibles) ;
+     * - plus de la moitié de la base concernée → erreur, sauf $force :
+     *   une chute massive d'une source ne doit jamais vider la base.
+     *
+     * @param  array<int, string>  $ingestedIds
      * @return int nombre de projets supprimés
      */
-    public function deleteStaleProjects(CarbonInterface $marker): int
+    public function deleteStaleProjects(array $ingestedIds, bool $force = false): int
     {
-        $stale = Projet::query()
-            ->where('updated_at', '<', $marker)
+        if (empty($ingestedIds)) {
+            throw new RuntimeException(
+                'Aucun projet ingéré depuis les sources : suppression annulée (source indisponible ?).'
+            );
+        }
+
+        $candidates = Projet::query()
+            ->whereNotIn('id', $ingestedIds)
             ->whereNotIn('id', Verification::select('projet_id'))
             ->whereNotIn('id', Contribution::select('projet_id'))
             ->pluck('id');
 
-        if ($stale->isEmpty()) {
+        if ($candidates->isEmpty()) {
             return 0;
         }
 
-        // Le cascade ne touchera que communes et snapshots : les lignes
-        // humaines ont été exclues par les whereNotIn ci-dessus.
-        Projet::whereIn('id', $stale)->delete();
+        $existing = Projet::count();
+        if (! $force && $candidates->count() > $existing / 2) {
+            throw new RuntimeException(sprintf(
+                'Suppression annulée : %d projets sur %d seraient supprimés (une source a-t-elle échoué ?).'.
+                ' Relancez avec --force si cette chute est réellement voulue.',
+                $candidates->count(),
+                $existing,
+            ));
+        }
 
-        return $stale->count();
+        Projet::whereIn('id', $candidates)->delete();
+
+        return $candidates->count();
     }
 }
