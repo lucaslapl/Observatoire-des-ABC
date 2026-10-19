@@ -6,8 +6,8 @@ on:
   pull_request:
 
 jobs:
-  php:
-    name: PHP 8.3 (tests + style)
+  ci:
+    name: PHP 8.3 + Node 24 (build, tests, style)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -19,6 +19,12 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, intl, dom, xml
           coverage: none
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
       - name: Get Composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
@@ -29,8 +35,18 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Install dependencies
+      # vendor est requis avant npm run build : resources/js/app.js importe
+      # Ziggy depuis vendor/tightenco/ziggy.
+      - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install JS dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Les tests PHPUnit rendent des pages Inertia (@vite → manifest.json)
+      # et le watchdog SSR lance bootstrap/ssr/ssr.js : le build est requis.
+      - name: Build frontend
+        run: npm run build
 
       - name: Copy environment
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
@@ -43,18 +59,3 @@ jobs:
 
       - name: Run Pint (style)
         run: ./vendor/bin/pint --test
-
-  node:
-    name: Node 24 (build Vite)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - run: npm ci --no-audit --no-fund
-
-      - run: npm run build
