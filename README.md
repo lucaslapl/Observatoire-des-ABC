@@ -15,6 +15,33 @@ filet de secours et source de vérité).
 - Node 20+ / npm
 - PostgreSQL 16 **+ PostGIS** (dev : Docker ; prod : extension de l'hébergeur)
 
+## Développement local avec Docker (recommandé, sans WAMP)
+
+La stack complète (PHP 8.3, Node 24, PostgreSQL 16 + PostGIS) est décrite dans
+`docker-compose.yml` :
+
+```bash
+docker compose up -d app                      # app + PostGIS : http://localhost:8000
+docker compose --profile build run --rm assets # build Vite (npm run build)
+docker compose --profile hmr up vite          # dev avec HMR (http://localhost:5173)
+docker compose run --rm app php artisan test   # suite PHPUnit
+```
+
+Au premier démarrage, `docker/php/entrypoint.sh` fait tout seul :
+`composer install` (volume `abc_vendor`), `APP_KEY` si absente, `migrate`,
+`db:seed` (compte admin depuis `ADMIN_*` du `.env`), puis `abc:import-legacy`
+si la table `projets` est vide. Les variables `DB_HOST=postgis` /
+`DB_PORT=5432` sont forcées par docker-compose et **priment sur `.env`** : le
+`.env` peut donc rester pointé vers `127.0.0.1:5433` pour un usage hors Docker.
+
+Volumes persistants : `abc_pgdata` (données), `abc_vendor`, `abc_node_modules`.
+Pour repartir de zéro : `docker compose down -v`.
+
+> Le serveur utilise `php artisan serve --no-reload` : sans `--no-reload`,
+> Laravel retire les variables d'environnement du sous-processus `php -S` et
+> le conteneur lirait `DB_HOST` dans le `.env` hôte (127.0.0.1) au lieu de
+> l'alias Docker `postgis`.
+
 ## Installation (développement local)
 
 ```bash

@@ -1,21 +1,73 @@
 services:
-  postgis:
-    image: postgis/postgis:16-3.4
-    container_name: abc-postgis
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: abc
-      POSTGRES_USER: abc
-      POSTGRES_PASSWORD: abc
-    ports:
-      - "5433:5432"
-    volumes:
-      - abc_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U abc -d abc"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    # --- Application Laravel (développement local, http://localhost:8000) ---
+    app:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        container_name: abc-app
+        restart: unless-stopped
+        depends_on:
+            postgis:
+                condition: service_healthy
+        environment:
+            # Surcharge le .env : en interne, la base est joignable via le
+            # nom du service (les variables d'environnement priment sur .env).
+            DB_HOST: postgis
+            DB_PORT: 5432
+            APP_URL: http://localhost:8000
+        ports:
+            - "8000:8000"
+        volumes:
+            - .:/var/www/html
+            - abc_vendor:/var/www/html/vendor
+
+    # --- Frontend : build one-shot des assets (npm run build) ---
+    # Usage : docker compose --profile build run --rm assets
+    assets:
+        image: node:24-bookworm-slim
+        profiles: ["build"]
+        working_dir: /var/www/html
+        volumes:
+            - .:/var/www/html
+            - abc_node_modules:/var/www/html/node_modules
+        command: sh -c "npm install --no-audit --no-fund && npm run build"
+
+    # --- Frontend : serveur Vite avec HMR (profil hmr) ---
+    # Usage : docker compose --profile hmr up vite
+    vite:
+        image: node:24-bookworm-slim
+        profiles: ["hmr"]
+        working_dir: /var/www/html
+        ports:
+            - "5173:5173"
+        environment:
+            HOST: 0.0.0.0
+            VITE_DEV_ORIGIN: http://localhost:5173
+        volumes:
+            - .:/var/www/html
+            - abc_node_modules:/var/www/html/node_modules
+        command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+
+    # --- Base de données PostgreSQL 16 + PostGIS ---
+    postgis:
+        image: postgis/postgis:16-3.4
+        container_name: abc-postgis
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: abc
+            POSTGRES_USER: abc
+            POSTGRES_PASSWORD: abc
+        ports:
+            - "5433:5432"
+        volumes:
+            - abc_pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U abc -d abc"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
 
 volumes:
-  abc_pgdata:
+    abc_pgdata:
+    abc_vendor:
+    abc_node_modules:

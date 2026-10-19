@@ -19,6 +19,10 @@ export default defineConfig({
         }),
     ],
     server: {
+        // Dev Docker : Vite écoute sur 0.0.0.0 dans le conteneur, mais le
+        // fichier public/hot doit pointer vers l'URL vue par le navigateur.
+        // VITE_DEV_ORIGIN=http://localhost:5173 est défini dans docker-compose.
+        origin: process.env.VITE_DEV_ORIGIN,
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

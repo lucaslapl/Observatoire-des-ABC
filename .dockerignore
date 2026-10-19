@@ -1,0 +1,16 @@
+.git
+.github
+.gitattributes
+.gitignore
+.editorconfig
+.idea
+.vscode
+node_modules
+vendor
+dist
+data/cache
+data/backups
+data/exports
+public-build.zip
+*.log
+.phpunit.result.cache
