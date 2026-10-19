@@ -21,7 +21,21 @@ const site = computed(() => page.props.site || {});
             <p>
                 La consultation de la carte ne nécessite aucune donnée personnelle. Les propositions de correction
                 (contribution) n'exigent pas de compte : vous pouvez y indiquer un commentaire si vous le souhaitez.
-                Les comptes (contributeur, modérateur, administrateur) sont réservés aux personnes habilitées.
+            </p>
+            <p>
+                L'inscription est ouverte à toute personne souhaitant contribuer. Un compte membre
+                stocke uniquement : un nom d'utilisateur, une adresse email (vérifiée par envoi d'un
+                lien) et un mot de passe haché. Les contributions soumises depuis un compte sont
+                associées à celui-ci pour en faciliter la modération et le suivi.
+            </p>
+
+            <h2 class="h6">Comptes et suppression</h2>
+            <p>
+                Vous pouvez supprimer votre compte à tout moment depuis votre espace membre
+                (après confirmation de votre mot de passe). La suppression efface le compte ;
+                les contributions déjà enregistrées sont conservées et deviennent anonymes,
+                car elles constituent un travail de vérification utile à la qualité des données.
+                Les comptes administrateur et modérateur restent réservés aux personnes habilitées.
             </p>
 
             <h2 class="h6">Cookies & mesure d'audience</h2>
@@ -29,14 +43,14 @@ const site = computed(() => page.props.site || {});
                 Une bannière de consentement vous permet de choisir l'activation de la mesure d'audience
                 (statistiques de fréquentation agrégées). Sans votre consentement, aucun traceur de mesure
                 d'audience n'est chargé. Le cookie de session de connexion est strictement nécessaire au
-                fonctionnement du panneau d'administration.
+                fonctionnement de l'espace membre et du panneau d'administration.
             </p>
 
             <h2 class="h6">Conservation et droits</h2>
             <p>
                 Vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant,
-                en nous contactant via le formulaire de la carte. Les adresses IP des contributions sont stockées
-                le temps de la modération puis anonymisées.
+                en nous contactant via le formulaire de la carte ou depuis votre espace membre. Les adresses IP
+                des contributions sont stockées le temps de la modération puis anonymisées.
             </p>
         </div>
     </Layout>

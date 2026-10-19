@@ -41,6 +41,13 @@ const submit = () => {
 
                         <button class="btn btn-success w-100 mt-3" :disabled="form.processing">Se connecter</button>
                     </form>
+
+                    <div class="text-center small mt-3">
+                        <a href="/forgot-password">Mot de passe oublié ?</a>
+                    </div>
+                    <div class="text-center small mt-1">
+                        Pas encore de compte ? <a href="/register">Créer un compte</a>
+                    </div>
                 </div>
             </div>
         </main>

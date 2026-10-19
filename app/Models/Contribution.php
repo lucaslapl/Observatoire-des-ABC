@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Contribution extends Model
 {
     protected $fillable = [
-        'projet_id', 'type', 'payload_json', 'commentaire', 'ip',
+        'projet_id', 'user_id', 'type', 'payload_json', 'commentaire', 'ip',
         'user_agent', 'statut', 'traite_par', 'traite_le', 'note_admin',
     ];
 
@@ -23,5 +23,10 @@ class Contribution extends Model
     public function projet(): BelongsTo
     {
         return $this->belongsTo(Projet::class, 'projet_id', 'id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

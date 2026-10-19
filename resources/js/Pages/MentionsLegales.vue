@@ -30,8 +30,8 @@ const site = computed(() => page.props.site || {});
             <h2 class="h6">Données personnelles</h2>
             <p>
                 Ce site ne collecte pas de données personnelles en dehors des informations que vous consentez à fournir
-                (proposition de correction, connexion au panneau d'administration). Voir la page
-                <a href="/confidentialite">Politique de confidentialité</a>.
+                (proposition de correction, création d'un compte membre, connexion au panneau d'administration).
+                Voir la page <a href="/confidentialite">Politique de confidentialité</a>.
             </p>
 
             <h2 class="h6">Données et licence</h2>

@@ -59,8 +59,26 @@ Commandes ponctuelles utiles :
 
 ```bash
 docker compose exec app php artisan abc:status
-docker compose exec app composer pint          # style
+docker compose exec app vendor/bin/pint      # style (le script composer "pint" n'existe pas)
 ```
+
+### Emails en local : Mailpit
+
+`docker compose up -d` démarre aussi **Mailpit** (boîte SMTP locale) : les
+emails de l'app (vérification d'email, reset de mot de passe) partent vers
+`mailpit:1025` (variables `MAIL_*` forcées par docker-compose) et se lisent
+dans l'interface **http://localhost:8025**. En production, configurer un
+SMTP réel dans `.env` (`MAIL_HOST`, `MAIL_PORT`, `MAIL_ENCRYPTION=tls`,
+`MAIL_USERNAME`, `MAIL_PASSWORD`).
+
+### Espace membre
+
+Inscription ouverte (`/register`) avec vérification d'email obligatoire
+(`Illuminate\Contracts\Auth\MustVerifyEmail`), rôle `contributeur` attribué
+automatiquement. Espace membre : `/profil` (contributions, mot de passe,
+suppression du compte). Les contributions liées à un compte (colonne
+`contributions.user_id`, nullable) sont conservées et anonymisées si le
+compte est supprimé — le travail humain n'est jamais perdu.
 
 ## Commandes artisan métier
 

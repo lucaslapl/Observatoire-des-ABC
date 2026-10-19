@@ -29,11 +29,33 @@ const pages = [
                                 <i :class="['bi', p.icon]"></i> {{ p.label }}
                             </Link>
                         </li>
-                        <li v-if="$page.props.auth?.user" class="nav-item d-flex align-items-center">
-                            <span v-if="$page.props.auth.user.roles?.includes('admin')" class="nav-link small px-2">
-                                <Link href="/" @click.prevent="$inertia.post('/logout')">Déconnexion</Link>
-                            </span>
-                        </li>
+                        <template v-if="$page.props.auth?.user">
+                            <li v-if="$page.props.auth.user.roles?.includes('admin') || $page.props.auth.user.roles?.includes('moderateur')"
+                                class="nav-item">
+                                <Link href="/admin" class="nav-link px-2 d-flex align-items-center gap-2">
+                                    <i class="bi bi-gear"></i> Admin
+                                </Link>
+                            </li>
+                            <li class="nav-item d-flex align-items-center">
+                                <Link href="/profil" class="nav-link px-2 d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-circle"></i> {{ $page.props.auth.user.name }}
+                                </Link>
+                            </li>
+                            <li class="nav-item d-flex align-items-center">
+                                <Link href="/logout" method="post" as="button" class="nav-link px-2"
+                                    @click.prevent="$inertia.post('/logout')">Déconnexion</Link>
+                            </li>
+                        </template>
+                        <template v-else>
+                            <li class="nav-item d-flex align-items-center gap-1">
+                                <Link href="/login" class="nav-link px-2 d-flex align-items-center gap-2">
+                                    <i class="bi bi-box-arrow-in-right"></i> Connexion
+                                </Link>
+                            </li>
+                            <li class="nav-item d-flex align-items-center">
+                                <Link href="/register" class="btn btn-sm btn-outline-light ms-1">S'inscrire</Link>
+                            </li>
+                        </template>
                     </ul>
                 </div>
             </div>

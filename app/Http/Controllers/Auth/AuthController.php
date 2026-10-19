@@ -16,7 +16,7 @@ class AuthController extends Controller
     {
         return Inertia::render('Login', [
             'status' => session('status'),
-            'canResetPassword' => false,
+            'canResetPassword' => true,
         ]);
     }
 
@@ -35,7 +35,11 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/admin');
+        $user = $request->user();
+
+        return redirect()->intended(
+            $user->hasRole('admin') || $user->hasRole('moderateur') ? '/admin' : '/profil'
+        );
     }
 
     public function destroy(Request $request): RedirectResponse

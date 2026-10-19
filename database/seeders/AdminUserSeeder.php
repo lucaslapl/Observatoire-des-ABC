@@ -24,11 +24,14 @@ class AdminUserSeeder extends Seeder
             return;
         }
 
+        $existing = User::where('email', $email)->first();
+
         $user = User::updateOrCreate(
             ['email' => $email],
             [
                 'name' => $username,
                 'email' => $email,
+                'email_verified_at' => $existing?->email_verified_at ?? now(),
                 'password' => $this->hashIfNeeded($password),
             ],
         );

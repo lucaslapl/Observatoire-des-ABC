@@ -35,5 +35,16 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(5)->by($request->input('email').'|'.$request->ip()),
             Limit::perMinute(20)->by($request->ip()),
         ]);
+
+        // Inscription ouverte : 5 comptes/h par couple email+IP, 10/h par IP.
+        RateLimiter::for('register', fn ($request) => [
+            Limit::perHour(5)->by($request->input('email').'|'.$request->ip()),
+            Limit::perHour(10)->by($request->ip()),
+        ]);
+
+        // Réinitialisation de mot de passe : 3 demandes/h par email+IP.
+        RateLimiter::for('password-reset', fn ($request) => [
+            Limit::perHour(3)->by($request->input('email').'|'.$request->ip()),
+        ]);
     }
 }

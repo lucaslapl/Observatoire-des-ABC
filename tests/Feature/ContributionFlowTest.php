@@ -177,6 +177,24 @@ class ContributionFlowTest extends TestCase
         $this->assertDatabaseHas('contributions', ['id' => $id, 'statut' => 'refusee', 'note_admin' => 'doublon']);
     }
 
+    public function test_authenticated_contribution_is_linked_to_user(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('contributeur');
+
+        $this->actingAs($user)
+            ->postJson('/api/contributions', [
+                'projet_id' => $this->projetId,
+                'type' => 'note',
+                'note' => 'note identifiée',
+            ])->assertCreated();
+
+        $this->assertDatabaseHas('contributions', [
+            'projet_id' => $this->projetId,
+            'user_id' => $user->id,
+        ]);
+    }
+
     public function test_public_contribution_rate_limited(): void
     {
         for ($i = 0; $i < 10; $i++) {

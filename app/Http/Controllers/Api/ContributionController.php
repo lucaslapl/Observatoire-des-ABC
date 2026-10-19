@@ -49,6 +49,7 @@ class ContributionController extends Controller
 
         $contribution = Contribution::create([
             'projet_id' => $validated['projet_id'],
+            'user_id' => $request->user()?->id,
             'type' => $validated['type'],
             'payload_json' => $payload,
             'commentaire' => $validated['commentaire'] ?? null,

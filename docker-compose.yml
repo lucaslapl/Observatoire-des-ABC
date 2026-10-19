@@ -15,6 +15,10 @@ services:
             DB_HOST: postgis
             DB_PORT: 5432
             APP_URL: http://localhost:8000
+            # Mail dev : Mailpit (interface http://localhost:8025)
+            MAIL_MAILER: smtp
+            MAIL_HOST: mailpit
+            MAIL_PORT: 1025
             # Avec le profil ssr : INERTIA_SSR_URL=http://ssr:13714
             INERTIA_SSR_URL: ${INERTIA_SSR_URL:-http://127.0.0.1:13714}
         ports:
@@ -51,10 +55,23 @@ services:
             DB_HOST: postgis
             DB_PORT: 5432
             APP_URL: http://localhost:8000
+            MAIL_MAILER: smtp
+            MAIL_HOST: mailpit
+            MAIL_PORT: 1025
         volumes:
             - .:/var/www/html
             - abc_vendor:/var/www/html/vendor
         command: php artisan schedule:work
+
+    # --- Boîte mail locale (profil dev) : capture les emails de l'app ---
+    # SMTP sur localhost:1025, interface web sur http://localhost:8025
+    mailpit:
+        image: axllent/mailpit:latest
+        container_name: abc-mailpit
+        restart: unless-stopped
+        ports:
+            - "1025:1025"
+            - "8025:8025"
 
     # --- Frontend : build one-shot des assets (npm run build) ---
     # Usage : docker compose --profile build run --rm assets

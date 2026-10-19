@@ -31,6 +31,15 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // Invités → /login ; utilisateurs connectés visitant une page
+        // « guest » (login, register…) → /admin ou /profil selon le rôle.
+        $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->redirectUsersTo(fn (Request $request) => (
+            $request->user()?->hasRole('admin') || $request->user()?->hasRole('moderateur')
+                ? '/admin'
+                : '/profil'
+        ));
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,

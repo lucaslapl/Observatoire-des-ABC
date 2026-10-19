@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\Admin\ActualiteController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\ProfilController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +26,12 @@ Route::get('/robots.txt', fn () => response(
         'Disallow: /api/',
         'Disallow: /admin',
         'Disallow: /login',
+        'Disallow: /register',
+        'Disallow: /profil',
+        'Disallow: /forgot-password',
+        'Disallow: /reset-password',
+        'Disallow: /verification-email',
+        'Disallow: /verify-email',
         'Disallow: /verify',
         '',
         'Sitemap: '.url('/sitemap.xml'),
@@ -46,10 +57,35 @@ Route::get('/confidentialite', [PageController::class, 'confidentialite'])->name
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:login');
+
+    Route::get('/register', [RegisterController::class, 'create'])->name('register');
+    Route::post('/register', [RegisterController::class, 'store'])->middleware('throttle:register');
+
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->middleware('throttle:password-reset')->name('password.email');
+
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
 });
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
+
+    Route::get('/verification-email', [EmailVerificationController::class, 'notice'])
+        ->name('verification.notice');
+
+    Route::post('/verification-email/send', [EmailVerificationController::class, 'send'])
+        ->middleware('throttle:6,1')->name('verification.send');
+
+    Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/profil', [ProfilController::class, 'index'])->name('profil');
+    Route::put('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.password');
+    Route::delete('/profil', [ProfilController::class, 'destroy'])->name('profil.destroy');
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin', [PageController::class, 'admin'])->name('admin');
