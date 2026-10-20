@@ -49,6 +49,20 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        // SMTP du formulaire de contact : l'adresse de contact peut être sur
+        // un autre domaine (même hébergement) avec ses propres identifiants.
+        // CONTACT_MAIL_* surcharge ; si absents, repli sur le SMTP par défaut.
+        'contact' => [
+            'transport' => 'smtp',
+            'scheme' => env('CONTACT_MAIL_SCHEME', env('MAIL_SCHEME')),
+            'host' => env('CONTACT_MAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('CONTACT_MAIL_PORT', env('MAIL_PORT', 2525)),
+            'username' => env('CONTACT_MAIL_USERNAME', env('MAIL_USERNAME')),
+            'password' => env('CONTACT_MAIL_PASSWORD', env('MAIL_PASSWORD')),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

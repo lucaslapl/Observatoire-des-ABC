@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -23,6 +24,9 @@ class ContactMessage extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
+            // Expéditeur = la boîte de contact (domaine du compte SMTP
+            // dédié, cf. mailer `contact`) ; le visiteur reste en Reply-To.
+            from: new Address(config('abc.contact_email'), config('mail.from.name')),
             subject: 'Observatoire des ABC — nouveau message de contact',
         );
     }

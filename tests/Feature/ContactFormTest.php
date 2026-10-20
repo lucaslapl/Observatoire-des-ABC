@@ -45,7 +45,9 @@ class ContactFormTest extends TestCase
         ])->assertRedirect('/contact');
 
         Mail::assertSent(ContactMessage::class, function (ContactMessage $mail) {
+            // Envoi via le mailer `contact`, expéditeur = la boîte de contact.
             $mail->assertTo('bugs@example.org');
+            $mail->assertFrom('bugs@example.org');
 
             $replyTo = collect($mail->replyTo)->map(fn ($a) => $a['address']);
 
@@ -68,6 +70,18 @@ class ContactFormTest extends TestCase
         ])->assertSessionHasErrors(['email', 'message']);
 
         Mail::assertNothingSent();
+    }
+
+    public function test_contact_mailer_falls_back_to_default_smtp(): void
+    {
+        $contact = config('mail.mailers.contact');
+        $smtp = config('mail.mailers.smtp');
+
+        $this->assertSame('smtp', $contact['transport']);
+        $this->assertSame($smtp['host'], $contact['host']);
+        $this->assertSame($smtp['port'], $contact['port']);
+        $this->assertSame($smtp['username'], $contact['username']);
+        $this->assertSame($smtp['password'], $contact['password']);
     }
 
     public function test_contact_form_is_rate_limited(): void
