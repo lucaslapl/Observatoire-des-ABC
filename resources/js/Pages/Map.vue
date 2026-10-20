@@ -128,7 +128,7 @@ const seoJsonLd = computed(() => {
         </section>
 
         <footer class="home-footer py-3">
-            <div class="container small text-center text-muted">
+            <div class="container small text-center">
                 <div>Observatoire des ABC — données réutilisées en lisant <a href="https://data.gouv.fr" rel="noopener">data.gouv.fr</a>. Projet ouvert.</div>
                 <div class="my-1">
                     Développé par <a href="https://lucaslaplanche.fr" target="_blank" rel="noopener">Lucas LAPLANCHE</a> ·
