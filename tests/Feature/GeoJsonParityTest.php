@@ -92,6 +92,19 @@ class GeoJsonParityTest extends TestCase
         $this->assertArrayHasKey('sources', $response->json());
     }
 
+    public function test_meta_counte_les_projets_non_localises(): void
+    {
+        Projet::create(['id' => 'abc-geo', 'nom' => 'ABC Géolocalisé', 'statut' => 'en_cours', 'source' => 'datagouv']);
+        Commune::create(['projet_id' => 'abc-geo', 'code_geographique' => '10007', 'libelle_geographique' => 'A', 'lon' => 2.35, 'lat' => 48.85]);
+        Projet::create(['id' => 'abc-nogeo', 'nom' => 'ABC Non Géolocalisé', 'statut' => 'a_venir', 'source' => 'fondsvert-p113-2024']);
+        Commune::create(['projet_id' => 'abc-nogeo', 'code_geographique' => '10008', 'libelle_geographique' => 'B', 'lon' => null, 'lat' => null]);
+
+        $response = $this->getJson('/api/meta');
+        $response->assertOk();
+        $response->assertJsonPath('countProjets', 2);
+        $response->assertJsonPath('countNonLocalises', 1);
+    }
+
     public function test_verification_list_endpoint(): void
     {
         $projet = Projet::create([

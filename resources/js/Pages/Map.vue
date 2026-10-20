@@ -92,6 +92,11 @@ const seoJsonLd = computed(() => {
                             <div class="stat"><span class="n">{{ meta?.countEstimes ?? 0 }}</span><span class="l">reclassés « terminé » (&gt; 5 ans)</span></div>
                             <div class="stat"><span class="n">{{ meta?.countAnomalies ?? 0 }}</span><span class="l">communes incohérentes écartées</span></div>
                         </div>
+                        <p v-if="meta?.countNonLocalises" class="small text-muted mt-2 mb-0">
+                            {{ meta.countNonLocalises }} projet{{ meta.countNonLocalises > 1 ? 's' : '' }}
+                            {{ meta.countNonLocalises > 1 ? 'figurent' : 'figure' }} dans les statistiques mais pas
+                            sur la carte : leurs communes n'ont pas pu être géolocalisées.
+                        </p>
                         <p class="mt-3 mb-0">
                             <a class="btn btn-outline-success btn-sm" href="/carte">Accéder à la carte complète</a>
                             <Link class="btn btn-outline-success btn-sm ms-2" href="/actualites">Suivre l'actualité</Link>

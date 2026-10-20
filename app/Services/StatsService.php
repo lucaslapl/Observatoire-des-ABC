@@ -45,6 +45,12 @@ class StatsService
             'countEstimes' => (int) $rows->sum('et'),
             'countVerifies' => Verification::where('etat', '!=', 'a_verifier')->count(),
             'countAnomalies' => Commune::where('anomalie', true)->count(),
+            'countNonLocalises' => Projet::query()
+                ->whereDoesntHave('communes', fn ($q) => $q
+                    ->whereNotNull('lon')
+                    ->whereNotNull('lat')
+                    ->where(fn ($q2) => $q2->where('lon', '!=', 0)->orWhere('lat', '!=', 0)))
+                ->count(),
             'countContributionsEnAttente' => Contribution::where('statut', 'en_attente')->count(),
         ];
     }

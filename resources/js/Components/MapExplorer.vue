@@ -662,6 +662,7 @@ onBeforeUnmount(() => {
                     <p>Les compteurs totaux (bas) et par statut (légende) ne tiennent compte que des projets visibles dans la fenêtre courante de la carte, filtres appliqués.</p>
                     <p>Projets regroupés en un point rempli sont comptés pour leurs communes.</p>
                     <p>Quand plusieurs ABC cohabitent à la même commune, un marqueur unique liste chaque projet avec son propre statut et son année.</p>
+                    <p>Les projets dont aucune commune n'a pu être géolocalisée ne figurent pas sur la carte : le compteur « projets » peut donc être inférieur au total de l'accueil.</p>
                 </span>
             </span>
         </div>
@@ -778,7 +779,7 @@ onBeforeUnmount(() => {
 }
 #map { position: relative; z-index: 0; }
 .legend {
-    position: absolute; z-index: 1000; bottom: 16px; left: 10px;
+    position: absolute; z-index: 1000; bottom: 30px; left: 10px;
     width: 288px; max-width: calc(100vw - 20px);
     font-family: var(--bs-body-font-family);
     background: rgba(255,255,255,.97); border-radius: 10px;
@@ -883,9 +884,10 @@ onBeforeUnmount(() => {
 .count-help {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px; border-radius: 50%;
-    background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.4);
+    background: #14532d; color: #fff; border: 1px solid #14532d;
     font-size: 12px; font-weight: 700; cursor: help;
 }
+.count-help:hover { background: #166534; }
 .count-help-tip {
     display: none; position: absolute; right: 0; top: calc(100% + 8px); z-index: 1001;
     width: 360px; max-width: calc(100vw - 24px); padding: 8px 10px; border-radius: 8px;
