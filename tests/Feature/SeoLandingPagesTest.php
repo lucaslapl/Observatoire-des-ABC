@@ -93,6 +93,30 @@ class SeoLandingPagesTest extends TestCase
         );
     }
 
+    public function test_departement_uppercase_code_redirects_301_to_lowercase(): void
+    {
+        $projet = Projet::create([
+            'id' => 'abc-corse',
+            'nom' => 'ABC de Corse du Sud',
+            'statut' => 'en_cours',
+            'source' => 'data_gouv',
+        ]);
+        Commune::create([
+            'projet_id' => $projet->id,
+            'code_geographique' => '2A004',
+            'libelle_geographique' => 'Ajaccio',
+            'departement' => '2A',
+            'libelle_departement' => 'Corse-du-Sud',
+            'region' => 'Corse',
+            'anomalie' => false,
+        ]);
+
+        $this->get('/departement/2A')
+            ->assertStatus(301)
+            ->assertRedirect('/departement/2a');
+        $this->get('/departement/2a')->assertOk();
+    }
+
     public function test_region_page_returns_departments(): void
     {
         $this->seedData();
@@ -148,7 +172,42 @@ class SeoLandingPagesTest extends TestCase
         $this->get('/robots.txt')
             ->assertOk()
             ->assertSee('Disallow: /api/')
-            ->assertSee('Sitemap:');
+            ->assertSee('Sitemap:')
+            ->assertHeader('Cache-Control', 'max-age=3600, public');
+    }
+
+    public function test_sitemap_is_cacheable(): void
+    {
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertHeader('Cache-Control', 'max-age=3600, public');
+    }
+
+    public function test_feed_lists_published_actualites_only(): void
+    {
+        $publiee = Actualite::create([
+            'titre' => 'Nouveauté ABC',
+            'slug' => 'nouveaute-abc',
+            'contenu' => 'Contenu de la publication.',
+            'statut' => 'publie',
+            'date_publication' => now()->subDay(),
+        ]);
+        Actualite::create([
+            'titre' => 'Brouillon',
+            'slug' => 'brouillon',
+            'contenu' => 'Non publié.',
+            'statut' => 'brouillon',
+        ]);
+
+        $response = $this->get('/feed.xml');
+
+        $response->assertOk()
+            ->assertHeader('Content-Type', 'application/atom+xml; charset=UTF-8')
+            ->assertHeader('Cache-Control', 'max-age=3600, public')
+            ->assertSee('<feed xmlns="http://www.w3.org/2005/Atom">', false)
+            ->assertSee('/actualites/'.$publiee->slug, false)
+            ->assertSee('<title>Nouveauté ABC</title>', false)
+            ->assertDontSee('brouillon');
     }
 
     public function test_sitemap_contains_landing_urls(): void

@@ -57,6 +57,11 @@ const ogType = computed(() => props.ogType || site.value.og_type || 'website');
 const ogImage = computed(() =>
     toAbsolute(props.ogImage || site.value.ogImage || '/og-image.png'),
 );
+const ogImageAlt = computed(() => site.value.ogImageAlt || site.value.name || '');
+const twitterHandle = computed(() => {
+    const handle = String(site.value.twitterHandle || '').replace(/^@/, '').trim();
+    return handle ? `@${handle}` : null;
+});
 
 const ldBlocks = computed(() => {
     if (!props.jsonLd) return [];
@@ -80,7 +85,11 @@ const ldJson = (block) =>
         <meta property="og:url" :content="canonical" v-if="canonical" />
         <meta property="og:locale" content="fr_FR" />
         <meta property="og:image" :content="ogImage" />
+        <meta property="og:image:width" :content="site.ogImageWidth || 1200" />
+        <meta property="og:image:height" :content="site.ogImageHeight || 630" />
+        <meta property="og:image:alt" :content="ogImageAlt" v-if="ogImageAlt" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" :content="twitterHandle" v-if="twitterHandle" />
         <meta name="twitter:title" :content="pageTitle" />
         <meta name="twitter:description" :content="pageDescription" />
         <meta name="twitter:image" :content="ogImage" />

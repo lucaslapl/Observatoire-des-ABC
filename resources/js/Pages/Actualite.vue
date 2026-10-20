@@ -22,6 +22,15 @@ const crumbs = computed(() => [
     { label: a.value.titre },
 ]);
 
+// Meta description : 160 caractères max, coupée à la frontière de mot.
+const pageDescription = computed(() => {
+    const contenu = (a.value.contenu || '').replace(/\s+/g, ' ').trim();
+    if (contenu.length <= 160) return contenu;
+    const coupe = contenu.slice(0, 160);
+    const dernierEspace = coupe.lastIndexOf(' ');
+    return (dernierEspace > 100 ? coupe.slice(0, dernierEspace) : coupe).trim() + '…';
+});
+
 const jsonLd = computed(() => {
     const base = site.value.url || '';
     return [
@@ -44,7 +53,7 @@ const jsonLd = computed(() => {
             publisher: {
                 '@type': 'Organization',
                 name: site.value.name,
-                logo: { '@type': 'ImageObject', url: `${base}/favicon.svg` },
+                logo: { '@type': 'ImageObject', url: `${base}/favicon.png` },
             },
             ...(a.value.auteur ? { author: { '@type': 'Person', name: a.value.auteur } } : { author: { '@type': 'Organization', name: site.value.name } }),
         },
@@ -54,7 +63,7 @@ const jsonLd = computed(() => {
 
 <template>
     <Layout>
-        <Seo :title="a.titre" :description="a.contenu?.slice(0, 160)" :jsonLd="jsonLd" />
+        <Seo :title="a.titre" :description="pageDescription" :jsonLd="jsonLd" />
         <div class="container py-4">
             <article style="max-width: 760px;">
                 <Breadcrumbs :items="crumbs" />

@@ -28,7 +28,7 @@ const crumbs = computed(() => {
 const statutClass = (s) =>
     ({ en_cours: 'text-bg-success', a_venir: 'text-bg-warning', termine: 'text-bg-primary', inconnu: 'text-bg-secondary' })[s] || 'text-bg-secondary';
 
-const pageTitle = computed(() => `Atlas de la Biodiversité Communale — ${d.value.label}`);
+const pageTitle = computed(() => `ABC — ${d.value.label} (${d.value.code.toUpperCase()})`);
 const pageDescription = computed(() =>
     `Les Atlas de la Biodiversité Communale (ABC) du département ${d.value.label} (${d.value.code.toUpperCase()}) : ${d.value.n_projets} projet(s) ABC sur ${d.value.n_communes} commune(s).`
 );

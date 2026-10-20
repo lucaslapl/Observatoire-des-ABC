@@ -16,7 +16,7 @@ const r = computed(() => props.region);
 
 const crumbs = computed(() => [{ label: r.value.label }]);
 
-const pageTitle = computed(() => `Atlas de la Biodiversité Communale — région ${r.value.label}`);
+const pageTitle = computed(() => `ABC — région ${r.value.label}`);
 const pageDescription = computed(() =>
     `Les Atlas de la Biodiversité Communale (ABC) en région ${r.value.label} : ${r.value.n_projets} projet(s) sur ${r.value.n_communes} commune(s), dans ${r.value.n_departements} département(s).`
 );

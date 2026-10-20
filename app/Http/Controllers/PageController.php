@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\LandingService;
 use App\Services\StatsService;
 use App\Services\VerificationService;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -57,8 +58,15 @@ class PageController extends Controller
         ]);
     }
 
-    public function departement(string $code): Response
+    public function departement(string $code): Response|RedirectResponse
     {
+        // Une seule forme canonique (minuscules) : la casse demandée
+        // (/departement/56A) redirige vers la forme indexée.
+        $norm = mb_strtolower($code);
+        if ($code !== $norm) {
+            return redirect()->to(route('departement.show', ['code' => $norm]), 301);
+        }
+
         return Inertia::render('Departement', [
             'departement' => $this->landing->departement($code),
         ]);

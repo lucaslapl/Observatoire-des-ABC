@@ -16,15 +16,19 @@ return [
 
     'default_description' => 'Observatoire national des Atlas de la Biodiversité Communale (ABC) : suivi des projets financés (Registre OFB, Fonds vert), carte interactive, statuts vérifiés et contributions du public.',
 
-    'default_keywords' => 'Atlas de la Biodiversité Communale, ABC, observatoire, biodiversité, communes, OFB, Fonds vert',
-
-    'canonical_base' => null, // null = racine du domaine (url('/'))
+    'canonical_base' => env('SEO_CANONICAL_BASE'), // null = racine du domaine (url('/'))
 
     'og_image' => '/og-image.png',
 
+    'og_image_width' => 1200,
+
+    'og_image_height' => 630,
+
+    'og_image_alt' => 'Observatoire des ABC — carte des Atlas de la Biodiversité Communale',
+
     'og_type' => 'website',
 
-    'twitter_handle' => null,
+    'twitter_handle' => env('SEO_TWITTER_HANDLE'),
 
     /*
     |--------------------------------------------------------------------------

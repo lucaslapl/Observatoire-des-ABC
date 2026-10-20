@@ -65,7 +65,10 @@ class SitemapController extends Controller
                 ."\n</urlset>\n";
         });
 
-        return response($xml)->header('Content-Type', 'application/xml');
+        return response($xml, 200, [
+            'Content-Type' => 'application/xml',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
     }
 
     private function entry(string $loc, ?string $lastmod = null, string $priority = '0.5', string $changefreq = 'monthly'): string

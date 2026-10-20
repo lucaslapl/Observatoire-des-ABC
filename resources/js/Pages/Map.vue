@@ -29,6 +29,7 @@ const fmtSourceDate = (d) =>
 
 const seoJsonLd = computed(() => {
     const meta = props.meta || {};
+    const base = site.value.url || '';
     const sources = meta.sources || {};
     const dates = Object.values(sources).filter(Boolean).sort();
     const datePublished = dates.length ? dates[dates.length - 1] : undefined;
@@ -40,7 +41,8 @@ const seoJsonLd = computed(() => {
             '@type': 'Organization',
             '@id': '#organization',
             name: 'Observatoire des ABC',
-            url: undefined,
+            url: `${base}/`,
+            logo: { '@type': 'ImageObject', url: `${base}/favicon.png` },
             description:
                 'Observatoire national des Atlas de la Biodiversité Communale (ABC) : suivi des projets financés, carte interactive et vérifications.',
         },
@@ -49,9 +51,17 @@ const seoJsonLd = computed(() => {
             '@type': 'Dataset',
             name: 'Observatoire des Atlas de la Biodiversité Communale (ABC)',
             description: `${count} projets ABC suivis en France Métropolitaine et Outre-mer : statut, communes, porteur, périodes et sources (Registre OFB, Fonds vert, archives 2022).`,
-            url: undefined,
+            url: `${base}/`,
             license: 'https://www.etalab.gouv.fr/licence-ouverte-open-licence/',
             publisher: { '@id': '#organization' },
+            distribution: [
+                {
+                    '@type': 'DataDownload',
+                    contentUrl: `${base}/api/abc.geojson`,
+                    encodingFormat: 'application/geo+json',
+                    name: 'Observatoire des ABC — export GeoJSON',
+                },
+            ],
             ...(datePublished ? { dateModified: datePublished } : {}),
             ...(count ? { variableMeasured: [{ name: 'nombre de projets ABC suivis', value: count, unitText: 'projets' }] } : {}),
         },

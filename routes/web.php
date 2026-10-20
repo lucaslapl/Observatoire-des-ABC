@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\ProfilController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
@@ -38,9 +39,11 @@ Route::get('/robots.txt', fn () => response(
         'Sitemap: '.url('/sitemap.xml'),
         '',
     ])
-)->header('Content-Type', 'text/plain; charset=UTF-8'))->name('robots');
+)->header('Content-Type', 'text/plain; charset=UTF-8')
+    ->header('Cache-Control', 'public, max-age=3600'))->name('robots');
 
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/feed.xml', FeedController::class)->name('feed');
 
 Route::get('/verify', [PageController::class, 'verify'])->name('verify');
 

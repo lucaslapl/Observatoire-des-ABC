@@ -29,7 +29,7 @@ const crumbs = computed(() => {
 const statutClass = (s) =>
     ({ en_cours: 'text-bg-success', a_venir: 'text-bg-warning', termine: 'text-bg-primary', inconnu: 'text-bg-secondary' })[s] || 'text-bg-secondary';
 
-const pageTitle = computed(() => `Atlas de la Biodiversité Communale ${c.value.libelle} (${c.value.departement?.code || ''})`);
+const pageTitle = computed(() => `ABC ${c.value.libelle} (${c.value.departement?.code?.toUpperCase() || ''})`);
 const pageDescription = computed(() =>
     `Découvrez les Atlas de la Biodiversité Communale (ABC) sur la commune de ${c.value.libelle}, département ${c.value.departement?.label || ''}${c.value.region?.label ? ', région ' + c.value.region.label : ''}. ${c.value.n_projets} projet(s) ABC recensé(s).`
 );
