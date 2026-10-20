@@ -22,8 +22,8 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
             <p>
                 L'Observatoire des ABC est né d'un constat simple : le site de référence
                 <a href="https://abc.naturefrance.fr" rel="noopener" target="_blank">abc.naturefrance.fr</a>,
-                qui recensait les Atlas de la Biodiversité Communale, est devenu indisponible en
-                <strong>juin 2025</strong>, à la suite de la cyberattaque qui a touché les systèmes
+                qui recensait les Atlas de la Biodiversité Communale, est devenu indisponible
+                <strong>à l'été 2025</strong>, à la suite de la cyberattaque qui a touché les systèmes
                 d'information du
                 <a href="https://www.mnhn.fr" rel="noopener" target="_blank">Muséum national d'Histoire naturelle</a> (MNHN).
                 Des informations publiques utiles aux communes, aux naturalistes et aux curieux se sont
