@@ -724,7 +724,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.map-wrap-full { min-height: 100vh; }
+.map-wrap-full { flex: 1 1 auto; min-height: 0; }
 .map-toolbar {
     position: relative; z-index: 1001; flex-shrink: 0;
     display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
