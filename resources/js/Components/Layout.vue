@@ -1,6 +1,7 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
 import ConsentBanner from './ConsentBanner.vue';
+import DevBanner from './DevBanner.vue';
 
 defineProps({
     title: String,
@@ -15,6 +16,7 @@ const pages = [
 
 <template>
     <div>
+        <DevBanner />
         <nav class="navbar navbar-dark navbar-abc navbar-expand-lg py-2">
             <div class="container-fluid">
                 <Link href="/" class="navbar-brand fs-6 mb-0">🌿 Observatoire des ABC</Link>
@@ -78,6 +80,7 @@ const pages = [
                 <div>
                     <Link href="/carte">Carte</Link>&nbsp;·
                     <Link href="/actualites">Actualités</Link>&nbsp;·
+                    <Link href="/contact">Contact</Link>&nbsp;·
                     <Link href="/mentions-legales">Mentions légales</Link>&nbsp;·
                     <Link href="/confidentialite">Confidentialité</Link>
                 </div>

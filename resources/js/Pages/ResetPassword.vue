@@ -1,5 +1,6 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
+import DevBanner from '../Components/DevBanner.vue';
 import Seo from '../Components/Seo.vue';
 
 const props = defineProps({
@@ -24,6 +25,7 @@ const submit = () => {
 <template>
     <div>
         <Seo noindex title="Nouveau mot de passe" description="Définissez un nouveau mot de passe pour votre compte." />
+        <DevBanner />
         <nav class="navbar navbar-dark navbar-abc py-2">
             <div class="container-fluid">
                 <a class="navbar-brand fs-6 mb-0" href="/">🔐 Observatoire des ABC</a>

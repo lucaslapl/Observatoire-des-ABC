@@ -18,6 +18,7 @@ class SitemapController extends Controller
 
             $urls[] = $this->entry($base.'/', null, '1.0', 'daily');
             $urls[] = $this->entry($base.'/actualites', null, '0.6', 'weekly');
+            $urls[] = $this->entry($base.'/contact', null, '0.5', 'monthly');
 
             // Actualités publiées.
             foreach (DB::table('actualites')

@@ -1,5 +1,6 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
+import DevBanner from '../Components/DevBanner.vue';
 import Seo from '../Components/Seo.vue';
 
 const form = useForm({
@@ -19,6 +20,7 @@ const submit = () => {
 <template>
     <div>
         <Seo noindex title="Créer un compte" description="Créez un compte contributeur sur l'Observatoire des ABC." />
+        <DevBanner />
         <nav class="navbar navbar-dark navbar-abc py-2">
             <div class="container-fluid">
                 <a class="navbar-brand fs-6 mb-0" href="/">🔐 Observatoire des ABC — Inscription</a>

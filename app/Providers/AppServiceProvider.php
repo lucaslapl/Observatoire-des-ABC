@@ -46,5 +46,11 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('password-reset', fn ($request) => [
             Limit::perHour(3)->by($request->input('email').'|'.$request->ip()),
         ]);
+
+        // Formulaire de contact : 3 messages/h par email+IP, 6/h par IP.
+        RateLimiter::for('contact', fn ($request) => [
+            Limit::perHour(3)->by($request->input('email').'|'.$request->ip()),
+            Limit::perHour(6)->by($request->ip()),
+        ]);
     }
 }

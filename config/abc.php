@@ -114,6 +114,13 @@ return [
     'annee_min' => 2000,
 
     /**
+     * Adresse de réception des messages du formulaire de contact
+     * (page /contact, signalée par la bannière de développement).
+     * Indépendante de MAIL_FROM_ADDRESS (expéditeur des emails du site).
+     */
+    'contact_email' => env('CONTACT_EMAIL', env('MAIL_FROM_ADDRESS', 'contact@observatoire-abc.fr')),
+
+    /**
      * Compte administrateur seedé depuis l'environnement.
      */
     'admin' => [
