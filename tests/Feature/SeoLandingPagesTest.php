@@ -163,6 +163,7 @@ class SeoLandingPagesTest extends TestCase
 
     public function test_about_pages_rendered(): void
     {
+        $this->get('/a-propos')->assertOk();
         $this->get('/mentions-legales')->assertOk();
         $this->get('/confidentialite')->assertOk();
     }
@@ -224,6 +225,7 @@ class SeoLandingPagesTest extends TestCase
             ->assertSee('/region/bretagne')
             ->assertSee('/actualites')
             ->assertSee('/contact')
+            ->assertSee('/a-propos')
             ->assertSee('/mentions-legales')
             ->assertSee('/confidentialite');
     }

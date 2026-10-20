@@ -55,6 +55,7 @@ Route::get('/commune/{code}', [PageController::class, 'commune'])->name('commune
 Route::get('/departement/{code}', [PageController::class, 'departement'])->where('code', '[0-9a-zA-Z]{1,3}')->name('departement.show');
 Route::get('/region/{slug}', [PageController::class, 'region'])->where('slug', '[a-z0-9-]+')->name('region.show');
 
+Route::get('/a-propos', [PageController::class, 'aPropos'])->name('a-propos');
 Route::get('/mentions-legales', [PageController::class, 'mentionsLegales'])->name('mentions-legales');
 Route::get('/confidentialite', [PageController::class, 'confidentialite'])->name('confidentialite');
 

@@ -80,6 +80,7 @@ const pages = [
                 </div>
                 <div>
                     <Link href="/carte">Carte</Link>&nbsp;·
+                    <Link href="/a-propos">À propos</Link>&nbsp;·
                     <Link href="/actualites">Actualités</Link>&nbsp;·
                     <Link href="/contact">Contact</Link>&nbsp;·
                     <Link href="/mentions-legales">Mentions légales</Link>&nbsp;·

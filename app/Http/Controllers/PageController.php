@@ -86,6 +86,11 @@ class PageController extends Controller
         ]);
     }
 
+    public function aPropos(): Response
+    {
+        return Inertia::render('APropos');
+    }
+
     public function mentionsLegales(): Response
     {
         return Inertia::render('MentionsLegales');
