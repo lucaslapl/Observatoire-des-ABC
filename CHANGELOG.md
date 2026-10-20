@@ -42,6 +42,12 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
   automatique (composer, `APP_KEY`, migrations, seed, import legacy si base
   vide). Plus besoin de WAMP (`docker/`, `docker-compose.yml`, `AGENTS.md`).
 - **AGENTS.md** : contexte projet, commandes, invariants critiques, conventions.
+- **Modération : action « Annuler »** sur les contributions en attente
+  (`POST /api/admin/contributions/{id}/annuler`) : statut `annulee` (erreur
+  d'envoi / erreur de l'auteur), distinct de « Refuser » (information
+  erronée, statut `refusee`) ; journalisé dans `audit_log`.
+- **Espace admin : liste des comptes** créés (nom, email, rôles, email vérifié,
+  nombre de contributions, date), prop `comptes` de `/admin`.
 
 ### Changé
 - **`abc:collect` : synchronisation sans superuser** — la purge via
@@ -72,6 +78,11 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
   email+IP et 20/min par IP (`throttle:login`).
 - **`GET /api/contributions` ne publie que les contributions `validee`** ;
   les contributions `en_attente`/`refusee` restent visibles côté admin.
+- **Contributions réservées aux comptes vérifiés** : `POST /api/contributions`
+  exige désormais `auth` + `verified` (invité : 401, email non vérifié : 403).
+  Depuis la carte, un visiteur non connecté est redirigé vers
+  `/register?raison=contribution` avec un message explicatif ; un compte non
+  vérifié est invité à vérifier son email.
 - **`TRUST_PROXY=1`** derrière un reverse proxy : `request()->ip()` lit
   l'IP réelle (`X-Forwarded-For`) et le schéma https est respecté.
 - **`COOKIE_SECURE=1`** en production : cookie de session en `Secure`.

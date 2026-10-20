@@ -28,13 +28,14 @@ Route::middleware('web')->group(function () {
 
     Route::get('/contributions', [ContributionController::class, 'index']);
     Route::post('/contributions', [ContributionController::class, 'store'])
-        ->middleware('throttle:10,60');
+        ->middleware(['auth', 'verified', 'throttle:10,60']);
 
     Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::post('/verifications', [VerificationController::class, 'store']);
         Route::get('/admin/contributions', [AdminContributionController::class, 'index']);
         Route::post('/admin/contributions/{id}/valider', [AdminContributionController::class, 'valider']);
         Route::post('/admin/contributions/{id}/refuser', [AdminContributionController::class, 'refuser']);
+        Route::post('/admin/contributions/{id}/annuler', [AdminContributionController::class, 'annuler']);
         Route::post('/admin/contributions/{id}/retirer', [AdminContributionController::class, 'retirer']);
         Route::post('/admin/backup', [BackupController::class, 'store']);
         Route::post('/admin/collect', [CollectController::class, 'store']);

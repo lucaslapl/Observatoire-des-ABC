@@ -20,9 +20,10 @@ const site = computed(() => page.props.site || {});
             <h2 class="h6">Ce que nous collectons</h2>
             <p>
                 La consultation de la carte ne nécessite aucune donnée personnelle. Les propositions de correction
-                (contribution) n'exigent pas de compte : vous pouvez y ajouter un commentaire si vous le souhaitez.
+                (contribution) exigent un compte dont l'adresse email est vérifiée ; vous pouvez y ajouter un
+                commentaire si vous le souhaitez.
                 À des fins de modération (lutte contre le spam et les propositions malveillantes), l'adresse IP
-                et le type de navigateur (user-agent) sont enregistrés avec chaque proposition.
+                et le type de navigateur (user-agent) sont enregistrées avec chaque proposition.
             </p>
             <p>
                 Le <a href="/contact">formulaire de contact</a> collecte une adresse email (obligatoire),

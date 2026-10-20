@@ -24,9 +24,13 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    comptes: {
+        type: Array,
+        default: () => [],
+    },
 });
 
-const ETAT_LABEL = { en_attente: 'en attente', validee: 'validée', refusee: 'refusée', retiree: 'retirée' };
+const ETAT_LABEL = { en_attente: 'en attente', validee: 'validée', refusee: 'refusée', annulee: 'annulée', retiree: 'retirée' };
 const TYPE_LABEL = { statut: 'Statut', date_debut: 'Date de début', note: 'Note', lien: 'Lien', autre: 'Autre info' };
 
 const activeTab = ref('en_attente');
@@ -153,7 +157,7 @@ async function exportAudit() {
 const tabs = [
     { key: 'en_attente', label: 'À modérer' },
     { key: 'validee', label: 'Appliquées' },
-    { key: 'historique', label: 'Refusées / retirées' },
+    { key: 'historique', label: 'Annulées / refusées / retirées' },
     { key: 'toutes', label: 'Toutes' },
 ];
 
@@ -176,7 +180,7 @@ const visibleCards = computed(() => {
     const all = cards.value;
     if (activeTab.value === 'en_attente') return all.filter((c) => c.statut === 'en_attente');
     if (activeTab.value === 'validee') return all.filter((c) => c.statut === 'validee');
-    if (activeTab.value === 'historique') return all.filter((c) => c.statut === 'refusee' || c.statut === 'retiree');
+    if (activeTab.value === 'historique') return all.filter((c) => ['refusee', 'annulee', 'retiree'].includes(c.statut));
     return all;
 });
 
@@ -341,6 +345,42 @@ async function collect() {
                 </div>
             </div>
 
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white fw-semibold py-2">Comptes ({{ comptes.length }})</div>
+                <div class="card-body py-2">
+                    <div v-if="comptes.length === 0" class="text-muted small py-2">Aucun compte.</div>
+                    <div v-else class="table-responsive">
+                        <table class="table table-sm table-striped align-middle mb-0 small">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nom</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Rôles</th>
+                                    <th scope="col">Email vérifié</th>
+                                    <th scope="col">Contributions</th>
+                                    <th scope="col">Créé le</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="u in comptes" :key="u.id">
+                                    <td class="fw-semibold">{{ u.name }}</td>
+                                    <td>{{ u.email }}</td>
+                                    <td>
+                                        <span v-for="r in u.roles" :key="r" class="chip me-1" :class="r">{{ r }}</span>
+                                    </td>
+                                    <td>
+                                        <span v-if="u.email_verifie" class="text-success">oui</span>
+                                        <span v-else class="text-warning">non</span>
+                                    </td>
+                                    <td>{{ u.nb_contributions }}</td>
+                                    <td class="text-muted">{{ formatDateFr(u.cree_le) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div class="row g-2 mb-3">
                 <div v-for="card in statCards" :key="card.label" class="col-6 col-md-3 col-lg-2">
                     <div class="card shadow-sm h-100">
@@ -405,7 +445,10 @@ async function collect() {
                         </div>
                         <div v-if="c.statut === 'en_attente'" class="d-flex gap-2 flex-wrap mt-2">
                             <button class="btn btn-sm btn-success" :disabled="busy" @click="act(c.id, 'valider')">✓ Valider</button>
-                            <button class="btn btn-sm btn-danger" :disabled="busy" @click="act(c.id, 'refuser')">✗ Refuser</button>
+                            <button class="btn btn-sm btn-danger" :disabled="busy" title="Information erronée : la suggestion est rejetée"
+                                @click="act(c.id, 'refuser')">✗ Refuser</button>
+                            <button class="btn btn-sm btn-outline-secondary" :disabled="busy" title="Erreur d'envoi ou erreur de l'auteur : la suggestion est annulée"
+                                @click="act(c.id, 'annuler')">↩ Annuler</button>
                         </div>
                         <div v-else-if="c.statut === 'validee'" class="d-flex gap-2 flex-wrap mt-2">
                             <button class="btn btn-sm btn-warning" :disabled="busy" @click="act(c.id, 'retirer')">↩ Retirer (rollback)</button>

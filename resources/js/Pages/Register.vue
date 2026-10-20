@@ -3,6 +3,13 @@ import { useForm } from '@inertiajs/vue3';
 import DevBanner from '../Components/DevBanner.vue';
 import Seo from '../Components/Seo.vue';
 
+defineProps({
+    raison: {
+        type: String,
+        default: null,
+    },
+});
+
 const form = useForm({
     name: '',
     email: '',
@@ -31,6 +38,10 @@ const submit = () => {
         <main class="d-flex align-items-center justify-content-center px-3" style="min-height: calc(100vh - 61px); background: #f1f5f9;">
             <div class="card shadow-sm w-100" style="max-width: 420px;">
                 <div class="card-body p-4">
+                    <div v-if="raison === 'contribution'" class="alert alert-info small py-2 mb-3">
+                        La suggestion de corrections depuis la carte nécessite un compte.
+                        Créez-le ci-dessous, vérifiez votre adresse email, puis revenez sur la carte.
+                    </div>
                     <h2 class="h5 mb-1">Créer un compte</h2>
                     <p class="text-muted small mb-3">
                         Un compte permet de suivre vos contributions et d'améliorer la qualité

@@ -6,6 +6,7 @@ use App\Models\Actualite;
 use App\Models\Contribution;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
+use App\Models\User;
 use App\Services\LandingService;
 use App\Services\StatsService;
 use App\Services\VerificationService;
@@ -128,6 +129,22 @@ class PageController extends Controller
                 ];
             });
 
+        $comptes = User::query()
+            ->withCount('contributions')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function (User $u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'roles' => $u->getRoleNames()->values()->all(),
+                    'email_verifie' => $u->hasVerifiedEmail(),
+                    'nb_contributions' => $u->contributions_count,
+                    'cree_le' => $u->created_at?->toDateTimeString(),
+                ];
+            });
+
         return Inertia::render('Admin', [
             'meta' => $this->stats->meta(),
             'contributions' => $contributions,
@@ -135,6 +152,7 @@ class PageController extends Controller
                 ->orderByDesc('created_at')
                 ->get(['id', 'titre', 'slug', 'contenu', 'statut', 'date_publication']),
             'exclusions' => $exclusions,
+            'comptes' => $comptes,
         ]);
     }
 

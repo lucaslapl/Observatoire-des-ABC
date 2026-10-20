@@ -52,6 +52,16 @@ class ContributionController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    public function annuler(ContributionService $service, int $id): JsonResponse
+    {
+        $result = $service->annulerContribution($id, Auth::user()->name);
+        if (! $result['ok']) {
+            return response()->json(['error' => $result['error']], 400);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
     public function retirer(ContributionService $service, int $id): JsonResponse
     {
         $result = $service->revertContribution($id, Auth::user()->name);

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Verification;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ContributionFlowTest extends TestCase
@@ -15,6 +16,8 @@ class ContributionFlowTest extends TestCase
     use RefreshDatabase;
 
     private string $projetId = 'abc-test-ville';
+
+    private User $contributeur;
 
     protected function setUp(): void
     {
@@ -29,11 +32,44 @@ class ContributionFlowTest extends TestCase
             'statut' => 'en_cours',
             'source' => 'datagouv',
         ]);
+
+        $this->contributeur = User::factory()->create();
+        $this->contributeur->assignRole('contributeur');
     }
 
-    public function test_public_contribution_is_created(): void
+    private function postContribution(array $body)
     {
-        $response = $this->postJson('/api/contributions', [
+        return $this->actingAs($this->contributeur)->postJson('/api/contributions', $body);
+    }
+
+    public function test_guest_cannot_contribute(): void
+    {
+        $this->postJson('/api/contributions', [
+            'projet_id' => $this->projetId,
+            'type' => 'note',
+            'note' => 'bonjour',
+        ])->assertUnauthorized();
+
+        $this->assertDatabaseCount('contributions', 0);
+    }
+
+    public function test_unverified_user_cannot_contribute(): void
+    {
+        $unverified = User::factory()->unverified()->create();
+        $unverified->assignRole('contributeur');
+
+        $this->actingAs($unverified)->postJson('/api/contributions', [
+            'projet_id' => $this->projetId,
+            'type' => 'note',
+            'note' => 'bonjour',
+        ])->assertForbidden();
+
+        $this->assertDatabaseCount('contributions', 0);
+    }
+
+    public function test_verified_user_contribution_is_created(): void
+    {
+        $response = $this->postContribution([
             'projet_id' => $this->projetId,
             'type' => 'statut',
             'statut_suggere' => 'termine',
@@ -51,7 +87,7 @@ class ContributionFlowTest extends TestCase
 
     public function test_contribution_rejects_invalid_type(): void
     {
-        $this->postJson('/api/contributions', [
+        $this->postContribution([
             'projet_id' => $this->projetId,
             'type' => 'bidon',
         ])->assertStatus(422);
@@ -89,7 +125,7 @@ class ContributionFlowTest extends TestCase
 
     public function test_contribution_unknown_projet_returns_404(): void
     {
-        $this->postJson('/api/contributions', [
+        $this->postContribution([
             'projet_id' => 'n-existe-pas',
             'type' => 'note',
             'note' => 'bonjour',
@@ -98,7 +134,7 @@ class ContributionFlowTest extends TestCase
 
     public function test_contribution_payload_keeps_string_values(): void
     {
-        $this->postJson('/api/contributions', [
+        $this->postContribution([
             'projet_id' => $this->projetId,
             'type' => 'date_debut',
             'annee_debut_suggeree' => 2019,
@@ -115,7 +151,7 @@ class ContributionFlowTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $this->postJson('/api/contributions', [
+        $this->postContribution([
             'projet_id' => $this->projetId,
             'type' => 'statut',
             'statut_suggere' => 'termine',
@@ -140,7 +176,7 @@ class ContributionFlowTest extends TestCase
         $contributor = User::factory()->create();
         $contributor->assignRole('contributeur');
 
-        $this->postJson('/api/contributions', [
+        $this->actingAs($contributor)->postJson('/api/contributions', [
             'projet_id' => $this->projetId,
             'type' => 'note',
             'note' => 'note de test',
@@ -158,12 +194,12 @@ class ContributionFlowTest extends TestCase
             ->assertUnauthorized();
     }
 
-    public function test_admin_can_reject_and_retire_contribution(): void
+    public function test_admin_can_reject_contribution(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $this->postJson('/api/contributions', [
+        $this->postContribution([
             'projet_id' => $this->projetId,
             'type' => 'statut',
             'statut_suggere' => 'en_cours',
@@ -175,6 +211,27 @@ class ContributionFlowTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseHas('contributions', ['id' => $id, 'statut' => 'refusee', 'note_admin' => 'doublon']);
+    }
+
+    public function test_admin_can_annul_contribution(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $this->postContribution([
+            'projet_id' => $this->projetId,
+            'type' => 'note',
+            'note' => 'envoyé par erreur',
+        ])->assertCreated();
+        $id = Contribution::first()->id;
+
+        $this->actingAs($admin)
+            ->postJson("/api/admin/contributions/{$id}/annuler")
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertDatabaseHas('contributions', ['id' => $id, 'statut' => 'annulee']);
+        $this->assertDatabaseHas('audit_log', ['contribution_id' => $id, 'action' => 'annulee']);
     }
 
     public function test_authenticated_contribution_is_linked_to_user(): void
@@ -195,20 +252,35 @@ class ContributionFlowTest extends TestCase
         ]);
     }
 
-    public function test_public_contribution_rate_limited(): void
+    public function test_contribution_rate_limited(): void
     {
         for ($i = 0; $i < 10; $i++) {
-            $this->postJson('/api/contributions', [
+            $this->postContribution([
                 'projet_id' => $this->projetId,
                 'type' => 'note',
                 'note' => "note {$i}",
             ])->assertCreated();
         }
 
-        $this->postJson('/api/contributions', [
+        $this->postContribution([
             'projet_id' => $this->projetId,
             'type' => 'note',
             'note' => 'trop',
         ])->assertStatus(429);
+    }
+
+    public function test_admin_page_lists_all_comptes(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $response = $this->actingAs($admin)->get('/admin');
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('comptes', 2));
+
+        $emails = array_column($response->inertiaProps('comptes'), 'email');
+        $this->assertContains($this->contributeur->email, $emails);
+        $this->assertContains($admin->email, $emails);
     }
 }

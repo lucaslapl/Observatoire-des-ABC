@@ -15,9 +15,11 @@ use Spatie\Permission\Models\Role;
 
 class RegisterController extends Controller
 {
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Register');
+        return Inertia::render('Register', [
+            'raison' => $request->query('raison') === 'contribution' ? 'contribution' : null,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

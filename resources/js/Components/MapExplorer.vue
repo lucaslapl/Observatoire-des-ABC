@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
+import { router, usePage } from '@inertiajs/vue3';
 import { COLOR, METRO, dStatut, fmtCount, visible } from '../map/constants.js';
 import { buildPopup as buildPopupHtml, buildMultiRow, buildMultiHeader } from '../map/popupBuilders.js';
 import { exportMap as exportMapImage } from '../map/exportImage.js';
@@ -53,6 +54,9 @@ let tileLayer = null;
 let layer = null;
 let all = [];
 let allProjs = new Set();
+
+const page = usePage();
+const authUser = computed(() => page.props.auth?.user || null);
 
 function inViewport(f) {
     if (!map) return false;
@@ -494,6 +498,16 @@ async function onDocClick(e) {
     const suggest = e.target.closest('[data-suggest]');
     if (suggest) {
         const root = suggest.closest('[data-sugg]');
+        if (!authUser.value) {
+            router.visit('/register', { data: { raison: 'contribution' } });
+            return;
+        }
+        if (!authUser.value.email_verifie) {
+            const form = root.querySelector('[data-sform]');
+            form.hidden = false;
+            root.querySelector('[data-s-result]').textContent = 'Vérifiez votre adresse email (lien reçu par mail) pour pouvoir envoyer une suggestion.';
+            return;
+        }
         const form = root.querySelector('[data-sform]');
         form.hidden = !form.hidden;
         showSuggFields(root, form.querySelector('[data-s-type]').value);

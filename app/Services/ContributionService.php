@@ -139,6 +139,36 @@ class ContributionService
         return ['ok' => true];
     }
 
+    /**
+     * Annule une contribution (erreur d'envoi, erreur utilisateur) :
+     * statut en_attente -> annulee, sans note de modération.
+     */
+    public function annulerContribution(int $id, string $admin): array
+    {
+        $c = Contribution::find($id);
+        if (! $c) {
+            return ['ok' => false, 'error' => 'Contribution introuvable'];
+        }
+        if ($c->statut !== 'en_attente') {
+            return ['ok' => false, 'error' => 'Contribution déjà traitée'];
+        }
+
+        $c->update([
+            'statut' => 'annulee',
+            'traite_par' => $admin,
+            'traite_le' => now(),
+        ]);
+        AuditLog::create([
+            'contribution_id' => $id,
+            'action' => 'annulee',
+            'avant' => null,
+            'apres' => null,
+            'par_admin' => $admin,
+        ]);
+
+        return ['ok' => true];
+    }
+
     public function revertContribution(int $id, string $admin): array
     {
         $c = Contribution::find($id);
