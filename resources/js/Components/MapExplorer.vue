@@ -558,11 +558,11 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numer
 function exportMap(format) {
     return exportMapImage(format, {
         mapEl: mapRef.value,
-        legendEl: legendRef.value,
         navEl: navRef.value,
         sidebarEl: sidebarRef.value,
         legendRetracted,
         exporting,
+        leafletMap: map,
     });
 }
 
@@ -874,6 +874,15 @@ onBeforeUnmount(() => {
     border: 1px solid rgba(255,255,255,.8);
     color: #1f2937; font-size: 14px; font-weight: 700; line-height: 1;
 }
+/* Composition appliquée uniquement pendant la capture (classe posée par
+   l'export) : légende opaque en bas à gauche, flèche du nord alignée en
+   haut à gauche, échelle et attribution dans la bande du bas. */
+.map-exporting .legend {
+    bottom: 30px; left: 10px; width: 280px; max-width: none;
+    background: #fff; box-shadow: none;
+}
+.map-exporting .legend-head { background: #fff; }
+.map-exporting .map-north { top: 10px; }
 .export-overlay {
     position: fixed; inset: 0; z-index: 9999;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
