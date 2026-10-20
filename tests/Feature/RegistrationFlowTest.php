@@ -43,6 +43,30 @@ class RegistrationFlowTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_verification_email_is_written_in_french(): void
+    {
+        $this->app->setLocale('fr');
+
+        $user = User::create([
+            'name' => 'Vérif FR',
+            'email' => 'verif-fr@example.com',
+            'password' => 'mot-de-passe-tres-long',
+        ]);
+
+        $message = (new VerifyEmail)->toMail($user);
+
+        $this->assertSame('Vérifier votre adresse e-mail', $message->subject);
+        $this->assertSame('Vérifier votre adresse e-mail', $message->actionText);
+        $this->assertContains(
+            'Cliquez sur le bouton ci-dessous pour vérifier votre adresse e-mail.',
+            $message->introLines
+        );
+        $this->assertContains(
+            "Si vous n'avez pas créé de compte, aucune action supplémentaire n'est nécessaire.",
+            $message->outroLines
+        );
+    }
+
     public function test_registration_rejects_short_password_and_duplicate_email(): void
     {
         $this->post('/register', [
