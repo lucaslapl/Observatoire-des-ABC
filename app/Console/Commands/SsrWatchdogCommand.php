@@ -64,9 +64,17 @@ class SsrWatchdogCommand extends Command
 
         // Détache complètement le processus : stdin/err détournés vers le log,
         // stdin fermé (</dev/null) pour que la commande ne « bloque » jamais.
+        // nohup est absent de certains hébergements mutualisés (PATH minimal du
+        // cron/PHP-FPM) : il n'est utilisé que s'il est résolvable, sinon le
+        // simple passage en arrière-plan suffit, les flux étant tous détournés.
+        $nohupPath = [];
+        exec('command -v nohup 2>/dev/null', $nohupPath);
+        $nohup = trim((string) ($nohupPath[0] ?? '')) !== '' ? 'nohup ' : '';
+
         $cmd = sprintf(
-            'cd %s && nohup %s %s >> %s 2>&1 < /dev/null & echo $!',
+            'cd %s && %s%s %s >> %s 2>&1 < /dev/null & echo $!',
             escapeshellarg(base_path()),
+            $nohup,
             escapeshellarg($nodeBin),
             escapeshellarg($bundle),
             escapeshellarg($log)
