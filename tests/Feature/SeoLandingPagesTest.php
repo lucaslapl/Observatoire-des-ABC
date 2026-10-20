@@ -158,11 +158,15 @@ class SeoLandingPagesTest extends TestCase
 
         $this->get('/sitemap.xml')
             ->assertOk()
+            ->assertSee('/carte')
             ->assertSee('/abc/'.$projet->slug)
             ->assertSee('/commune/56001')
             ->assertSee('/departement/56')
             ->assertSee('/region/bretagne')
-            ->assertSee('/actualites');
+            ->assertSee('/actualites')
+            ->assertSee('/contact')
+            ->assertSee('/mentions-legales')
+            ->assertSee('/confidentialite');
     }
 
     public function test_saving_hook_backfills_null_slug_on_update(): void

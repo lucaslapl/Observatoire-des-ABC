@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import ConsentBanner from './ConsentBanner.vue';
 import DevBanner from './DevBanner.vue';
+import { reopenConsentChoice } from '../utils/consent';
 
 defineProps({
     title: String,
@@ -82,7 +83,8 @@ const pages = [
                     <Link href="/actualites">Actualités</Link>&nbsp;·
                     <Link href="/contact">Contact</Link>&nbsp;·
                     <Link href="/mentions-legales">Mentions légales</Link>&nbsp;·
-                    <Link href="/confidentialite">Confidentialité</Link>
+                    <Link href="/confidentialite">Confidentialité</Link>&nbsp;·
+                    <a href="#" @click.prevent="reopenConsentChoice">Cookies</a>
                 </div>
             </div>
         </footer>

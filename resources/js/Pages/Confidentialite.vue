@@ -20,7 +20,13 @@ const site = computed(() => page.props.site || {});
             <h2 class="h6">Ce que nous collectons</h2>
             <p>
                 La consultation de la carte ne nécessite aucune donnée personnelle. Les propositions de correction
-                (contribution) n'exigent pas de compte : vous pouvez y indiquer un commentaire si vous le souhaitez.
+                (contribution) n'exigent pas de compte : vous pouvez y ajouter un commentaire si vous le souhaitez.
+                À des fins de modération (lutte contre le spam et les propositions malveillantes), l'adresse IP
+                et le type de navigateur (user-agent) sont enregistrés avec chaque proposition.
+            </p>
+            <p>
+                Le <a href="/contact">formulaire de contact</a> collecte une adresse email (obligatoire),
+                un nom (facultatif) et votre message ; ils servent uniquement à vous répondre.
             </p>
             <p>
                 L'inscription est ouverte à toute personne souhaitant contribuer. Un compte membre
@@ -42,15 +48,27 @@ const site = computed(() => page.props.site || {});
             <p>
                 Une bannière de consentement vous permet de choisir l'activation de la mesure d'audience
                 (statistiques de fréquentation agrégées). Sans votre consentement, aucun traceur de mesure
-                d'audience n'est chargé. Le cookie de session de connexion est strictement nécessaire au
+                d'audience n'est chargé. Votre choix est mémorisé dans votre navigateur (stockage local,
+                clé « abc-consent ») et reste modifiable à tout moment via le lien « Cookies » présent
+                en pied de page de chaque page. Le cookie de session de connexion est strictement nécessaire au
                 fonctionnement de l'espace membre et du panneau d'administration.
             </p>
 
-            <h2 class="h6">Conservation et droits</h2>
+            <h2 class="h6">Conservation des données</h2>
             <p>
-                Vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant,
-                en nous contactant via le formulaire de la carte ou depuis votre espace membre. Les adresses IP
-                des contributions sont stockées le temps de la modération puis anonymisées.
+                Les contributions et leurs métadonnées de modération (adresse IP, user-agent) sont conservées
+                pendant toute la durée nécessaire à la modération des propositions. Les comptes sont conservés
+                jusqu'à leur suppression par leur titulaire. Les messages de contact sont conservés le temps de
+                leur traitement, dans la boîte mail du destinataire.
+            </p>
+
+            <h2 class="h6">Vos droits</h2>
+            <p>
+                Vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant.
+                Pour l'exercer, écrivez-nous via le <a href="/contact">formulaire de contact</a> ; pour vos
+                données de compte, vous pouvez aussi agir directement depuis votre espace membre
+                (mot de passe, suppression du compte). Vous pouvez introduire une réclamation auprès de la
+                CNIL (<a href="https://www.cnil.fr" rel="noopener" target="_blank">cnil.fr</a>).
             </p>
         </div>
     </Layout>

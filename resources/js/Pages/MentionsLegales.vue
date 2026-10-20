@@ -19,25 +19,30 @@ const site = computed(() => page.props.site || {});
 
             <h2 class="h6">Éditeur du site</h2>
             <p>
-                « {{ site.name }} » est un projet ouvert consacré au suivi des Atlas de la Biodiversité Communale (ABC).
-                Contact pour toute question : par le formulaire de suggestion depuis la carte, ou via la page
-                <a href="/actualites">Actualités</a>.
+                « {{ site.name }} » est un projet ouvert développé et édité par
+                <a href="https://lucaslaplanche.fr" rel="noopener" target="_blank">Lucas Laplanche</a>,
+                consacré au suivi des Atlas de la Biodiversité Communale (ABC).
+                Contact pour toute question : via la page <a href="/contact">Contact</a>.
             </p>
 
             <h2 class="h6">Hébergement</h2>
-            <p>Le site est hébergé chez l'hébergeur du domaine observatoire-abc.fr.</p>
+            <p>Le site est publié à l'adresse observatoire-abc.fr, hébergée par l'hébergeur du domaine.</p>
 
             <h2 class="h6">Données personnelles</h2>
             <p>
-                Ce site ne collecte pas de données personnelles en dehors des informations que vous consentez à fournir
-                (proposition de correction, création d'un compte membre, connexion au panneau d'administration).
+                Ce site ne collecte des données personnelles que dans les cas suivants :
+                proposition de correction depuis la carte (adresse IP et navigateur enregistrés
+                pour la modération), envoi du <a href="/contact">formulaire de contact</a>
+                (nom facultatif, adresse email, message), création d'un compte membre, et
+                connexion au panneau d'administration.
                 Voir la page <a href="/confidentialite">Politique de confidentialité</a>.
             </p>
 
             <h2 class="h6">Données et licence</h2>
             <p>
                 Les données proviennent des registres publics <a href="https://data.gouv.fr" rel="noopener" target="_blank">data.gouv.fr</a>
-                (Registre OFB, Fonds vert). Elles sont réutilisées telles que publiées par leurs producteurs.
+                (Registre OFB, Fonds vert) et des archives publiques de ces mêmes sources
+                (Wayback Machine, millésime 2022). Elles sont réutilisées telles que publiées par leurs producteurs.
                 L'Observatoire n'est pas l'auteur de ces données et n'en modifie pas la licence d'origine.
             </p>
             <h2 class="h6">Code source</h2>

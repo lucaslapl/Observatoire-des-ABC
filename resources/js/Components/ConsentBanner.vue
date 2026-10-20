@@ -1,14 +1,14 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { CONSENT_REOPEN_EVENT, CONSENT_STORAGE_KEY } from '../utils/consent';
 
 const page = usePage();
 const tracking = page.props.site?.tracking || {};
-const STORAGE_KEY = 'abc-consent';
 const open = ref(false);
 
 function showIfNeeded() {
-    if (typeof window === 'undefined' || !hasTracking() || localStorage.getItem(STORAGE_KEY)) {
+    if (!hasTracking() || localStorage.getItem(CONSENT_STORAGE_KEY)) {
         return;
     }
     open.value = true;
@@ -19,10 +19,10 @@ function hasTracking() {
 }
 
 function choose(ok) {
-    if (typeof window === 'undefined' || !hasTracking()) {
+    if (!hasTracking()) {
         return;
     }
-    localStorage.setItem(STORAGE_KEY, ok ? 'accepted' : 'refused');
+    localStorage.setItem(CONSENT_STORAGE_KEY, ok ? 'accepted' : 'refused');
     if (ok) {
         loadTracking();
     }
@@ -53,10 +53,16 @@ function loadTracking() {
     }
 }
 
-if (typeof window !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', showIfNeeded);
+onMounted(() => {
     showIfNeeded();
-}
+    document.addEventListener('DOMContentLoaded', showIfNeeded);
+    window.addEventListener(CONSENT_REOPEN_EVENT, showIfNeeded);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('DOMContentLoaded', showIfNeeded);
+    window.removeEventListener(CONSENT_REOPEN_EVENT, showIfNeeded);
+});
 </script>
 
 <template>
@@ -65,7 +71,8 @@ if (typeof window !== 'undefined') {
             <p>
                 Ce site peut utiliser une mesure d'audience anonyme pour améliorer ses contenus.
                 Aucun traceur n'est chargé sans votre accord. Plus de détails dans la
-                <a href="/confidentialite">politique de confidentialité</a>.
+                <a href="/confidentialite">politique de confidentialité</a> — votre choix reste
+                modifiable à tout moment via le lien « Cookies » en pied de page.
             </p>
             <div class="consent-actions">
                 <button type="button" class="btn btn-sm btn-success" @click="choose(true)">Accepter</button>

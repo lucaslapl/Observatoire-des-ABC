@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import Seo from '../Components/Seo.vue';
 import MapExplorer from '../Components/MapExplorer.vue';
+import ConsentBanner from '../Components/ConsentBanner.vue';
+import { reopenConsentChoice } from '../utils/consent';
 
 const props = defineProps({
     meta: {
@@ -134,10 +136,13 @@ const seoJsonLd = computed(() => {
                     <Link href="/carte">Carte</Link>&nbsp;·
                     <Link href="/actualites">Actualités</Link>&nbsp;·
                     <Link href="/mentions-legales">Mentions légales</Link>&nbsp;·
-                    <Link href="/confidentialite">Confidentialité</Link>
+                    <Link href="/confidentialite">Confidentialité</Link>&nbsp;·
+                    <a href="#" @click.prevent="reopenConsentChoice">Cookies</a>
                 </div>
             </div>
         </footer>
+
+        <ConsentBanner />
     </div>
 </template>
 
