@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Actualite;
+use App\Models\Commune;
 use App\Models\Contribution;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
@@ -88,7 +89,15 @@ class PageController extends Controller
 
     public function aPropos(): Response
     {
-        return Inertia::render('APropos');
+        $meta = $this->stats->meta();
+
+        return Inertia::render('APropos', [
+            'chiffres' => [
+                'projets' => $meta['countProjets'],
+                'communes' => Commune::query()->where('anomalie', false)->distinct()->count('code_geographique'),
+                'verifies' => $meta['countVerifies'],
+            ],
+        ]);
     }
 
     public function mentionsLegales(): Response

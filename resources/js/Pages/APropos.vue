@@ -1,6 +1,12 @@
 <script setup>
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
+
+defineProps({
+    chiffres: { type: Object, default: () => ({}) },
+});
+
+const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
 </script>
 
 <template>
@@ -16,19 +22,34 @@ import Seo from '../Components/Seo.vue';
             <p>
                 L'Observatoire des ABC est né d'un constat simple : le site de référence
                 <a href="https://abc.naturefrance.fr" rel="noopener" target="_blank">abc.naturefrance.fr</a>,
-                qui recensait les Atlas de la Biodiversité Communale, est devenu indisponible à la suite de la
-                cyberattaque qui a touché les systèmes d'information du
+                qui recensait les Atlas de la Biodiversité Communale, est devenu indisponible en
+                <strong>juin 2025</strong>, à la suite de la cyberattaque qui a touché les systèmes
+                d'information du
                 <a href="https://www.mnhn.fr" rel="noopener" target="_blank">Muséum national d'Histoire naturelle</a> (MNHN).
                 Des informations publiques utiles aux communes, aux naturalistes et aux curieux se sont
                 retrouvées inaccessibles du jour au lendemain, sans alternative pour consulter la liste
                 des projets ABC et leur avancement.
             </p>
             <p>
-                Ce site propose donc un recensement indépendant des projets ABC : qui ils sont, où ils se
-                trouvent, à quel stade ils en sont. Il ne s'agit pas d'une reprise du site officiel, mais
+                Ce site propose donc un recensement indépendant des projets ABC : qui ils sont, où ils
+                se trouvent, à quel stade ils en sont. Il ne s'agit pas d'une reprise du site officiel, mais
                 d'une reconstruction à partir des registres publics, accessible à tous même pendant
                 l'indisponibilité de la source historique.
             </p>
+            <div class="row text-center my-4" v-if="chiffres?.projets">
+                <div class="col-4">
+                    <div class="h4 mb-0">{{ fmt(chiffres.projets) }}</div>
+                    <div class="small text-muted">projets ABC suivis</div>
+                </div>
+                <div class="col-4">
+                    <div class="h4 mb-0">{{ fmt(chiffres.communes) }}</div>
+                    <div class="small text-muted">communes couvertes</div>
+                </div>
+                <div class="col-4">
+                    <div class="h4 mb-0">{{ fmt(chiffres.verifies) }}</div>
+                    <div class="small text-muted">projets vérifiés manuellement</div>
+                </div>
+            </div>
 
             <h2 class="h6">D'où viennent les données</h2>
             <p>
@@ -40,7 +61,9 @@ import Seo from '../Components/Seo.vue';
                 <a href="https://www.ecologie.gouv.fr/dispositif-fonds-vert" rel="noopener" target="_blank">Fonds vert</a>,
                 ainsi que les archives du site historique conservées par la
                 <a href="https://web.archive.org" rel="noopener" target="_blank">Wayback Machine</a> (instantanés 2022).
-                Aucune donnée privée ni confidentielle n'est utilisée.
+                Aucune donnée privée ni confidentielle n'est utilisée. Ces données sont publiées
+                sous <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence/" rel="noopener" target="_blank">Licence Ouverte</a> :
+                leur réutilisation est libre, y compris commercialement, sous réserve de mentionner la source.
             </p>
             <p>
                 Les données collectées automatiquement sont ensuite <strong>vérifiées manuellement</strong> :
