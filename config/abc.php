@@ -89,6 +89,13 @@ return [
     'backup_upload_cmd' => env('BACKUP_UPLOAD_CMD'),
 
     /**
+     * Binaire pg_dump utilisé par abc:backup. Chemin complet si le cron
+     * de l'hébergeur n'a pas /usr/bin dans son PATH (ex. Plesk) :
+     * BACKUP_PG_DUMP_BIN=/usr/bin/pg_dump
+     */
+    'backup_pg_dump_bin' => env('BACKUP_PG_DUMP_BIN', 'pg_dump'),
+
+    /**
      * Collect mensuel automatique (désactivable en prod : COLLECT_AUTOMATIC=false).
      */
     'collect_automatic' => (bool) env('COLLECT_AUTOMATIC', false),

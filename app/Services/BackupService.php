@@ -37,7 +37,8 @@ class BackupService
         $pass = $config['password'];
 
         $cmd = sprintf(
-            'pg_dump -h %s -p %s -U %s -F c -b -f %s %s 2>&1',
+            '%s -h %s -p %s -U %s -F c -b -f %s %s 2>&1',
+            escapeshellarg((string) config('abc.backup_pg_dump_bin', 'pg_dump')),
             escapeshellarg($host),
             escapeshellarg($port),
             escapeshellarg($user),
@@ -48,7 +49,15 @@ class BackupService
         [$rc, $out] = $this->run($cmd, ['PGPASSWORD' => $pass]);
 
         if ($rc !== 0) {
-            // L'app tourne sous Windows (WSL) : on retente via le conteneur Docker.
+            $error = trim($out);
+
+            // Dev local sous Windows : pg_dump est absent, on retente via le
+            // conteneur Docker. Ailleurs (production, conteneur app), ce
+            // fallback n'existe pas et masquerait la vraie erreur pg_dump.
+            if (PHP_OS_FAMILY !== 'Windows') {
+                throw new \RuntimeException('pg_dump a échoué : '.$error);
+            }
+
             $cmd = sprintf(
                 'docker exec -e PGPASSWORD=%s abc-postgis pg_dump -U %s -F c -b %s 2>&1',
                 escapeshellarg($pass),
@@ -57,7 +66,9 @@ class BackupService
             );
             [$rc, $out] = $this->run($cmd);
             if ($rc !== 0) {
-                throw new \RuntimeException('pg_dump a échoué : '.trim($out));
+                throw new \RuntimeException(
+                    "pg_dump a échoué : {$error}\nFallback Docker : ".trim($out)
+                );
             }
             file_put_contents($path, $out);
         }
