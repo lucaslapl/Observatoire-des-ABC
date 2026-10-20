@@ -28,7 +28,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 <a href="https://www.mnhn.fr" rel="noopener" target="_blank">Muséum national d'Histoire naturelle</a> (MNHN).
                 Des informations publiques utiles aux communes, aux naturalistes et aux curieux se sont
                 retrouvées inaccessibles du jour au lendemain, sans alternative pour consulter la liste
-                des projets ABC et leur avancement.
+                des projets ABC et leur avancement, à moins de récupérer les données brutes mais difficilement exploitables.
             </p>
             <p>
                 Ce site propose donc un recensement indépendant des projets ABC : qui ils sont, où ils
