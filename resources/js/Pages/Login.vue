@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import Seo from '../Components/Seo.vue';
+import InfoBanner from '../Components/InfoBanner.vue';
 
 const form = useForm({
     email: '',
@@ -19,6 +20,7 @@ const submit = () => {
 <template>
     <div>
         <Seo noindex title="Connexion" description="Connexion au panneau de l'Observatoire des ABC." />
+        <InfoBanner />
         <nav class="navbar navbar-dark navbar-abc py-2">
             <div class="container-fluid">
                 <a class="navbar-brand fs-6 mb-0" href="/">🔐 Observatoire des ABC — Connexion</a>

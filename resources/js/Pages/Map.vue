@@ -4,6 +4,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import Seo from '../Components/Seo.vue';
 import MapExplorer from '../Components/MapExplorer.vue';
 import ConsentBanner from '../Components/ConsentBanner.vue';
+import InfoBanner from '../Components/InfoBanner.vue';
 import { reopenConsentChoice } from '../utils/consent';
 
 const props = defineProps({
@@ -74,6 +75,7 @@ const seoJsonLd = computed(() => {
             description="Carte des Atlas de la Biodiversité Communale (ABC) en France : suivi des projets financés (Registre OFB, Fonds vert), statuts, communes et porteurs — départements et régions."
             :jsonLd="seoJsonLd"
         />
+        <InfoBanner />
         <MapExplorer :meta="meta" :is-admin="isAdmin" :compact-legend="true" />
 
         <section class="home-content flex-grow-1">

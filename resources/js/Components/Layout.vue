@@ -1,6 +1,7 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
 import ConsentBanner from './ConsentBanner.vue';
+import InfoBanner from './InfoBanner.vue';
 import { reopenConsentChoice } from '../utils/consent';
 
 defineProps({
@@ -16,6 +17,7 @@ const pages = [
 
 <template>
     <div class="d-flex flex-column min-vh-100">
+        <InfoBanner />
         <nav class="navbar navbar-dark navbar-abc navbar-expand-lg py-2">
             <div class="container-fluid">
                 <Link href="/" class="navbar-brand fs-6 mb-0">🌿 Observatoire des ABC</Link>
