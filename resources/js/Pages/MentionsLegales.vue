@@ -26,7 +26,13 @@ const site = computed(() => page.props.site || {});
             </p>
 
             <h2 class="h6">Hébergement</h2>
-            <p>Le site est publié à l'adresse observatoire-abc.fr, hébergée par l'hébergeur du domaine.</p>
+            <p>
+                Le site est publié à l'adresse observatoire-abc.fr et hébergé par
+                <a href="https://pulseheberg.com" rel="noopener" target="_blank">PulseHeberg</a>,
+                SAS au 9, Boulevard de Strasbourg, 83000 Toulon (RCS Toulon 824 070 619,
+                SIRET 824 070 619 00039, TVA FR29824070619) —
+                <a href="https://pulseheberg.com/legal" rel="noopener" target="_blank">mentions légales de l'hébergeur</a>.
+            </p>
 
             <h2 class="h6">Données personnelles</h2>
             <p>
