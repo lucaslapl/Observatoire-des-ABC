@@ -43,18 +43,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Mesure d'audience (consentement RGPD).
+    | Mesure d'audience (RGPD).
     |--------------------------------------------------------------------------
-    | Rien n'est chargé tant que le visiteur n'a pas accepté : la bannière de
-    | consentement (Layout) active le déclencheur choisi. Options : Matomo
-    | (autohébergé recommandé, MATOMO_URL + MATOMO_SITE_ID) ou Google gtag
-    | (GTAG_ID). Laissez vides pour désactiver.
+    | Matomo (autohébergé, MATOMO_URL + MATOMO_SITE_ID) : mesure d'audience
+    | anonyme exemptée de consentement — le traceur se charge par défaut et
+    | le refus (bannière / lien « Cookies » du Layout) est mémorisé.
+    | Laissez vides pour désactiver.
     */
 
     'tracking' => [
         'matomo_url' => env('MATOMO_URL'),
         'matomo_site_id' => env('MATOMO_SITE_ID'),
-        'gtag_id' => env('GTAG_ID'),
     ],
 
 ];

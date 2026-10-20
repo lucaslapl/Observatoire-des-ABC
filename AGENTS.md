@@ -108,8 +108,9 @@ compte est supprimé — le travail humain n'est jamais perdu.
    `actualites/{actualite:slug}`), pages commune/département/région,
    `sitemap.xml` (`SitemapController`), `robots.txt`. Toute nouvelle page
    publique doit être ajoutée au sitemap.
-5. **RGPD** : la mesure d'audience (Matomo/GTag) ne se charge **qu'après
-   consentement** (`ConsentBanner.vue`, `config/seo.php`).
+5. **RGPD** : la mesure d'audience Matomo (anonyme, exemption mesure
+   d'audience) se charge **par défaut** et reste révocable (bannière, lien
+   « Cookies ») (`ConsentBanner.vue`, `config/seo.php`).
 
 ## Conventions
 

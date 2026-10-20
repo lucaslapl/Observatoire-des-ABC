@@ -47,11 +47,12 @@ const site = computed(() => page.props.site || {});
 
             <h2 class="h6">Cookies & mesure d'audience</h2>
             <p>
-                Une bannière de consentement vous permet de choisir l'activation de la mesure d'audience
-                (statistiques de fréquentation agrégées). Sans votre consentement, aucun traceur de mesure
-                d'audience n'est chargé. Votre choix est mémorisé dans votre navigateur (stockage local,
-                clé « abc-consent ») et reste modifiable à tout moment via le lien « Cookies » présent
-                en pied de page de chaque page. Le cookie de session de connexion est strictement nécessaire au
+                Ce site utilise une mesure d'audience anonyme (Matomo, auto-hébergé) : statistiques
+                de fréquentation agrégées, sans revente ni recoupement de données. Au titre de
+                l'exemption dédiée à la mesure d'audience (RGPD), elle est active par défaut —
+                vous pouvez vous y opposer à tout moment via le lien « Cookies » présent en pied
+                de page de chaque page. Votre choix est mémorisé dans votre navigateur (stockage
+                local, clé « abc-consent »). Le cookie de session de connexion est strictement nécessaire au
                 fonctionnement de l'espace membre et du panneau d'administration.
             </p>
 

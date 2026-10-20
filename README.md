@@ -55,8 +55,8 @@ l'ancien endpoint de l'application historique.
   du journal d'audit en CSV.
 - **Administration** : modération des contributions et actualités, collecte
   manuelle, sauvegardes immédiates, gestion des exclusions.
-- **RGPD** : mesure d'audience (Matomo/GTag) chargée uniquement après
-  consentement explicite (bannière dédiée).
+- **RGPD** : mesure d'audience anonyme (Matomo, exemptée de consentement),
+  chargée par défaut et révocable à tout moment (bannière dédiée).
 
 ## Sources de données
 

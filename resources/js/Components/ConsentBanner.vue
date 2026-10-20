@@ -6,6 +6,7 @@ import { CONSENT_REOPEN_EVENT, CONSENT_STORAGE_KEY } from '../utils/consent';
 const page = usePage();
 const tracking = page.props.site?.tracking || {};
 const open = ref(false);
+let matomoLoaded = false;
 
 function showIfNeeded() {
     if (!hasTracking() || localStorage.getItem(CONSENT_STORAGE_KEY)) {
@@ -15,7 +16,7 @@ function showIfNeeded() {
 }
 
 function hasTracking() {
-    return Boolean(tracking.matomo_url || tracking.gtag_id);
+    return Boolean(tracking.matomo_url && tracking.matomo_site_id);
 }
 
 function choose(ok) {
@@ -24,36 +25,38 @@ function choose(ok) {
     }
     localStorage.setItem(CONSENT_STORAGE_KEY, ok ? 'accepted' : 'refused');
     if (ok) {
-        loadTracking();
+        loadMatomo();
+    } else if (matomoLoaded && window._paq) {
+        // Arrête la mesure pour le reste de la session ; le refus mémorisé
+        // empêche le chargement du traceur aux visites suivantes.
+        window._paq.push(['optOut']);
     }
     open.value = false;
 }
 
-function loadTracking() {
-    if (tracking.matomo_url && tracking.matomo_site_id) {
-        const url = tracking.matomo_url.replace(/\/$/, '');
-        window._paq = window._paq || [];
-        window._paq.push(['setTrackerUrl', url + '/matomo.php']);
-        window._paq.push(['setSiteId', String(tracking.matomo_site_id)]);
-        window._paq.push(['trackPageView']);
-        window._paq.push(['enableLinkTracking']);
-        const s = document.createElement('script');
-        s.async = true; s.defer = true;
-        s.src = url + '/matomo.js';
-        document.head.appendChild(s);
-    } else if (tracking.gtag_id) {
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () { window.dataLayer.push(arguments); };
-        window.gtag('js', new Date());
-        window.gtag('config', tracking.gtag_id);
-        const s = document.createElement('script');
-        s.async = true;
-        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(tracking.gtag_id);
-        document.head.appendChild(s);
+function loadMatomo() {
+    if (matomoLoaded || !tracking.matomo_url || !tracking.matomo_site_id) {
+        return;
     }
+    matomoLoaded = true;
+    const url = tracking.matomo_url.replace(/\/$/, '');
+    window._paq = window._paq || [];
+    window._paq.push(['setTrackerUrl', url + '/matomo.php']);
+    window._paq.push(['setSiteId', String(tracking.matomo_site_id)]);
+    window._paq.push(['trackPageView']);
+    window._paq.push(['enableLinkTracking']);
+    const s = document.createElement('script');
+    s.async = true; s.defer = true;
+    s.src = url + '/matomo.js';
+    document.head.appendChild(s);
 }
 
 onMounted(() => {
+    // Mesure d'audience anonyme exemptée de consentement (RGPD) : chargée
+    // par défaut, sauf refus explicite.
+    if (localStorage.getItem(CONSENT_STORAGE_KEY) !== 'refused') {
+        loadMatomo();
+    }
     showIfNeeded();
     document.addEventListener('DOMContentLoaded', showIfNeeded);
     window.addEventListener(CONSENT_REOPEN_EVENT, showIfNeeded);
@@ -69,10 +72,13 @@ onUnmounted(() => {
     <div v-if="open" class="consent-banner" role="dialog" aria-label="Consentement à la mesure d'audience">
         <div class="consent-body">
             <p>
-                Ce site peut utiliser une mesure d'audience anonyme pour améliorer ses contenus.
-                Aucun traceur n'est chargé sans votre accord. Plus de détails dans la
-                <a href="/confidentialite">politique de confidentialité</a> — votre choix reste
-                modifiable à tout moment via le lien « Cookies » en pied de page.
+                Ce site utilise une mesure d'audience anonyme (Matomo auto-hébergé) pour
+                améliorer ses contenus : statistiques agrégées de fréquentation, sans revente
+                ni recoupement de données. Elle est active par défaut et exemptée de
+                consentement au titre de la mesure d'audience (RGPD). Vous pouvez vous y
+                opposer à tout moment via le bouton « Refuser » ou le lien « Cookies » en pied
+                de page — votre choix est mémorisé dans votre navigateur. Plus de détails dans
+                la <a href="/confidentialite">politique de confidentialité</a>.
             </p>
             <div class="consent-actions">
                 <button type="button" class="btn btn-sm btn-success" @click="choose(true)">Accepter</button>
