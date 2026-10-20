@@ -144,9 +144,9 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - RGPD : l'adresse IP est conservée à des fins de modération uniquement (mention dans
   les pages).
 
-[Unreleased]: https://github.com/lucas_lapl/Observatoire-des-ABC/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/lucas_lapl/Observatoire-des-ABC/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/lucas_lapl/Observatoire-des-ABC/releases/tag/v0.1.0
+[Unreleased]: https://github.com/lucaslapl/Observatoire-des-ABC/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/lucaslapl/Observatoire-des-ABC/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/lucaslapl/Observatoire-des-ABC/releases/tag/v0.1.0
 
 ### Ajouté
 - Référencement des Atlas de la Biodiversité Communale (ABC) à partir de 4 sources officielles :
@@ -191,5 +191,5 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 ### Sécurité
 - Aucun secret dans le dépôt (URLs sources publiques, user-agent explicite uniquement).
 
-[Unreleased]: https://github.com/lucas_lapl/Observatoire-des-ABC/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/lucas_lapl/Observatoire-des-ABC/releases/tag/v0.1.0
+[Unreleased]: https://github.com/lucaslapl/Observatoire-des-ABC/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/lucaslapl/Observatoire-des-ABC/releases/tag/v0.1.0
