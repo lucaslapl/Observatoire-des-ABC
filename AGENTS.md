@@ -121,6 +121,27 @@ compte est supprimé — le travail humain n'est jamais perdu.
 - Messages de commit : préfixes `feat:`, `fix:`, docs en français accepté.
 - Utiliser le français dans l'UI et les textes visibles (site public français).
 
+## Déploiement — information obligatoire à chaque push
+
+Chaque push doit indiquer **toutes les étapes nécessaires à la mise à jour
+en production** (dans le message de commit ou le résumé du push), en les
+distinguant de ce qui ne l'est pas. Exemples d'étapes à couvrir :
+
+- `composer install --no-dev --optimize-autoloader` si `composer.json` a changé ;
+- `npm ci && npm run build` (client + bundle SSR) si le front ou les
+  dépendances JS ont changé ;
+- `php artisan migrate --force` si des migrations sont ajoutées ;
+- relance du serveur SSR (`php artisan ssr:watchdog --restart`) si le front
+  ou le SSR a changé ;
+- caches à rafraîchir/vider, variables `.env` nouvelles, seed, commandes
+  artisan à rejouer (`abc:status`, etc.), dépendances système (extension PHP,
+  Node).
+
+Si aucun changement de déploiement n'est requis, l'écrire explicitement
+(« aucun changement de déploiement »). Le guide de déploiement complet n'est
+pas dans le README (présentation du projet uniquement) : reporter les étapes
+dans le commit/le push.
+
 ## Tests
 
 ```bash
