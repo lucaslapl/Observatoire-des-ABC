@@ -59,14 +59,14 @@ const seoJsonLd = computed(() => {
 </script>
 
 <template>
-    <div class="d-flex flex-column">
+    <div class="d-flex flex-column min-vh-100">
         <Seo
             description="Carte des Atlas de la Biodiversité Communale (ABC) en France : suivi des projets financés (Registre OFB, Fonds vert), statuts, communes et porteurs — départements et régions."
             :jsonLd="seoJsonLd"
         />
         <MapExplorer :meta="meta" :is-admin="isAdmin" :compact-legend="true" />
 
-        <section class="home-content">
+        <section class="home-content flex-grow-1">
             <div class="container py-5">
                 <div class="row">
                     <div class="col-lg-8">

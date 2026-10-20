@@ -16,7 +16,7 @@ const pages = [
 </script>
 
 <template>
-    <div>
+    <div class="d-flex flex-column min-vh-100">
         <DevBanner />
         <nav class="navbar navbar-dark navbar-abc navbar-expand-lg py-2">
             <div class="container-fluid">
@@ -64,7 +64,7 @@ const pages = [
             </div>
         </nav>
 
-        <main>
+        <main class="flex-grow-1">
             <slot />
         </main>
 
