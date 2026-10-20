@@ -32,7 +32,8 @@ migrée depuis un ancien serveur **Node/TypeScript/SQLite**.
 - Node 20+ (24 en CI), Vite 8, Vue 3, Bootstrap 5, Leaflet
 - PostgreSQL 16 + PostGIS 3.4
 - Tests : PHPUnit 12 (`phpunit.xml`, SQLite en mémoire). Style : Laravel Pint.
-- CI GitHub Actions : `.github/workflows/ci.yml` (build Vite) et `tests.yml`.
+- CI GitHub Actions : `.github/workflows/ci.yml` (build Vite, tests PHPUnit
+  et JS, Pint, PHPStan niveau 5).
 
 ## Développement local — Docker (recommandé, sans WAMP)
 
