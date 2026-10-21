@@ -1,9 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#14532d"/>
-  <g fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M32 42c-7-2-9-8-8-14h14v14z"/>
-    <path d="M32 18v12M20 28c4 2 8 2 12 0M32 42v4"/>
-  </g>
-  <text x="32" y="56" font-family="Arial, sans-serif" font-size="24" font-weight="bold"
-        fill="#fff" text-anchor="middle">ABC</text>
+  <defs>
+    <linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="64">
+      <stop offset="0" stop-color="#1e7d45"/>
+      <stop offset="1" stop-color="#113d20"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <path fill="#ffffff" d="M32 53C26.5 46.5 19.5 38.5 19.5 27a12.5 12.5 0 1 1 25 0c0 11.5-7 19.5-12.5 26Z"/>
+  <path fill="url(#bg)" d="M32 18c7.5 5 7.5 14 0 19-7.5-5-7.5-14 0-19Z"/>
 </svg>
