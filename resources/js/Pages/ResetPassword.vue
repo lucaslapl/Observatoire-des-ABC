@@ -1,6 +1,7 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
 import Seo from '../Components/Seo.vue';
+import BrandMark from '../Components/BrandMark.vue';
 import InfoBanner from '../Components/InfoBanner.vue';
 
 const props = defineProps({
@@ -28,7 +29,7 @@ const submit = () => {
         <InfoBanner />
         <nav class="navbar navbar-dark navbar-abc py-2">
             <div class="container-fluid">
-                <a class="navbar-brand fs-6 mb-0" href="/">🔐 Observatoire des ABC</a>
+                <a class="navbar-brand fs-6 mb-0 d-inline-flex align-items-center gap-2" href="/"><BrandMark /> Observatoire des ABC</a>
                 <a class="btn btn-sm btn-outline-light" href="/">← Carte</a>
             </div>
         </nav>

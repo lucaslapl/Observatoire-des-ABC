@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import BrandMark from './BrandMark.vue';
 import ConsentBanner from './ConsentBanner.vue';
 import InfoBanner from './InfoBanner.vue';
 import { reopenConsentChoice } from '../utils/consent';
@@ -20,7 +21,7 @@ const pages = [
         <InfoBanner />
         <nav class="navbar navbar-dark navbar-abc navbar-expand-lg py-2">
             <div class="container-fluid">
-                <Link href="/" class="navbar-brand fs-6 mb-0">🌿 Observatoire des ABC</Link>
+                <Link href="/" class="navbar-brand fs-6 mb-0 d-inline-flex align-items-center gap-2"><BrandMark /> Observatoire des ABC</Link>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navAbc">
                     <span class="navbar-toggler-icon"></span>
                 </button>
