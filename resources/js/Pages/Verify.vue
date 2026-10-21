@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, reactive } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
@@ -8,6 +9,15 @@ const props = defineProps({
     projets: { type: Array, default: () => [] },
     compteurs: { type: Object, default: () => ({}) },
 });
+
+const page = usePage();
+const user = computed(() => page.props.auth?.user || null);
+const isAdmin = computed(() => !!user.value?.roles?.includes('admin'));
+const isModerateur = computed(() => !!user.value?.roles?.includes('moderateur'));
+// Admin et modérateur (expert de confiance) : verdict direct, sourcé.
+const peutTrancher = computed(() => isAdmin.value || isModerateur.value);
+// Membre vérifié (contributeur) : peut suggérer, pas trancher.
+const isContributeur = computed(() => !!user.value && user.value.email_verifie && !peutTrancher.value);
 
 const ETATS = {
     a_verifier: { label: 'À vérifier', cls: '' },
@@ -18,7 +28,17 @@ const ETATS = {
     introuvable: { label: 'Introuvable', cls: 'introuvable' },
     douteux: { label: 'Incertain', cls: 'douteux' },
 };
-const MOTIFS = { termine: 'Potentiellement terminé', en_cours: 'Potentiellement en cours', archives: 'Archives 2022', anomalie: 'Commune incohérente', 'date inconnue': 'Date inconnue' };
+// Les motifs renvoyés par l'API (contrat parité, cf. GeoJsonParityTest)
+// sont des libellés français ; on n'a ici que leur classe CSS.
+const MOTIF_CLS = {
+    'potentiellement terminé': 'termine',
+    'potentiellement en cours': 'en_cours',
+    'archives 2022': 'archives',
+    'anomalie': 'anomalie',
+};
+
+const SUGG_TYPES = { statut: 'Statut', date_debut: 'Dates de début / fin', note: 'Note', lien: 'Lien', autre: 'Autre info' };
+const SUGG_STATUTS = { termine: 'Terminé', en_cours: 'En cours', va_debuter: 'À venir' };
 
 const sMotif = ref('');
 const sEtat = ref('a_verifier');
@@ -27,7 +47,13 @@ const sQ = ref('');
 const forms = reactive({});
 const form = (p) => forms[p.id] || (forms[p.id] = { etat: p.etat, note: p.note || '', lien: p.lien || '', annee_debut: p.annee_debut || '', annee_fin: p.annee_fin || '' });
 
-const fache = reactive({ type: '', message: '' });
+const suggs = reactive({});
+const sugg = (p) => suggs[p.id] || (suggs[p.id] = {
+    type: 'statut', statut: 'termine', annee_debut: '', annee_fin: '', source: '',
+    note: '', lien: '', texte: '', commentaire: '', sending: false, message: '', ok: false,
+});
+
+const fache = reactive({ type: '', message: '', login: false });
 
 const searchUrl = (p) => 'https://duckduckgo.com/?q=' + encodeURIComponent(p.requete);
 
@@ -61,7 +87,7 @@ const rowClass = (p) => ({ 'table-success': p.etat === 'confirme_termine', 'tabl
 const badges = (p) => {
     const etat = ETATS[p.etat] || ETATS.a_verifier;
     const list = p.etat !== 'a_verifier' ? [{ label: etat.label, cls: etat.cls }] : [];
-    p.motifs.forEach((b) => list.push({ label: MOTIFS[b], cls: b }));
+    p.motifs.forEach((b) => list.push({ label: b, cls: MOTIF_CLS[b] || '' }));
     return list;
 };
 
@@ -70,6 +96,7 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '';
 const save = async (p, f) => {
     fache.type = '';
     fache.message = '';
+    fache.login = false;
     const body = { projet_id: p.id, etat: f.etat, note: f.note, lien: f.lien };
     if (f.etat === 'confirme_date') {
         const an = Number(f.annee_debut);
@@ -78,7 +105,7 @@ const save = async (p, f) => {
         if (fin) body.annee_fin = fin;
     }
     try {
-        const r = await axios.post('/api/verifications', body);
+        await axios.post('/api/verifications', body);
         const target = props.projets.find((x) => x.id === p.id);
         target.etat = f.etat;
         target.note = f.note;
@@ -92,12 +119,58 @@ const save = async (p, f) => {
     } catch (err) {
         fache.type = 'danger';
         if (err.response?.status === 401) {
-            fache.message = 'Connexion requise : seuls les administrateurs peuvent enregistrer une vérification.';
+            fache.message = 'Connexion requise : seuls les administrateurs et modérateurs peuvent enregistrer un verdict.';
             fache.login = true;
         } else {
             fache.message = 'Erreur : ' + (err.response?.data?.error || err.message);
-            fache.login = false;
         }
+    }
+};
+
+const sendSuggestion = async (p) => {
+    const s = sugg(p);
+    s.message = '';
+    s.ok = false;
+    const body = { projet_id: p.id, type: s.type };
+    if (s.commentaire) body.commentaire = s.commentaire;
+    if (s.type === 'statut') body.statut_suggere = s.statut;
+    if (s.type === 'date_debut') {
+        const an = Number(s.annee_debut);
+        if (!an) {
+            s.message = "Veuillez renseigner au moins l'année de début.";
+            return;
+        }
+        body.annee_debut_suggeree = an;
+        const fin = Number(s.annee_fin);
+        if (fin) body.annee_fin_suggeree = fin;
+        if (s.source) body.source = s.source;
+    }
+    if (s.type === 'note') body.note = s.note;
+    if (s.type === 'lien') body.lien = s.lien;
+    if (s.type === 'autre') {
+        if (!s.texte.trim()) {
+            s.message = 'Décrivez la correction à apporter.';
+            return;
+        }
+        body.texte = s.texte;
+    }
+    s.sending = true;
+    try {
+        await axios.post('/api/contributions', body);
+        s.ok = true;
+        s.message = 'Merci, suggestion envoyée : elle sera examinée par un administrateur avant application.';
+        s.commentaire = '';
+    } catch (err) {
+        const statut = err.response?.status;
+        if (statut === 401) {
+            s.message = 'Connexion requise : seuls les membres inscrits peuvent suggérer une correction.';
+        } else if (statut === 403) {
+            s.message = 'Vérifiez votre adresse email (lien reçu par mail) pour pouvoir envoyer une suggestion.';
+        } else {
+            s.message = 'Erreur : ' + (err.response?.data?.error || err.message);
+        }
+    } finally {
+        s.sending = false;
     }
 };
 </script>
@@ -111,6 +184,14 @@ const save = async (p, f) => {
                 <span class="badge text-bg-light">{{ faits }}/{{ projets.length }} vérifiés</span>
             </div>
 
+            <div v-if="!user" class="alert alert-info py-2">
+                <i class="bi bi-person-plus me-1" aria-hidden="true"></i>
+                Vous consultez la liste publique des projets à vérifier.
+                <a href="/register?raison=contribution">Créez un compte</a> ou
+                <a href="/login">connectez-vous</a> pour suggérer une correction :
+                elle sera examinée par un administrateur avant application.
+            </div>
+
             <div v-if="fache.message" class="alert alert-{{ fache.type }} alert-dismissible fade show pb-2 pt-2" role="alert">
                 {{ fache.message }}
                 <a v-if="fache.login" href="/login" class="btn btn-sm btn-dark ms-2">Se connecter</a>
@@ -121,9 +202,9 @@ const save = async (p, f) => {
                 <label class="d-flex align-items-center gap-2 me-2" style="font-size:13px; white-space:nowrap;">Motif
                     <select v-model="sMotif" class="form-select form-select-sm">
                         <option value="">Tous</option>
-                        <option value="termine">Potentiellement terminé</option>
-                        <option value="en_cours">Potentiellement en cours</option>
-                        <option value="archives">Archives 2022</option>
+                        <option value="potentiellement terminé">Potentiellement terminé</option>
+                        <option value="potentiellement en cours">Potentiellement en cours</option>
+                        <option value="archives 2022">Archives 2022</option>
                         <option value="anomalie">Commune incohérente</option>
                         <option value="date inconnue">Date inconnue</option>
                     </select>
@@ -158,9 +239,11 @@ const save = async (p, f) => {
             </div>
 
             <div class="small text-muted mb-2">
-                Les projets déjà vérifiés restent consultables et corrigeables : passez le filtre
+                Les projets déjà vérifiés restent consultables : passez le filtre
                 « État » sur <b>Vérifiés</b> ou <b>Tous</b>. Une erreur sur un projet confirmé ?
-                Re-sauvegardez un verdict corrigé, ou signalez-la depuis le popup de la carte.
+                <template v-if="peutTrancher">Re-sauvegardez un verdict corrigé, ou signalez-la depuis le popup de la carte.</template>
+                <template v-else-if="isContributeur">Envoyez une suggestion ci-contre, ou signalez-la depuis le popup de la carte.</template>
+                <template v-else>Les membres connectés peuvent envoyer une suggestion, examinée avant application.</template>
             </div>
 
             <div class="table-responsive">
@@ -172,7 +255,8 @@ const save = async (p, f) => {
                             <th>Début</th>
                             <th>Motif</th>
                             <th>Recherche</th>
-                            <th style="min-width:290px">Verdict / Suggestion</th>
+                            <th v-if="peutTrancher" style="min-width:290px">Verdict</th>
+                            <th v-else-if="user" style="min-width:290px">Suggestion de correction</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -190,7 +274,7 @@ const save = async (p, f) => {
                                 <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" :href="searchUrl(p)"><i class="bi bi-search me-1" aria-hidden="true"></i>Rechercher</a>
                                 <a v-if="p.lien" class="btn btn-sm btn-outline-secondary" :href="p.lien" target="_blank" rel="noopener"><i class="bi bi-globe me-1" aria-hidden="true"></i>Lien</a>
                             </td>
-                            <td>
+                            <td v-if="peutTrancher">
                                 <div class="form">
                                     <select class="form-select form-select-sm" v-model="form(p).etat">
                                         <option v-for="(v, k) in ETATS" :key="k" :value="k">{{ v.label }}</option>
@@ -205,15 +289,45 @@ const save = async (p, f) => {
                                     <span v-if="p.etat !== 'a_verifier' && p.verifie_le" class="saved"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ formatDate(p.verifie_le) }}</span>
                                 </div>
                             </td>
+                            <td v-else-if="user">
+                                <template v-if="!user.email_verifie">
+                                    <div class="small text-muted">
+                                        Vérifiez votre adresse email (lien reçu à l'inscription) pour pouvoir envoyer une suggestion.
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <div class="form">
+                                        <select class="form-select form-select-sm" style="width:auto" v-model="sugg(p).type">
+                                            <option v-for="(label, k) in SUGG_TYPES" :key="k" :value="k">{{ label }}</option>
+                                        </select>
+                                        <select v-if="sugg(p).type === 'statut'" class="form-select form-select-sm" style="width:auto" v-model="sugg(p).statut">
+                                            <option v-for="(label, k) in SUGG_STATUTS" :key="k" :value="k">{{ label }}</option>
+                                        </select>
+                                        <template v-if="sugg(p).type === 'date_debut'">
+                                            <input type="number" min="1990" max="2040" placeholder="Début" class="form-control form-control-sm" style="width:90px" v-model="sugg(p).annee_debut" />
+                                            <input type="number" min="1990" max="2040" placeholder="Fin" class="form-control form-control-sm" style="width:80px" v-model="sugg(p).annee_fin" />
+                                            <input type="text" placeholder="Source (optionnel)" class="form-control form-control-sm" v-model="sugg(p).source" />
+                                        </template>
+                                        <input v-if="sugg(p).type === 'note'" type="text" placeholder="Note" class="form-control form-control-sm" v-model="sugg(p).note" />
+                                        <input v-if="sugg(p).type === 'lien'" type="text" placeholder="Lien trouvé" class="form-control form-control-sm" v-model="sugg(p).lien" />
+                                        <input v-if="sugg(p).type === 'autre'" type="text" placeholder="Décrivez la correction" class="form-control form-control-sm" style="min-width:160px" v-model="sugg(p).texte" />
+                                        <button class="btn btn-sm btn-success" :disabled="sugg(p).sending" @click="sendSuggestion(p)">
+                                            {{ sugg(p).sending ? '…' : 'Envoyer' }}
+                                        </button>
+                                    </div>
+                                    <input type="text" placeholder="Commentaire pour la modération (optionnel)" class="form-control form-control-sm mt-1" v-model="sugg(p).commentaire" />
+                                    <div v-if="sugg(p).message" class="small mt-1" :class="sugg(p).ok ? 'text-success' : 'text-danger'">{{ sugg(p).message }}</div>
+                                </template>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             <div v-if="filtered.length === 0" class="text-center text-body-secondary py-5">Aucun projet ne correspond aux filtres.</div>
             <p class="foot">
-                <i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Une information erronée ou non vérifiée ? Signalez une correction : elle sera
-                étudiée par un modérateur avant d'être appliquée. Votre adresse IP est conservée
-                uniquement à des fins de modération (RGPD).
+                <i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Une information erronée ou non vérifiée ? Les membres inscrits
+                peuvent suggérer une correction : elle sera étudiée par un administrateur avant d'être appliquée.
+                Votre adresse IP est conservée uniquement à des fins de modération (RGPD).
             </p>
         </div>
     </Layout>
