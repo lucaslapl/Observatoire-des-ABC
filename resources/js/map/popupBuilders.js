@@ -22,11 +22,11 @@ export function buildPopup(p, isAdmin) {
         `<b>${p.nom}</b><br>${p.commune}${p.departement ? ' (' + p.departement + ')' : ''}<br>`,
         `Structure : ${p.structure_porteuse || '—'}<br>Année : ${p.annee_debut ? (p.annee_fin ? p.annee_debut + '–' + p.annee_fin : p.annee_debut) : '—'}<br>`,
         `<b>${p.categorie}</b>`,
-        !confirme && p.potentiellement_termine ? `<br><b style="color:#8d6e63">⚠ Potentiellement terminé</b><br><small>Début ${p.annee_debut}, durée d'un ABC ≈ 3 ans</small>` : '',
-        !confirme && p.potentiellement_en_cours ? `<br><b style="color:#b45309">⏳ Potentiellement en cours</b><br><small>Début annoncé ${p.annee_debut}, toujours « va débuter »</small>` : '',
-        !confirme && p.donnees_2022 ? `<br><b style="color:#7f1d1d">🕓 Statut issu des archives 2022</b><br><small>À vérifier — site officiel hors ligne</small>` : '',
-        !confirme && p.estime_termine ? `<br><b style="color:#1b5e20">✓ Terminé (estimation)</b><br><small>Statut officiel inconnu, projet débuté en ${p.annee_debut} (> 5 ans)</small>` : '',
-        p.anomalie ? `<br><b style="color:#b91c1c">⚠ Commune incohérente</b><br><small>À ${Math.round(p.distance_km)} km de son groupe — non reliée, à vérifier</small>` : '',
+        !confirme && p.potentiellement_termine ? `<br><b style="color:#8d6e63"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Potentiellement terminé</b><br><small>Début ${p.annee_debut}, durée d'un ABC ≈ 3 ans</small>` : '',
+        !confirme && p.potentiellement_en_cours ? `<br><b style="color:#b45309"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Potentiellement en cours</b><br><small>Début annoncé ${p.annee_debut}, toujours « va débuter »</small>` : '',
+        !confirme && p.donnees_2022 ? `<br><b style="color:#7f1d1d"><i class="bi bi-clock-history" aria-hidden="true"></i> Statut issu des archives 2022</b><br><small>À vérifier — site officiel hors ligne</small>` : '',
+        !confirme && p.estime_termine ? `<br><b style="color:#1b5e20"><i class="bi bi-check-lg" aria-hidden="true"></i> Terminé (estimation)</b><br><small>Statut officiel inconnu, projet débuté en ${p.annee_debut} (> 5 ans)</small>` : '',
+        p.anomalie ? `<br><b style="color:#b91c1c"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Commune incohérente</b><br><small>À ${Math.round(p.distance_km)} km de son groupe — non reliée, à vérifier</small>` : '',
         verifNote,
         `<br><small>${p.verifie ? 'Source initiale' : 'Source'} : ${srcFr}</small>`,
         delBtn(p, isAdmin),
@@ -37,7 +37,7 @@ export function buildPopup(p, isAdmin) {
 /** Formulaire de contribution intégré au popup. */
 export function buildContribForm(pid) {
     return `<div class="pop-contrib" data-sugg data-pid="${pid}">` +
-        `<button class="contrib-toggle" data-suggest role="button">💡 Signaler une correction</button>` +
+        `<button class="contrib-toggle" data-suggest role="button"><i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Signaler une correction</button>` +
         `<div class="contrib-form" data-sform hidden>` +
         `<select data-s-type class="form-select form-select-sm">` +
         `<option value="statut">Statut</option><option value="date_debut">Date de début</option><option value="note">Note</option><option value="lien">Lien</option><option value="autre">Autre info</option>` +
@@ -81,6 +81,6 @@ export function buildMultiRow(p, isAdmin) {
 export function buildMultiHeader(count, nbCommunes, isAdmin) {
     return `<div class="multi-head"><span class="multi-count">${count}</span> ABC sur ce territoire` +
         (nbCommunes ? ` · ${nbCommunes} commune${nbCommunes > 1 ? 's' : ''}` : '') +
-        (isAdmin ? '<div class="multi-adminnote">Admin : 🗑 supprime un projet jugé erroné.</div>' : '') +
+        (isAdmin ? '<div class="multi-adminnote">Admin : <i class="bi bi-trash" aria-hidden="true"></i> supprime un projet jugé erroné.</div>' : '') +
         `</div>`;
 }

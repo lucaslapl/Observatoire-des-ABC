@@ -99,7 +99,7 @@ const seoJsonLd = computed(() => {
                         </p>
                         <div class="home-stats">
                             <div class="stat"><span class="n">{{ meta?.countProjets ?? 0 }}</span><span class="l">projets suivis</span></div>
-                            <div class="stat"><span class="n">✓ {{ meta?.countVerifies ?? 0 }}</span><span class="l">projets vérifiés manuellement</span></div>
+                            <div class="stat"><span class="n"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ meta?.countVerifies ?? 0 }}</span><span class="l">projets vérifiés manuellement</span></div>
                             <div class="stat"><span class="n">{{ meta?.countEstimes ?? 0 }}</span><span class="l">reclassés « terminé » (&gt; 5 ans)</span></div>
                             <div class="stat"><span class="n">{{ meta?.countAnomalies ?? 0 }}</span><span class="l">communes incohérentes écartées</span></div>
                         </div>

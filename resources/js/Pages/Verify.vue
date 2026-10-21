@@ -147,8 +147,8 @@ const save = async (p, f) => {
                 </label>
                 <div class="d-flex gap-2 flex-wrap">
                     <span class="badge text-bg-secondary">{{ aVerifierCount }} à vérifier</span>
-                    <span v-if="verifiesCount" class="badge text-bg-light" title="Projets déjà vérifiés — visibles via le filtre État">✓ {{ verifiesCount }} vérifiés</span>
-                    <span v-if="compteurs.confirme_termine" class="badge text-bg-success">{{ compteurs.confirme_termine }} ✓ terminés</span>
+                    <span v-if="verifiesCount" class="badge text-bg-light" title="Projets déjà vérifiés — visibles via le filtre État"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ verifiesCount }} vérifiés</span>
+                    <span v-if="compteurs.confirme_termine" class="badge text-bg-success"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ compteurs.confirme_termine }} terminés</span>
                     <span v-if="compteurs.confirme_en_cours" class="badge text-bg-warning">{{ compteurs.confirme_en_cours }} en cours</span>
                     <span v-if="compteurs.toujours_a_avenir" class="badge text-bg-warning">{{ compteurs.toujours_a_avenir }} à venir</span>
                     <span v-if="compteurs.confirme_date" class="badge text-bg-info">{{ compteurs.confirme_date }} dates vérifiées</span>
@@ -187,8 +187,8 @@ const save = async (p, f) => {
                                 <span v-for="(b, i) in badges(p)" :key="i" class="badge-cell" :class="b.cls">{{ b.label }}</span>
                             </td>
                             <td>
-                                <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" :href="searchUrl(p)">🔍 Rechercher</a>
-                                <a v-if="p.lien" class="btn btn-sm btn-outline-secondary" :href="p.lien" target="_blank" rel="noopener">🌐 Lien</a>
+                                <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" :href="searchUrl(p)"><i class="bi bi-search me-1" aria-hidden="true"></i>Rechercher</a>
+                                <a v-if="p.lien" class="btn btn-sm btn-outline-secondary" :href="p.lien" target="_blank" rel="noopener"><i class="bi bi-globe me-1" aria-hidden="true"></i>Lien</a>
                             </td>
                             <td>
                                 <div class="form">
@@ -202,7 +202,7 @@ const save = async (p, f) => {
                                         <input type="number" min="1990" max="2040" placeholder="Fin" class="form-control form-control-sm" style="width:80px" v-model="form(p).annee_fin" />
                                     </div>
                                     <button class="btn btn-sm btn-success" @click="save(p, form(p))">Sauver</button>
-                                    <span v-if="p.etat !== 'a_verifier' && p.verifie_le" class="saved">✓ {{ formatDate(p.verifie_le) }}</span>
+                                    <span v-if="p.etat !== 'a_verifier' && p.verifie_le" class="saved"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ formatDate(p.verifie_le) }}</span>
                                 </div>
                             </td>
                         </tr>
@@ -211,7 +211,7 @@ const save = async (p, f) => {
             </div>
             <div v-if="filtered.length === 0" class="text-center text-body-secondary py-5">Aucun projet ne correspond aux filtres.</div>
             <p class="foot">
-                💡 Une information erronée ou non vérifiée ? Signalez une correction : elle sera
+                <i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Une information erronée ou non vérifiée ? Signalez une correction : elle sera
                 étudiée par un modérateur avant d'être appliquée. Votre adresse IP est conservée
                 uniquement à des fins de modération (RGPD).
             </p>

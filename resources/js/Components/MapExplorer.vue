@@ -543,7 +543,7 @@ async function onDocClick(e) {
             root.querySelector('[data-sform]').hidden = true;
             send.disabled = false;
             send.textContent = 'Envoyer la suggestion';
-            root.querySelector('[data-s-result]').textContent = '✓ Merci, suggestion envoyée (en attente de modération)';
+            root.querySelector('[data-s-result]').textContent = 'Merci, suggestion envoyée (en attente de modération)';
         } catch (err) {
             const msg = err.response && err.response.data && err.response.data.error ? err.response.data.error : err.message;
             root.querySelector('[data-s-result]').textContent = 'Erreur : ' + msg;
@@ -641,12 +641,12 @@ onBeforeUnmount(() => {
             <label class="tb-field">
                 <span class="tb-label">Période</span>
                 <select v-model="filters.yearFrom" class="tb-ctrl" title="Année de début minimum" @change="onYearChange">
-                    <option value="">De 🔽</option>
+                    <option value="">De</option>
                     <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
                 </select>
                 <span class="tb-sep">–</span>
                 <select v-model="filters.yearTo" class="tb-ctrl" title="Année de début maximum" @change="onYearChange">
-                    <option value="">À 🔽</option>
+                    <option value="">À</option>
                     <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
                 </select>
             </label>
@@ -670,7 +670,7 @@ onBeforeUnmount(() => {
         <div id="map" ref="mapRef" class="map-main" :class="{ 'map-full': fullPage, 'map-compact-legend': compactLegend }">
             <div class="legend" :class="{ retracted: legendRetracted }" ref="legendRef">
                 <div class="legend-head" role="button" tabindex="0" title="Afficher / masquer" @click="legendRetracted = !legendRetracted">
-                    <span class="title">Légende</span><span class="chev">▾</span>
+                    <span class="title">Légende</span><span class="chev"><i class="bi bi-chevron-down" aria-hidden="true"></i></span>
                 </div>
                 <div class="legend-body" v-show="!legendRetracted">
                     <div class="legend-section">Statuts</div>
@@ -682,7 +682,7 @@ onBeforeUnmount(() => {
                         <div class="legend-section">Données</div>
                         <div class="meta">
                             <div class="meta-row"><span class="k">Projets</span><span class="v">{{ counts.projets }} <small class="text-body-secondary">visibles</small></span></div>
-                            <div v-if="counts.verif" class="meta-row"><span class="k">Vérifiés manuellement</span><span class="v">✓ {{ counts.verif }}</span></div>
+                            <div v-if="counts.verif" class="meta-row"><span class="k">Vérifiés manuellement</span><span class="v"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ counts.verif }}</span></div>
                             <div v-if="counts.estime" class="meta-row"><span class="k">Reclassés Terminé (&gt; 5 ans)</span><span class="v">{{ counts.estime }}</span></div>
                             <div v-if="counts.pt" class="meta-row"><span class="k">Potentiellement terminés</span><span class="v">{{ counts.pt }}</span></div>
                             <div v-if="counts.pec" class="meta-row"><span class="k">Potentiellement en cours</span><span class="v">{{ counts.pec }}</span></div>

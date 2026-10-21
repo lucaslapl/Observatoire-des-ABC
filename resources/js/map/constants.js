@@ -52,7 +52,7 @@ export function srcChip(p) {
 export function delBtn(p, isAdmin) {
     if (!isAdmin) return '';
     const nom = (p.nom || '').replace(/"/g, '&quot;');
-    return `<button type="button" class="btn-del" data-del-pid="${p.projet_id}" data-del-nom="${nom}" title="Supprimer ce projet (admin)">🗑</button>`;
+    return `<button type="button" class="btn-del" data-del-pid="${p.projet_id}" data-del-nom="${nom}" title="Supprimer ce projet (admin)"><i class="bi bi-trash" aria-hidden="true"></i></button>`;
 }
 
 export function fmtCount(n, s) {

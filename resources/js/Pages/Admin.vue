@@ -267,8 +267,8 @@ async function collect() {
                 <div class="card-header bg-white fw-semibold py-2">Maintenance</div>
                 <div class="card-body py-2">
                     <div class="d-flex gap-2 flex-wrap align-items-center">
-                        <button class="btn btn-primary btn-sm" :disabled="busy" @click="collect">🔄 Collecter les données</button>
-                        <button class="btn btn-secondary btn-sm" :disabled="busy" @click="backup">💾 Sauvegarder la base</button>
+                        <button class="btn btn-primary btn-sm" :disabled="busy" @click="collect"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Collecter les données</button>
+                        <button class="btn btn-secondary btn-sm" :disabled="busy" @click="backup"><i class="bi bi-save me-1" aria-hidden="true"></i>Sauvegarder la base</button>
                         <span v-if="busy" class="spinner-border spinner-border-sm text-success" role="status"></span>
                     </div>
                     <div v-if="maintenanceMsg" class="small mt-1" :class="maintenanceOk ? 'text-success' : 'text-danger'">{{ maintenanceMsg }}</div>
@@ -279,8 +279,8 @@ async function collect() {
                 <div class="card-header bg-white fw-semibold py-2">Actualités</div>
                 <div class="card-body py-2">
                     <div class="d-flex flex-wrap gap-2 mb-2">
-                        <button v-if="!actualiteForm.id" class="btn btn-sm btn-outline-primary" @click="openActualite(null)">➕ Nouvelle actualité</button>
-                        <button v-else class="btn btn-sm btn-outline-secondary" @click="openActualite(null)">↩ Annuler l'édition</button>
+                        <button v-if="!actualiteForm.id" class="btn btn-sm btn-outline-primary" @click="openActualite(null)"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nouvelle actualité</button>
+                        <button v-else class="btn btn-sm btn-outline-secondary" @click="openActualite(null)"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>Annuler l'édition</button>
                     </div>
                     <form @submit.prevent="saveActualite" class="border rounded-3 p-2 mb-2 bg-light">
                         <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -312,8 +312,8 @@ async function collect() {
                                     {{ formatDateFr(a.date_publication) }} · {{ (a.contenu || '').slice(0, 80) }}{{ (a.contenu || '').length > 80 ? '…' : '' }}
                                 </div>
                             </div>
-                            <button class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="openActualite(a)">✎ Modifier</button>
-                            <button class="btn btn-sm btn-outline-danger" :disabled="busy" @click="destroyActualite(a)">🗑 Supprimer</button>
+                            <button class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="openActualite(a)"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Modifier</button>
+                            <button class="btn btn-sm btn-outline-danger" :disabled="busy" @click="destroyActualite(a)"><i class="bi bi-trash me-1" aria-hidden="true"></i>Supprimer</button>
                         </li>
                     </ul>
                 </div>
@@ -322,7 +322,7 @@ async function collect() {
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-2">
                     <span class="fw-semibold">Exclusions (projets supprimés)</span>
-                    <button class="btn btn-sm btn-outline-secondary ms-auto" :disabled="exclusionsBusy" @click="exportAudit">⬇ Exporter le journal d'audit</button>
+                    <button class="btn btn-sm btn-outline-secondary ms-auto" :disabled="exclusionsBusy" @click="exportAudit"><i class="bi bi-download me-1" aria-hidden="true"></i>Exporter le journal d'audit</button>
                 </div>
                 <div class="card-body py-2">
                     <div v-if="exclusionsMsg" class="small mb-2" :class="exclusionsOk ? 'text-success' : 'text-danger'">{{ exclusionsMsg }}</div>
@@ -338,7 +338,7 @@ async function collect() {
                                     {{ e.projet_id }}{{ e.motif ? ` · motif : ${e.motif}` : '' }}{{ e.par_admin ? ` · par ${e.par_admin}` : '' }}{{ e.cree_le ? ` · le ${formatDateFr(e.cree_le)}` : '' }}
                                 </div>
                             </div>
-                            <button class="btn btn-sm btn-outline-secondary" :disabled="exclusionsBusy" @click="unexcludeProjet(e)">↩ Ré-import</button>
+                            <button class="btn btn-sm btn-outline-secondary" :disabled="exclusionsBusy" @click="unexcludeProjet(e)"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Ré-import</button>
                         </li>
                     </ul>
                     <div class="small text-muted mt-2">La levée d'exclusion ne recrée pas le projet : il faut ensuite lancer un collect.</div>
@@ -427,7 +427,7 @@ async function collect() {
                             <span v-if="c.structure_porteuse">{{ c.structure_porteuse }} · </span>
                             IP {{ c.ip }} · {{ c.created_at }}<template v-if="c.user_agent"> · {{ c.user_agent.slice(0, 60) }}</template>
                         </div>
-                        <div v-if="c.commentaire" class="small text-muted mt-1">💬 {{ c.commentaire }}</div>
+                        <div v-if="c.commentaire" class="small text-muted mt-1"><i class="bi bi-chat-left-text me-1" aria-hidden="true"></i>{{ c.commentaire }}</div>
                         <div class="payload">
                             <template v-for="(line, i) in c.payload" :key="i">
                                 <b>{{ line.label }} :</b>
@@ -444,14 +444,14 @@ async function collect() {
                             <template v-if="c.verif_lien"> · <a :href="c.verif_lien" target="_blank" rel="noopener">Lien source</a></template>
                         </div>
                         <div v-if="c.statut === 'en_attente'" class="d-flex gap-2 flex-wrap mt-2">
-                            <button class="btn btn-sm btn-success" :disabled="busy" @click="act(c.id, 'valider')">✓ Valider</button>
+                            <button class="btn btn-sm btn-success" :disabled="busy" @click="act(c.id, 'valider')"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>Valider</button>
                             <button class="btn btn-sm btn-danger" :disabled="busy" title="Information erronée : la suggestion est rejetée"
-                                @click="act(c.id, 'refuser')">✗ Refuser</button>
+                                @click="act(c.id, 'refuser')"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>Refuser</button>
                             <button class="btn btn-sm btn-outline-secondary" :disabled="busy" title="Erreur d'envoi ou erreur de l'auteur : la suggestion est annulée"
-                                @click="act(c.id, 'annuler')">↩ Annuler</button>
+                                @click="act(c.id, 'annuler')"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Annuler</button>
                         </div>
                         <div v-else-if="c.statut === 'validee'" class="d-flex gap-2 flex-wrap mt-2">
-                            <button class="btn btn-sm btn-warning" :disabled="busy" @click="act(c.id, 'retirer')">↩ Retirer (rollback)</button>
+                            <button class="btn btn-sm btn-warning" :disabled="busy" @click="act(c.id, 'retirer')"><i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Retirer (rollback)</button>
                         </div>
                     </div>
                 </div>
