@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Commune;
+use App\Models\Contribution;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\Snapshot;
@@ -84,6 +85,12 @@ class ProjetRepository
 
         $projet = Projet::find($p['id']);
         if ($projet) {
+            if ($this->hasValidatedDateContribution($p['id'])) {
+                // Dates confirmées par un membre : la source ne doit pas les
+                // écraser. Une correction se fait par une nouvelle
+                // contribution (qui remplacera l'ancienne valeur validée).
+                unset($data['annee_debut']);
+            }
             $projet->fill($data);
             $projet->save();
         } else {
@@ -116,6 +123,21 @@ class ProjetRepository
             }
             Commune::insert($rows);
         }
+    }
+
+    /**
+     * Une contribution de dates (type date_debut) validée écrit directement
+     * dans projets.annee_debut / annee_fin : ces valeurs humaines doivent
+     * survivre aux collects suivants. Le retrait de la contribution
+     * (statut retiree) retire la protection et rend la main à la source.
+     */
+    protected function hasValidatedDateContribution(string $projetId): bool
+    {
+        return Contribution::query()
+            ->where('projet_id', $projetId)
+            ->where('type', 'date_debut')
+            ->where('statut', 'validee')
+            ->exists();
     }
 
     public function recordSnapshot(string $snapshotDate, string $projetId, string $avancement, string $source): void

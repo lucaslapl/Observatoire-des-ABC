@@ -8,6 +8,7 @@ use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\Verification;
 use App\Services\CollectService;
+use App\Services\ContributionService;
 use App\Services\ProjetRepository;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use RuntimeException;
@@ -214,5 +215,105 @@ class CollectServiceTest extends TestCase
 
         $this->assertDatabaseMissing('projets', ['id' => 'projet-exclu']);
         $this->assertDatabaseHas('projets', ['id' => 'projet-conserve']);
+    }
+
+    public function test_upsert_preserves_dates_from_validated_contribution(): void
+    {
+        Projet::create([
+            'id' => 'projet-dates',
+            'nom' => 'ABC Dates',
+            'annee_debut' => 2020,
+            'annee_fin' => 2021,
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+        $c = Contribution::create([
+            'projet_id' => 'projet-dates',
+            'type' => 'date_debut',
+            'payload_json' => ['annee_debut_suggeree' => '2019', 'annee_fin_suggeree' => '2022'],
+            'statut' => 'en_attente',
+        ]);
+
+        app(ContributionService::class)->applyContribution($c->id, 'admin');
+        $this->assertDatabaseHas('projets', ['id' => 'projet-dates', 'annee_debut' => 2019, 'annee_fin' => 2022]);
+
+        // Collect suivant : la source annonce une autre date, la valeur
+        // humaine validée doit survivre (les autres champs suivent la source).
+        $repo = app(ProjetRepository::class);
+        $repo->upsertProjet([
+            'id' => 'projet-dates',
+            'nom' => 'ABC Dates renommé',
+            'annee_debut' => 2020,
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+
+        $this->assertDatabaseHas('projets', [
+            'id' => 'projet-dates',
+            'nom' => 'ABC Dates renommé',
+            'annee_debut' => 2019,
+            'annee_fin' => 2022,
+        ]);
+    }
+
+    public function test_upsert_source_dates_win_without_validated_contribution(): void
+    {
+        Projet::create([
+            'id' => 'projet-source',
+            'nom' => 'ABC Source',
+            'annee_debut' => 2020,
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+        // Contribution jamais traitée : aucune protection, la source prime.
+        Contribution::create([
+            'projet_id' => 'projet-source',
+            'type' => 'date_debut',
+            'payload_json' => ['annee_debut_suggeree' => '2019'],
+            'statut' => 'en_attente',
+        ]);
+
+        app(ProjetRepository::class)->upsertProjet([
+            'id' => 'projet-source',
+            'nom' => 'ABC Source',
+            'annee_debut' => 2021,
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+
+        $this->assertDatabaseHas('projets', ['id' => 'projet-source', 'annee_debut' => 2021]);
+    }
+
+    public function test_upsert_source_dates_win_again_after_contribution_revert(): void
+    {
+        Projet::create([
+            'id' => 'projet-revert',
+            'nom' => 'ABC Revert',
+            'annee_debut' => 2020,
+            'annee_fin' => 2021,
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+        $c = Contribution::create([
+            'projet_id' => 'projet-revert',
+            'type' => 'date_debut',
+            'payload_json' => ['annee_debut_suggeree' => '2019'],
+            'statut' => 'en_attente',
+        ]);
+
+        $service = app(ContributionService::class);
+        $service->applyContribution($c->id, 'admin');
+        $service->revertContribution($c->id, 'admin');
+
+        // Contribution retirée : la protection tombe, la source reprend la main.
+        app(ProjetRepository::class)->upsertProjet([
+            'id' => 'projet-revert',
+            'nom' => 'ABC Revert',
+            'annee_debut' => 2021,
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+
+        $this->assertDatabaseHas('projets', ['id' => 'projet-revert', 'annee_debut' => 2021]);
     }
 }
