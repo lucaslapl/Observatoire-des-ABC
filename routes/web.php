@@ -96,8 +96,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.password');
     Route::delete('/profil', [ProfilController::class, 'destroy'])->name('profil.destroy');
 
-    Route::middleware('role:admin')->group(function () {
+    // Panneau /admin : la modération des contributions est ouverte aux
+    // modérateurs (experts de confiance), le reste reste réservé aux admins.
+    Route::middleware('role:admin|moderateur')->group(function () {
         Route::get('/admin', [PageController::class, 'admin'])->name('admin');
+    });
+
+    Route::middleware('role:admin')->group(function () {
         Route::post('/actualites', [ActualiteController::class, 'store'])->name('actualites.store');
         Route::put('/actualites/{actualite}', [ActualiteController::class, 'update'])->name('actualites.update');
         Route::delete('/actualites/{actualite}', [ActualiteController::class, 'destroy'])->name('actualites.destroy');

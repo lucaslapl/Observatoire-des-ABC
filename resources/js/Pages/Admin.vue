@@ -8,6 +8,12 @@ import { STATUT_LABEL, SRC_LABEL, VERDICT } from '../map/constants.js';
 import { parsePayload, payloadLines } from '../utils/contributionDisplay.js';
 
 const props = defineProps({
+    // false = simple modérateur : seules les sections de modération
+    // des contributions sont affichées.
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
     meta: {
         type: Object,
         default: null,
@@ -261,9 +267,9 @@ async function collect() {
     <Layout>
         <Seo noindex title="Administration" description="Panneau d'administration de l'Observatoire des ABC." />
         <div class="container py-4">
-            <h1 class="h4 mb-4">Administration</h1>
+            <h1 class="h4 mb-4">{{ isAdmin ? 'Administration' : 'Modération' }}</h1>
 
-            <div class="card shadow-sm mb-3">
+            <div v-if="isAdmin" class="card shadow-sm mb-3">
                 <div class="card-header bg-white fw-semibold py-2">Maintenance</div>
                 <div class="card-body py-2">
                     <div class="d-flex gap-2 flex-wrap align-items-center">
@@ -275,7 +281,7 @@ async function collect() {
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-3">
+            <div v-if="isAdmin" class="card shadow-sm mb-3">
                 <div class="card-header bg-white fw-semibold py-2">Actualités</div>
                 <div class="card-body py-2">
                     <div class="d-flex flex-wrap gap-2 mb-2">
@@ -319,7 +325,7 @@ async function collect() {
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-3">
+            <div v-if="isAdmin" class="card shadow-sm mb-3">
                 <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-2">
                     <span class="fw-semibold">Exclusions (projets supprimés)</span>
                     <button class="btn btn-sm btn-outline-secondary ms-auto" :disabled="exclusionsBusy" @click="exportAudit"><i class="bi bi-download me-1" aria-hidden="true"></i>Exporter le journal d'audit</button>
@@ -345,7 +351,7 @@ async function collect() {
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-3">
+            <div v-if="isAdmin" class="card shadow-sm mb-3">
                 <div class="card-header bg-white fw-semibold py-2">Comptes ({{ comptes.length }})</div>
                 <div class="card-body py-2">
                     <div v-if="comptes.length === 0" class="text-muted small py-2">Aucun compte.</div>

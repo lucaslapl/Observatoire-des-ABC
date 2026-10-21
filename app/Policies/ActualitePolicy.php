@@ -18,16 +18,16 @@ class ActualitePolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'moderateur']);
+        return false;
     }
 
     public function update(User $user, Actualite $actualite): bool
     {
-        return $user->hasRole(['admin', 'moderateur']);
+        return false;
     }
 
     public function delete(User $user, Actualite $actualite): bool
     {
-        return $user->hasRole(['admin', 'moderateur']);
+        return false;
     }
 }

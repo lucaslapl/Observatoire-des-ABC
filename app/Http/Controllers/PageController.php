@@ -123,6 +123,8 @@ class PageController extends Controller
 
     public function admin(): Response
     {
+        $isAdmin = auth()->user()->hasRole('admin');
+
         $contributions = Contribution::query()
             ->leftJoin('projets', 'projets.id', '=', 'contributions.projet_id')
             ->leftJoin('verifications', 'verifications.projet_id', '=', 'contributions.projet_id')
@@ -138,44 +140,51 @@ class PageController extends Controller
             ->orderByDesc('contributions.created_at')
             ->get();
 
-        $exclusions = ProjectExclusion::query()
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function (ProjectExclusion $e) {
-                return [
-                    'projet_id' => $e->projet_id,
-                    'nom' => Projet::whereKey($e->projet_id)->value('nom'),
-                    'motif' => $e->motif,
-                    'par_admin' => $e->par_admin,
-                    'cree_le' => $e->created_at?->toDateTimeString(),
-                ];
-            });
-
-        $comptes = User::query()
-            ->withCount('contributions')
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function (User $u) {
-                return [
-                    'id' => $u->id,
-                    'name' => $u->name,
-                    'email' => $u->email,
-                    'roles' => $u->getRoleNames()->values()->all(),
-                    'email_verifie' => $u->hasVerifiedEmail(),
-                    'nb_contributions' => $u->contributions_count,
-                    'cree_le' => $u->created_at?->toDateTimeString(),
-                ];
-            });
-
-        return Inertia::render('Admin', [
+        $props = [
+            'isAdmin' => $isAdmin,
             'meta' => $this->stats->meta(),
             'contributions' => $contributions,
-            'actualites' => Actualite::query()
+        ];
+
+        // Sections de maintenance : administrateurs uniquement. Les
+        // modérateurs (experts de confiance) n'accèdent qu'à la modération
+        // des contributions — pas aux comptes (RGPD) ni au paramétrage.
+        if ($isAdmin) {
+            $props['exclusions'] = ProjectExclusion::query()
                 ->orderByDesc('created_at')
-                ->get(['id', 'titre', 'slug', 'contenu', 'statut', 'date_publication']),
-            'exclusions' => $exclusions,
-            'comptes' => $comptes,
-        ]);
+                ->get()
+                ->map(function (ProjectExclusion $e) {
+                    return [
+                        'projet_id' => $e->projet_id,
+                        'nom' => Projet::whereKey($e->projet_id)->value('nom'),
+                        'motif' => $e->motif,
+                        'par_admin' => $e->par_admin,
+                        'cree_le' => $e->created_at?->toDateTimeString(),
+                    ];
+                });
+
+            $props['comptes'] = User::query()
+                ->withCount('contributions')
+                ->orderByDesc('created_at')
+                ->get()
+                ->map(function (User $u) {
+                    return [
+                        'id' => $u->id,
+                        'name' => $u->name,
+                        'email' => $u->email,
+                        'roles' => $u->getRoleNames()->values()->all(),
+                        'email_verifie' => $u->hasVerifiedEmail(),
+                        'nb_contributions' => $u->contributions_count,
+                        'cree_le' => $u->created_at?->toDateTimeString(),
+                    ];
+                });
+
+            $props['actualites'] = Actualite::query()
+                ->orderByDesc('created_at')
+                ->get(['id', 'titre', 'slug', 'contenu', 'statut', 'date_publication']);
+        }
+
+        return Inertia::render('Admin', $props);
     }
 
     public function diag(): array
