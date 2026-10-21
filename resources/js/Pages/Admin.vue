@@ -160,6 +160,35 @@ async function exportAudit() {
     }
 }
 
+// Rôle modérateur (carte « Comptes ») : promotion / retrait.
+const comptesMsg = ref('');
+const comptesOk = ref(true);
+const comptesBusy = ref(false);
+
+async function setModerateur(u, add) {
+    if (!add && !window.confirm(`Retirer le rôle modérateur à ${u.name} ? Il redevient simple contributeur.`)) return;
+    comptesBusy.value = true;
+    comptesMsg.value = '';
+    try {
+        const url = `/api/admin/comptes/${u.id}/moderateur`;
+        if (add) {
+            await axios.post(url);
+        } else {
+            await axios.delete(url);
+        }
+        comptesMsg.value = add
+            ? `${u.name} est maintenant modérateur.`
+            : `Rôle modérateur retiré à ${u.name}.`;
+        comptesOk.value = true;
+        router.reload({ only: ['comptes'] });
+    } catch (e) {
+        comptesMsg.value = 'Erreur : ' + errMsg(e);
+        comptesOk.value = false;
+    } finally {
+        comptesBusy.value = false;
+    }
+}
+
 const tabs = [
     { key: 'en_attente', label: 'À modérer' },
     { key: 'validee', label: 'Appliquées' },
@@ -354,6 +383,7 @@ async function collect() {
             <div v-if="isAdmin" class="card shadow-sm mb-3">
                 <div class="card-header bg-white fw-semibold py-2">Comptes ({{ comptes.length }})</div>
                 <div class="card-body py-2">
+                    <div v-if="comptesMsg" class="small mb-2" :class="comptesOk ? 'text-success' : 'text-danger'">{{ comptesMsg }}</div>
                     <div v-if="comptes.length === 0" class="text-muted small py-2">Aucun compte.</div>
                     <div v-else class="table-responsive">
                         <table class="table table-sm table-striped align-middle mb-0 small">
@@ -365,6 +395,7 @@ async function collect() {
                                     <th scope="col">Email vérifié</th>
                                     <th scope="col">Contributions</th>
                                     <th scope="col">Créé le</th>
+                                    <th scope="col">Modération</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -380,9 +411,22 @@ async function collect() {
                                     </td>
                                     <td>{{ u.nb_contributions }}</td>
                                     <td class="text-muted">{{ formatDateFr(u.cree_le) }}</td>
+                                    <td>
+                                        <span v-if="u.roles.includes('admin')" class="text-muted" title="Le rôle administrateur n'est pas gérable ici">—</span>
+                                        <button v-else-if="u.roles.includes('moderateur')" class="btn btn-sm btn-outline-warning"
+                                            :disabled="comptesBusy" title="Redevient simple contributeur"
+                                            @click="setModerateur(u, false)"><i class="bi bi-dash-lg me-1" aria-hidden="true"></i>Retirer</button>
+                                        <button v-else class="btn btn-sm btn-outline-primary"
+                                            :disabled="comptesBusy" title="Expert de confiance : peut valider les suggestions et enregistrer des verdicts"
+                                            @click="setModerateur(u, true)"><i class="bi bi-person-check me-1" aria-hidden="true"></i>Modérateur</button>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        Le modérateur valide les suggestions des contributeurs et enregistre des verdicts directs,
+                        sans accès à la maintenance du site.
                     </div>
                 </div>
             </div>

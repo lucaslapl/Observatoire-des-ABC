@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\CollectController;
 use App\Http\Controllers\Admin\ContributionController as AdminContributionController;
 use App\Http\Controllers\Admin\ProjetController as AdminProjetController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\DiagController;
 use App\Http\Controllers\Api\GeoJsonController;
@@ -50,6 +51,10 @@ Route::middleware('web')->group(function () {
         Route::get('/admin/exclusions', [AdminProjetController::class, 'index']);
         Route::delete('/admin/exclusions/{projet}', [AdminProjetController::class, 'unexclude']);
         Route::get('/admin/exclusions/export', [AdminProjetController::class, 'export']);
+
+        // Gestion du rôle modérateur (carte « Comptes ») : admin uniquement.
+        Route::post('/admin/comptes/{user}/moderateur', [AdminUserController::class, 'promoteModerateur']);
+        Route::delete('/admin/comptes/{user}/moderateur', [AdminUserController::class, 'demoteModerateur']);
     });
 
 });

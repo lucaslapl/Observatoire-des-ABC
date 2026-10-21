@@ -186,4 +186,70 @@ class ModerateurAccessTest extends TestCase
 
         $this->assertDatabaseCount('actualites', 0);
     }
+
+    private function createAdmin(): User
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        return $admin;
+    }
+
+    public function test_admin_peut_promouvoir_un_moderateur(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('contributeur');
+
+        $this->actingAs($this->createAdmin())
+            ->postJson("/api/admin/comptes/{$user->id}/moderateur")
+            ->assertOk()
+            ->assertJson(['ok' => true, 'roles' => ['contributeur', 'moderateur']]);
+
+        $this->assertTrue($user->refresh()->hasRole('moderateur'));
+    }
+
+    public function test_admin_peut_retirer_le_role_moderateur(): void
+    {
+        $this->actingAs($this->createAdmin())
+            ->deleteJson("/api/admin/comptes/{$this->moderateur->id}/moderateur")
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $this->assertFalse($this->moderateur->refresh()->hasRole('moderateur'));
+    }
+
+    public function test_moderateur_ne_peut_pas_gerer_les_roles(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('contributeur');
+
+        $this->actingAs($this->moderateur)
+            ->postJson("/api/admin/comptes/{$user->id}/moderateur")
+            ->assertForbidden();
+
+        $this->assertFalse($user->refresh()->hasRole('moderateur'));
+    }
+
+    public function test_un_compte_non_verifie_ne_peut_pas_etre_promu(): void
+    {
+        $unverified = User::factory()->unverified()->create();
+        $unverified->assignRole('contributeur');
+
+        $this->actingAs($this->createAdmin())
+            ->postJson("/api/admin/comptes/{$unverified->id}/moderateur")
+            ->assertStatus(400);
+
+        $this->assertFalse($unverified->refresh()->hasRole('moderateur'));
+    }
+
+    public function test_le_role_admin_ne_peut_pas_etre_modifie_depuis_le_panneau(): void
+    {
+        $admin = $this->createAdmin();
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/comptes/{$admin->id}/moderateur")
+            ->assertStatus(400);
+
+        $this->assertTrue($admin->refresh()->hasRole('admin'));
+    }
 }
