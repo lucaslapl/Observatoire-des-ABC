@@ -24,6 +24,7 @@ const props = defineProps({
 
 const page = usePage();
 const site = computed(() => page.props.site || {});
+const authUser = computed(() => page.props.auth?.user || null);
 const fmtSourceDate = (d) =>
     d ? new Date(`${d}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
@@ -113,8 +114,31 @@ const seoJsonLd = computed(() => {
                             <Link class="btn btn-outline-success btn-sm ms-2" href="/actualites">Suivre l'actualité</Link>
                             <Link class="btn btn-outline-success btn-sm ms-2" href="/verify">Page de vérification</Link>
                         </p>
+                        <p v-if="!authUser" class="contribute-hint">
+                            <i class="bi bi-person-plus" aria-hidden="true"></i>
+                            Un ABC manque sur la carte ou une donnée vous semble erronée ?
+                            <Link href="/register?raison=contribution">Créez un compte</Link>
+                            pour proposer vos corrections et suivre leurs validations.
+                        </p>
                     </div>
                     <div class="col-lg-4">
+                        <div class="contribute-card mb-4">
+                            <h2><i class="bi bi-pencil-square" aria-hidden="true"></i> Contribuer à l'Observatoire</h2>
+                            <p>
+                                L'Observatoire s'appuie sur des données publiques, mais votre connaissance du terrain
+                                compte tout autant : corrigez un statut, précisez une période, signalez un projet manquant.
+                            </p>
+                            <template v-if="!authUser">
+                                <Link class="btn btn-success btn-sm" href="/register?raison=contribution">Créer un compte</Link>
+                                <Link class="btn btn-outline-success btn-sm ms-1" href="/login">Se connecter</Link>
+                                <div class="mt-1">
+                                    <Link class="alt" href="/login">Déjà inscrit ? Connectez-vous pour retrouver vos contributions.</Link>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <Link class="btn btn-success btn-sm" href="/profil">Gérer mes contributions</Link>
+                            </template>
+                        </div>
                         <h2 class="h5">Explorer par région</h2>
                         <ul class="list-unstyled home-links">
                             <li v-for="r in index?.regions" :key="r.slug">
@@ -182,6 +206,16 @@ const seoJsonLd = computed(() => {
 .home-links a:hover { text-decoration: underline; }
 .home-links small { color: #94a3b8; }
 .home-sources { padding: 1rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; }
+.contribute-card {
+    background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.contribute-card h2 { font-size: 1rem; color: #14532d; margin-bottom: .4rem; }
+.contribute-card p { font-size: .85rem; color: #475569; margin-bottom: .75rem; }
+.contribute-card a.alt { font-size: .8rem; color: #166534; text-decoration: none; }
+.contribute-card a.alt:hover { text-decoration: underline; }
+.contribute-hint { font-size: .85rem; color: #64748b; margin-top: 1rem; margin-bottom: 0; }
+.contribute-hint a { color: #14532d; font-weight: 600; }
 .home-footer { background: #14532d; color: #e8f5e9; }
 .home-footer a { color: #fff; }
 </style>
