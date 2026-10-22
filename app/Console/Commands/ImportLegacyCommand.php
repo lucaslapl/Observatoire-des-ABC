@@ -12,6 +12,7 @@ use App\Models\Snapshot;
 use App\Models\Verification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use PDO;
 
 /**
@@ -59,13 +60,17 @@ class ImportLegacyCommand extends Command
 
         // Rétro-remplissage de la géométrie PostGIS à partir de lon/lat
         // (les anciennes communes n'avaient pas de colonne geom).
-        $this->line('geometry…');
-        $updated = DB::table('communes')
-            ->whereNotNull('lon')
-            ->where('lon', '!=', 0)
-            ->where('lat', '!=', 0)
-            ->update(['geom' => DB::raw('ST_SetSRID(ST_MakePoint(lon, lat), 4326)')]);
-        $this->line("geometry : {$updated} communes");
+        // Garde : la colonne geom n'existe que sous PostgreSQL + PostGIS
+        // (pas sous SQLite, utilisée par les tests).
+        if (DB::connection()->getDriverName() === 'pgsql' && Schema::hasColumn('communes', 'geom')) {
+            $this->line('geometry…');
+            $updated = DB::table('communes')
+                ->whereNotNull('lon')
+                ->where('lon', '!=', 0)
+                ->where('lat', '!=', 0)
+                ->update(['geom' => DB::raw('ST_SetSRID(ST_MakePoint(lon, lat), 4326)')]);
+            $this->line("geometry : {$updated} communes");
+        }
 
         $this->info('Import terminé.');
 
