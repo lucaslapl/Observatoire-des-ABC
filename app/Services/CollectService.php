@@ -7,6 +7,7 @@ use App\Collectors\FondsVertCollector;
 use App\Collectors\WaybackCollector;
 use App\Models\Commune;
 use App\Models\Contribution;
+use App\Models\Financement;
 use App\Models\Projet;
 use App\Models\Verification;
 use RuntimeException;
@@ -100,6 +101,9 @@ class CollectService
             ->whereNotIn('id', $ingestedIds)
             ->whereNotIn('id', Verification::select('projet_id'))
             ->whereNotIn('id', Contribution::select('projet_id'))
+            // Un projet financé (Fonds vert) ne disparaît pas avec la ligne
+            // de financement : le rattachement est conservé.
+            ->whereNotIn('id', Financement::select('project_id'))
             ->pluck('id');
 
         if ($candidates->isEmpty()) {

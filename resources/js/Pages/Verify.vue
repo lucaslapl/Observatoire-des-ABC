@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, reactive } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
@@ -8,7 +8,13 @@ import Seo from '../Components/Seo.vue';
 const props = defineProps({
     projets: { type: Array, default: () => [] },
     compteurs: { type: Object, default: () => ({}) },
+    candidats: { type: Array, default: () => [] },
 });
+
+const fmtMontant = (m) => {
+    const n = Number(String(m ?? '').replace(',', '.'));
+    return Number.isFinite(n) && n > 0 ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n) : '';
+};
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user || null);
@@ -324,6 +330,42 @@ const sendSuggestion = async (p) => {
                 </table>
             </div>
             <div v-if="filtered.length === 0" class="text-center text-body-secondary py-5">Aucun projet ne correspond aux filtres.</div>
+
+            <div v-if="candidats.length" class="mt-5">
+                <h2 class="h6">Candidats Fonds vert non rattachés ({{ candidats.length }})</h2>
+                <p class="small text-muted">
+                    Lignes « Atlas de la biodiversité communale » des listes Fonds vert (P113) qui ne
+                    correspondent à aucun projet connu : probable doublon sous une autre appellation, ou
+                    nouvel ABC financé pas encore recensé par l'OFB. Aucun projet n'est créé sans
+                    vérification humaine — <Link href="/methodologie">voir la méthodologie</Link>.
+                </p>
+                <div class="table-responsive bg-white border rounded-3">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Projet financé</th>
+                                <th>Bénéficiaire</th>
+                                <th>Millésime</th>
+                                <th class="text-end">Montant engagé</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="c in candidats" :key="c.ligne_id">
+                                <td>
+                                    <span class="nom">{{ c.nom }}</span>
+                                    <span v-if="c.ambigu && c.ambigu.length" class="sub d-block">
+                                        Plusieurs projets existants portent un nom proche : à départager.
+                                    </span>
+                                </td>
+                                <td class="small">{{ c.beneficiaire || '—' }}</td>
+                                <td class="small">{{ c.annee || '—' }}</td>
+                                <td class="small text-end">{{ fmtMontant(c.montant) || '—' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <p class="foot">
                 <i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Une information erronée ou non vérifiée ? Les membres inscrits
                 peuvent suggérer une correction : elle sera étudiée par un administrateur avant d'être appliquée.

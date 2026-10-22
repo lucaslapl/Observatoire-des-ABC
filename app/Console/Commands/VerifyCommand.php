@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Commune;
 use App\Models\Projet;
 use App\Services\StatusService;
+use App\Services\VerificationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -85,9 +86,24 @@ class VerifyCommand extends Command
             ]));
         }
 
+        // Candidats Fonds vert non rattachés (lignes passées en file par le
+        // collect : probable doublon ou nouvel ABC pas encore recensé).
+        $candidats = app(VerificationService::class)->candidatsFondsVert();
+        foreach ($candidats as $i => $c) {
+            $lines[] = str_replace("\n", ' ', implode(';', [
+                $c['nom'],
+                $c['beneficiaire'] ?? '',
+                '',
+                $c['annee'] ?? '',
+                'a_verifier',
+                ($c['ambigu'] ? 'doublon suspect (plusieurs projets au nom proche)' : 'candidat Fonds vert non rattaché').' ; montant '.($c['montant'] ?? '?'),
+                '"atlas de la biodiversité communale" "'.($c['beneficiaire'] ?? $c['nom']).'"',
+            ]));
+        }
+
         $path = $dir.'/verification-worklist.csv';
         file_put_contents($path, $header.implode("\n", $lines)."\n");
-        $this->line("Worklist de vérification : {$path} (".count($rows).' projets à vérifier)');
+        $this->line("Worklist de vérification : {$path} (".count($rows).' projets à vérifier, '.count($candidats).' candidats Fonds vert)');
 
         return self::SUCCESS;
     }
