@@ -48,6 +48,8 @@ Route::middleware('web')->group(function () {
         Route::post('/admin/collect', [CollectController::class, 'store']);
 
         Route::delete('/admin/projets/{projet}', [AdminProjetController::class, 'destroy']);
+        Route::post('/admin/projets/{projet}/fusion', [AdminProjetController::class, 'fusion']);
+        Route::get('/admin/projets/recherche', [AdminProjetController::class, 'recherche']);
         Route::get('/admin/exclusions', [AdminProjetController::class, 'index']);
         Route::delete('/admin/exclusions/{projet}', [AdminProjetController::class, 'unexclude']);
         Route::get('/admin/exclusions/export', [AdminProjetController::class, 'export']);

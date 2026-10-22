@@ -94,6 +94,62 @@ const ouvrirVerdict = (p) => { verdictOuvert.value = p; };
 const fermerVerdict = () => { verdictOuvert.value = null; };
 const formActif = computed(() => verdictOuvert.value ? form(verdictOuvert.value) : null);
 
+// Fusion d'un doublon suspect dans un projet canonique (admin uniquement).
+const fusion = reactive({
+    ouvert: false, projet: null, q: '', resultats: [], canoniqueId: '',
+    motif: '', sending: false, message: '', ok: false,
+});
+const ouvrirFusion = (p) => {
+    fusion.ouvert = true;
+    fusion.projet = p;
+    fusion.q = '';
+    fusion.resultats = [];
+    fusion.canoniqueId = '';
+    fusion.motif = '';
+    fusion.message = '';
+    fusion.ok = false;
+    chercherProjets('');
+};
+const fermerFusion = () => { fusion.ouvert = false; fusion.projet = null; };
+
+let fusionTimer = null;
+const chercherProjets = (q) => {
+    if (fusionTimer) clearTimeout(fusionTimer);
+    fusionTimer = setTimeout(async () => {
+        try {
+            const r = await axios.get('/api/admin/projets/recherche', { params: { q } });
+            fusion.resultats = r.data.projets || [];
+        } catch {
+            fusion.resultats = [];
+        }
+    }, 250);
+};
+
+const fusionner = async () => {
+    if (!fusion.projet || !fusion.canoniqueId) return;
+    fusion.message = '';
+    fusion.ok = false;
+    fusion.sending = true;
+    try {
+        const r = await axios.post(`/api/admin/projets/${encodeURIComponent(fusion.projet.id)}/fusion`, {
+            canonique_id: fusion.canoniqueId,
+            motif: fusion.motif || null,
+        });
+        fusion.ok = true;
+        fusion.message = `Fusion effectuée : ${r.data.stats?.communes_deplacees ?? 0} commune(s) unie(s), `
+            + `${r.data.stats?.financements_deplaces ?? 0} financement(s) migré(s).`;
+        fermerFusion();
+        fache.type = 'success';
+        fache.message = 'Doublon fusionné dans le projet canonique (alias créé, redirection 301, audit journalisé).';
+        router.reload({ only: ['projets', 'compteurs'] });
+    } catch (err) {
+        fusion.ok = false;
+        fusion.message = 'Erreur : ' + (err.response?.data?.error || err.message);
+    } finally {
+        fusion.sending = false;
+    }
+};
+
 const fache = reactive({ type: '', message: '', login: false });
 
 const searchUrl = (p) => 'https://duckduckgo.com/?q=' + encodeURIComponent(p.requete);
@@ -318,6 +374,13 @@ const sendSuggestion = async (p) => {
                                 <div v-if="p.note_auto" class="small text-muted mt-1" :title="p.note_auto">
                                     <div v-for="(ligne, i) in p.note_auto.split('\n')" :key="i">{{ ligne }}</div>
                                 </div>
+                                <button
+                                    v-if="isAdmin && p.note_auto && p.note_auto.includes('Doublon suspect')"
+                                    type="button" class="btn btn-sm btn-outline-danger mt-1"
+                                    @click="ouvrirFusion(p)"
+                                >
+                                    <i class="bi bi-union me-1" aria-hidden="true"></i>Fusionner ce doublon
+                                </button>
                             </td>
                             <td class="communes" :title="p.communes || ''">{{ p.communes || '—' }}</td>
                             <td>{{ p.annee_debut || '—' }}</td>
@@ -392,6 +455,65 @@ const sendSuggestion = async (p) => {
                 peuvent suggérer une correction : elle sera étudiée par un administrateur avant d'être appliquée.
                 Votre adresse IP est conservée uniquement à des fins de modération (RGPD).
             </p>
+
+            <div v-if="fusion.ouvert" class="sugg-backdrop" @click.self="fermerFusion">
+                <div class="sugg-modal" role="dialog" aria-modal="true" aria-labelledby="fusion-titre" tabindex="-1" @keydown.esc="fermerFusion">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h2 id="fusion-titre" class="h6 mb-1">Fusionner un doublon</h2>
+                            <div class="small text-muted">
+                                <span class="nom">{{ fusion.projet?.nom }}</span>
+                                <span class="text-danger"> — sera fusionné dans le projet canonique choisi ci-dessous</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" aria-label="Fermer" @click="fermerFusion"></button>
+                    </div>
+
+                    <p class="small text-muted mb-3">
+                        À n'utiliser que si les deux projets décrivent le <b>même ABC réel</b>.
+                        Le doublon devient un alias du canonique : communes, financements, contributions et
+                        vérifications migrent sans perte, son slug redirige en 301, et tout est journalisé
+                        (audit + snapshot de rollback). Si ce sont deux ABC distincts (même nom, territoires
+                        différents), fermez cette fenêtre : rendez simplement un verdict et ignorez la note
+                        automatique.
+                    </p>
+
+                    <label class="form-label small mb-1">Projet canonique <span class="text-danger">*</span></label>
+                    <input
+                        type="text" class="form-control mb-2" placeholder="Rechercher par nom ou structure…"
+                        v-model="fusion.q" @input="chercherProjets(fusion.q)"
+                    />
+                    <div class="mb-3" style="max-height: 240px; overflow-y: auto;">
+                        <label
+                            v-for="c in fusion.resultats.filter((x) => x.id !== fusion.projet?.id)"
+                            :key="c.id" class="sugg-projet"
+                            :class="{ actif: fusion.canoniqueId === c.id }"
+                        >
+                            <input type="radio" class="form-check-input m-0" :value="c.id" v-model="fusion.canoniqueId" />
+                            <span>
+                                <b>{{ c.nom }}</b>
+                                <span class="small text-muted"> · {{ c.structure_porteuse || '—' }}{{ c.annee_debut ? ' · ' + c.annee_debut : '' }}</span>
+                                <span class="small text-muted d-block">{{ c.id }}</span>
+                            </span>
+                        </label>
+                        <div v-if="fusion.resultats.length === 0" class="small text-muted">Aucun projet ne correspond.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small mb-1">Motif <span class="text-muted">(journalisé, optionnel)</span></label>
+                        <input type="text" class="form-control" placeholder="Ex. même ABC décrit sous deux noms dans deux sources" v-model="fusion.motif" />
+                    </div>
+
+                    <div v-if="fusion.message" class="small mb-2" :class="fusion.ok ? 'text-success' : 'text-danger'">{{ fusion.message }}</div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="fermerFusion">Fermer</button>
+                        <button type="button" class="btn btn-sm btn-danger" :disabled="fusion.sending || !fusion.canoniqueId" @click="fusionner">
+                            {{ fusion.sending ? 'Fusion…' : 'Fusionner' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <div v-if="verdictOuvert" class="sugg-backdrop" @click.self="fermerVerdict">
                 <div class="sugg-modal" role="dialog" aria-modal="true" aria-labelledby="verdict-titre" tabindex="-1" @keydown.esc="fermerVerdict">
@@ -562,5 +684,8 @@ const sendSuggestion = async (p) => {
 .sugg-type { display: block; border: 1px solid #dee2e6; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 13px; cursor: pointer; }
 .sugg-type:hover { border-color: #14532d; }
 .sugg-type.actif { border-color: #14532d; background: #f0fdf4; color: #14532d; font-weight: 600; }
+.sugg-projet { display: flex; align-items: flex-start; gap: 8px; border: 1px solid #dee2e6; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 13px; cursor: pointer; margin-bottom: 4px; }
+.sugg-projet:hover { border-color: #14532d; }
+.sugg-projet.actif { border-color: #14532d; background: #f0fdf4; }
 .foot { font-size: 12px; color: #64748b; margin-top: 16px; line-height: 1.6; }
 </style>

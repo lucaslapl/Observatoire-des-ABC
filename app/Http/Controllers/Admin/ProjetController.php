@@ -6,12 +6,60 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
+use App\Services\ProjectMergeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjetController extends Controller
 {
+    /**
+     * Fusionne un projet doublon (résolu par l'URL) dans un projet
+     * canonique : alias + union des données sans perte, redirection 301
+     * de l'ancien slug, snapshot de rollback et journal d'audit.
+     */
+    public function fusion(Request $request, Projet $projet, ProjectMergeService $service): JsonResponse
+    {
+        $validated = $request->validate([
+            'canonique_id' => ['required', 'string', 'max:120'],
+            'motif' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $result = $service->merge(
+            $projet->id,
+            $validated['canonique_id'],
+            $validated['motif'] ?? null,
+            'panneau-admin',
+            $request->user()?->email,
+        );
+
+        if (! $result['ok']) {
+            return response()->json(['error' => $result['error'] ?? 'Fusion impossible.'], 400);
+        }
+
+        return response()->json(['ok' => true, 'stats' => $result['stats']]);
+    }
+
+    /**
+     * Recherche de projets (id, nom, structure) pour choisir le projet
+     * canonique lors d'une fusion depuis le panneau. Insensible à la
+     * casse sur PostgreSQL comme sur SQLite.
+     */
+    public function recherche(Request $request): JsonResponse
+    {
+        $q = mb_strtolower(trim((string) $request->query('q', '')));
+
+        $rows = Projet::query()
+            ->when($q !== '', fn ($query) => $query->where(fn ($w) => $w
+                ->whereRaw('lower(nom) like ?', ["%{$q}%"])
+                ->orWhereRaw('lower(structure_porteuse) like ?', ["%{$q}%"])))
+            ->orderBy('nom')
+            ->limit(15)
+            ->get(['id', 'nom', 'structure_porteuse', 'annee_debut', 'annee_fin', 'statut', 'source']);
+
+        return response()->json(['projets' => $rows]);
+    }
+
     /**
      * Supprime un projet jugé erroné (cascade : communes, snapshots,
      * enrichissements, vérifications, contributions) et l'exclut du prochain
