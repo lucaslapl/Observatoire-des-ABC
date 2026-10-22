@@ -35,7 +35,7 @@ migrée depuis un ancien serveur **Node/TypeScript/SQLite**.
 - CI GitHub Actions : `.github/workflows/ci.yml` (build Vite, tests PHPUnit
   et JS, Pint, PHPStan niveau 5).
 
-## Développement local — Docker (recommandé, sans WAMP)
+## Développement local — Docker (seul environnement utilisé, plus de WAMP)
 
 ```bash
 docker compose up -d app          # app + PostGIS : http://localhost:8000
@@ -53,8 +53,7 @@ Au premier démarrage, `docker/php/entrypoint.sh` fait tout seul : `composer
 install` (volume `abc_vendor`), `APP_KEY` si absente, `migrate`, `db:seed`
 (admin depuis `ADMIN_*` du `.env`), puis `abc:import-legacy` si la table
 `projets` est vide. Les variables `DB_HOST=postgis` / `DB_PORT=5432` sont
-forcées par docker-compose (elles priment sur `.env`, qui peut donc rester
-pointé vers `127.0.0.1:5433` pour un usage hors Docker).
+forcées par docker-compose et priment sur le `.env`.
 
 Commandes ponctuelles utiles :
 

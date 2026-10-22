@@ -260,8 +260,9 @@ async function backup() {
     maintenanceMsg.value = '';
     try {
         const j = await axios.post('/api/admin/backup');
-        const time = j.data.path.replace(/^.*abc-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\..*$/, '$3/$2/$1 $4:$5:$6');
-        maintenanceMsg.value = `Sauvegarde créée : ${time} (${j.data.kept} sauvegardes conservées).`;
+        const time = j.data.path.replace(/^.*abc-(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})\..*$/, '$3/$2/$1 $4:$5:$6');
+        const fmt = j.data.format === 'sql' ? ' (SQL data-only — proc_open désactivé sur cet hébergeur)' : '';
+        maintenanceMsg.value = `Sauvegarde créée : ${time} (${j.data.kept} sauvegardes conservées)${fmt}.`;
         maintenanceOk.value = true;
     } catch (e) {
         maintenanceMsg.value = 'Erreur : ' + errMsg(e);

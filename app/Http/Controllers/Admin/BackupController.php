@@ -13,7 +13,12 @@ class BackupController extends Controller
         try {
             $r = $service->backupDb();
 
-            return response()->json(['ok' => true, 'path' => $r['path'], 'kept' => $r['kept']]);
+            return response()->json([
+                'ok' => true,
+                'path' => $r['path'],
+                'kept' => $r['kept'],
+                'format' => $r['format'] ?? 'pg_dump',
+            ]);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

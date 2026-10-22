@@ -27,6 +27,13 @@ class BackupService
 
     private function backupPostgres(string $dir): array
     {
+        // Hébergement mutualisé : proc_open est souvent désactivé dans le PHP
+        // web (mais pas CLI, où tourne le cron abc:backup). pg_dump étant un
+        // binaire externe, on retombe sur un dump SQL data-only en pur PHP.
+        if (! function_exists('proc_open')) {
+            return $this->backupSqlDump($dir);
+        }
+
         $path = $dir.'/abc-'.date('Y-m-d-H-i-s').'.dump';
         $config = config('database.connections.pgsql');
 
@@ -79,12 +86,31 @@ class BackupService
     }
 
     /**
+     * Sauvegarde sans pg_dump (proc_open désactivé) : dump SQL data-only.
+     *
+     * @return array{path: string, kept: int, format: string}
+     */
+    private function backupSqlDump(string $dir): array
+    {
+        $path = $dir.'/abc-'.date('Y-m-d-H-i-s').'.sql';
+        app(SqlDumpService::class)->dump($path);
+
+        $kept = $this->rotate($dir);
+
+        return ['path' => $path, 'kept' => $kept, 'format' => 'sql'];
+    }
+
+    /**
      * Exécute une commande en capturant stdout (proc_open : compatible Windows/cmd et Unix).
      *
      * @return array{0: int, 1: string} [code de sortie, sortie]
      */
     private function run(string $cmd, array $env = []): array
     {
+        if (! function_exists('proc_open')) {
+            return [255, 'proc_open est désactivé sur cet hébergement : exécution de commandes impossible'];
+        }
+
         $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $env ?: null);
         if (! is_resource($proc)) {
             return [255, 'proc_open a échoué'];
@@ -112,7 +138,7 @@ class BackupService
     public function rotate(string $dir): int
     {
         $retention = (int) config('abc.backup_retention');
-        $files = glob($dir.'/abc-*.{dump,db}', GLOB_BRACE) ?: [];
+        $files = glob($dir.'/abc-*.{dump,db,sql}', GLOB_BRACE) ?: [];
         sort($files);
         $toDelete = array_slice($files, 0, max(0, count($files) - $retention));
         foreach ($toDelete as $f) {
