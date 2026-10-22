@@ -8,13 +8,22 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ### Audit du 2026-10-21 — phase 0 : environnement et état de référence
 
-- **Base locale représentative vérifiée** : `docker compose up -d app` +
-  entrypoint (migrate, seed, `abc:import-legacy`) donne 1 263 projets,
-  5 421 lignes projet-commune et 3 070 snapshots — identiques aux compteurs
-  de production pour les projets et les communes (un `abc:collect` a déjà
-  été rejoué en local après l'import, d'où les snapshots supplémentaires ;
-  l'import pur de `data/abc.db` donne 1 338 projets / 5 437 communes /
-  1 958 snapshots).
+- **Base locale = copie exacte de la production** : un dump `pg_dump`
+  (format custom) de la base de production, fourni le 2026-10-22, a été
+  vérifié (restauration dans une base éphémère : 1 263 projets,
+  5 421 lignes projet-commune, 2 200 snapshots, 8 vérifications,
+  6 contributions, répartition par source conforme à l'audit :
+  data.gouv 1 112 / wayback 86 / FV 2024 16 / FV 2025 49), puis la base
+  locale `abc` a été réinitialisée dessus. L'ancien état local reste
+  récupérable via la sauvegarde vérifiée `abc-2026-10-22-08-36-33.sql`
+  (1 263 projets, 5 421 communes, 3 070 snapshots, 6 vérifications,
+  3 contributions). Le dump de référence est conservé hors rotation dans
+  `data/backups/production-reference-2026-10-22.dump` (non versionné :
+  contient des données personnelles).
+- **Fait constaté** : la production n'a PAS la colonne PostGIS
+  `communes.geom` (hébergement sans PostGIS) ; le code ne l'utilise que
+  sous garde (`lon`/`lat` dans `GeoJsonService`). La base locale restaurée
+  sur le schéma production n'a donc pas non plus `geom`.
 - **Sauvegarde pré-phase vérifiée restaurable** : `abc:backup` (format SQL,
   `pg_dump` indisponible dans le conteneur), puis restauration complète dans
   une base éphémère `abc_restore_test` (migrations + import du dump) :
