@@ -197,7 +197,7 @@ class ModerateurAccessTest extends TestCase
                 ->where('journalVerifications.0.etat_avant', 'confirme_termine'));
     }
 
-    public function test_moderateur_peut_envoyer_sa_propre_suggestion(): void
+    public function test_moderateur_suggestion_is_applied_immediately(): void
     {
         $this->actingAs($this->moderateur)
             ->postJson('/api/contributions', [
@@ -206,12 +206,20 @@ class ModerateurAccessTest extends TestCase
                 'note' => 'Note experte sourcée',
                 'commentaire' => 'Source : bulletin communal 2024',
             ])
-            ->assertCreated();
+            ->assertCreated()
+            ->assertJson(['ok' => true, 'auto_validee' => true]);
 
         $this->assertDatabaseHas('contributions', [
             'projet_id' => $this->projetId,
             'user_id' => $this->moderateur->id,
-            'statut' => 'en_attente',
+            'statut' => 'validee',
+            'traite_par' => $this->moderateur->name,
+        ]);
+
+        $this->assertDatabaseHas('verifications', [
+            'projet_id' => $this->projetId,
+            'note' => 'Note experte sourcée',
+            'verifie_par' => $this->moderateur->name,
         ]);
     }
 

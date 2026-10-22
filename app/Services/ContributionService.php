@@ -83,7 +83,7 @@ class ContributionService
         $avant = $this->projectStateOf($c->projet_id);
         $cible = $this->verificationTarget($c->type, $c->payload_json ?? [], $avant);
 
-        $this->saveVerification($c->projet_id, $cible);
+        $this->saveVerification($c->projet_id, $cible, $admin);
 
         if ($c->type === 'date_debut') {
             $payload = $c->payload_json ?? [];
@@ -213,7 +213,7 @@ class ContributionService
         return ['ok' => true];
     }
 
-    protected function saveVerification(string $projetId, array $target): void
+    protected function saveVerification(string $projetId, array $target, ?string $par = null): void
     {
         Verification::updateOrCreate(
             ['projet_id' => $projetId],
@@ -222,6 +222,7 @@ class ContributionService
                 'note' => $target['note'],
                 'lien' => $target['lien'],
                 'verifie_le' => now(),
+                'verifie_par' => $par,
             ],
         );
     }

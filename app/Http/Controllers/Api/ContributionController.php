@@ -57,6 +57,15 @@ class ContributionController extends Controller
             'user_agent' => mb_substr($request->userAgent() ?? '', 0, 200),
         ]);
 
-        return response()->json(['ok' => true, 'id' => $contribution->id], 201);
+        // Admin et modérateur (experts de confiance) : la correction est
+        // appliquée immédiatement, via le même pipeline que la validation
+        // manuelle dans le panneau d'admin (application + journal d'audit,
+        // réversible par « retirer »).
+        $autoValidee = $request->user()->hasAnyRole(['admin', 'moderateur']);
+        if ($autoValidee) {
+            $service->applyContribution($contribution->id, $request->user()->name);
+        }
+
+        return response()->json(['ok' => true, 'id' => $contribution->id, 'auto_validee' => $autoValidee], 201);
     }
 }

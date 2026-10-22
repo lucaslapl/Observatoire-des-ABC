@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, reactive } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
@@ -199,10 +199,18 @@ const sendSuggestion = async (p) => {
     }
     s.sending = true;
     try {
-        await axios.post('/api/contributions', body);
+        const resp = await axios.post('/api/contributions', body);
         s.ok = true;
-        s.message = 'Merci, suggestion envoyée : elle sera examinée par un administrateur avant application.';
         s.commentaire = '';
+        if (resp.data?.auto_validee) {
+            s.message = 'Correction appliquée immédiatement (admin / modérateur).';
+            fermerSuggestion();
+            fache.type = 'success';
+            fache.message = 'Correction appliquée au projet.';
+            router.reload({ only: ['projets', 'compteurs'] });
+        } else {
+            s.message = 'Merci, suggestion envoyée : elle sera examinée par un administrateur avant application.';
+        }
     } catch (err) {
         const statut = err.response?.status;
         if (statut === 401) {
@@ -284,7 +292,7 @@ const sendSuggestion = async (p) => {
             <div class="small text-muted mb-2">
                 Les projets déjà vérifiés restent consultables : passez le filtre
                 « État » sur <b>Vérifiés</b> ou <b>Tous</b>. Une erreur sur un projet confirmé ?
-                <template v-if="peutTrancher">Rouvrez « Modifier le verdict » pour le corriger, ou signalez-la depuis le popup de la carte.</template>
+                <template v-if="peutTrancher">Rouvrez « Modifier le verdict » pour statuer sur le projet, ou « Appliquer une correction » pour corriger une information sans verdict complet.</template>
                 <template v-else-if="isContributeur">Utilisez le bouton « Suggérer une correction » de la ligne concernée, ou signalez-la depuis le popup de la carte.</template>
                 <template v-else>Les membres connectés peuvent envoyer une suggestion, examinée avant application.</template>
             </div>
@@ -299,7 +307,7 @@ const sendSuggestion = async (p) => {
                             <th>Motif</th>
                             <th>Recherche</th>
                             <th v-if="peutTrancher">Verdict</th>
-                            <th v-else-if="user">Suggestion</th>
+                            <th v-if="user">Suggestion</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -328,14 +336,14 @@ const sendSuggestion = async (p) => {
                                     <i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ formatDate(p.verifie_le) }}<template v-if="p.verifie_par"> · {{ p.verifie_par }}</template>
                                 </div>
                             </td>
-                            <td v-else-if="user">
+                            <td v-if="user">
                                 <template v-if="!user.email_verifie">
                                     <div class="small text-muted">
                                         Vérifiez votre adresse email (lien reçu à l'inscription) pour pouvoir envoyer une suggestion.
                                     </div>
                                 </template>
                                 <button v-else type="button" class="btn btn-sm btn-outline-success" @click="ouvrirSuggestion(p)">
-                                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Suggérer une correction
+                                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>{{ peutTrancher ? 'Appliquer une correction' : 'Suggérer une correction' }}
                                 </button>
                             </td>
                         </tr>
@@ -399,8 +407,10 @@ const sendSuggestion = async (p) => {
                     </div>
 
                     <p class="small text-muted mb-3">
-                        Le verdict est appliqué immédiatement et affiché sur la fiche et la carte.
-                        Précisez si possible un lien source qui l'étaye.
+                        Ce verdict statue sur le projet à vérifier : ce qu'il est réellement (terminé, en cours,
+                        dates…). Il est appliqué immédiatement et affiché sur la fiche et la carte.
+                        La modération des suggestions envoyées par les contributeurs se fait séparément,
+                        dans le panneau d'administration. Précisez si possible un lien source qui étaye le verdict.
                     </p>
 
                     <div class="mb-2">
@@ -446,7 +456,7 @@ const sendSuggestion = async (p) => {
                 <div class="sugg-modal" role="dialog" aria-modal="true" aria-labelledby="sugg-titre" tabindex="-1" @keydown.esc="fermerSuggestion">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
-                            <h2 id="sugg-titre" class="h6 mb-1">Suggérer une correction</h2>
+                            <h2 id="sugg-titre" class="h6 mb-1">{{ peutTrancher ? 'Appliquer une correction' : 'Suggérer une correction' }}</h2>
                             <div class="small text-muted">
                                 <span class="nom">{{ suggOuvert.nom }}</span>
                                 <span v-if="suggOuvert.structure_porteuse"> · {{ suggOuvert.structure_porteuse }}</span>
@@ -456,8 +466,14 @@ const sendSuggestion = async (p) => {
                     </div>
 
                     <p class="small text-muted mb-3">
-                        Choisissez le type de correction, puis détaillez-la. La suggestion sera
-                        examinée par un administrateur avant d'être appliquée.
+                        Choisissez le type de correction, puis détaillez-la.
+                        <template v-if="peutTrancher">
+                            En tant qu'administrateur ou modérateur, elle sera appliquée immédiatement au projet,
+                            avec trace d'audit (réversible depuis le panneau d'administration).
+                        </template>
+                        <template v-else>
+                            La suggestion sera examinée par un administrateur avant d'être appliquée.
+                        </template>
                     </p>
 
                     <div class="mb-2">
@@ -517,7 +533,7 @@ const sendSuggestion = async (p) => {
                     <div class="d-flex justify-content-end gap-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary" @click="fermerSuggestion">Fermer</button>
                         <button type="button" class="btn btn-sm btn-success" :disabled="suggActif.sending" @click="sendSuggestion(suggOuvert)">
-                            {{ suggActif.sending ? 'Envoi…' : 'Envoyer la suggestion' }}
+                            {{ suggActif.sending ? 'Envoi…' : (peutTrancher ? 'Appliquer la correction' : 'Envoyer la suggestion') }}
                         </button>
                     </div>
                 </div>

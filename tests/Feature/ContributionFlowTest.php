@@ -42,6 +42,60 @@ class ContributionFlowTest extends TestCase
         return $this->actingAs($this->contributeur)->postJson('/api/contributions', $body);
     }
 
+    public function test_admin_contribution_is_applied_immediately(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $response = $this->actingAs($admin)->postJson('/api/contributions', [
+            'projet_id' => $this->projetId,
+            'type' => 'date_debut',
+            'annee_debut_suggeree' => 2023,
+            'annee_fin_suggeree' => 2026,
+            'source' => 'https://exemple.fr/abc-test-ville',
+        ]);
+
+        $response->assertCreated()->assertJson(['ok' => true, 'auto_validee' => true]);
+
+        $this->assertDatabaseHas('contributions', [
+            'projet_id' => $this->projetId,
+            'user_id' => $admin->id,
+            'statut' => 'validee',
+            'traite_par' => $admin->name,
+        ]);
+        $this->assertDatabaseHas('projets', [
+            'id' => $this->projetId,
+            'annee_debut' => 2023,
+            'annee_fin' => 2026,
+        ]);
+        $this->assertDatabaseHas('verifications', [
+            'projet_id' => $this->projetId,
+            'etat' => 'confirme_date',
+            'verifie_par' => $admin->name,
+        ]);
+        $this->assertDatabaseHas('audit_log', [
+            'action' => 'validee',
+            'par_admin' => $admin->name,
+        ]);
+    }
+
+    public function test_contributeur_contribution_stays_pending(): void
+    {
+        $this->postContribution([
+            'projet_id' => $this->projetId,
+            'type' => 'note',
+            'note' => 'bonjour',
+        ])->assertCreated()->assertJson(['ok' => true, 'auto_validee' => false]);
+
+        $this->assertDatabaseHas('contributions', [
+            'projet_id' => $this->projetId,
+            'statut' => 'en_attente',
+        ]);
+        $this->assertDatabaseMissing('verifications', [
+            'projet_id' => $this->projetId,
+        ]);
+    }
+
     public function test_guest_cannot_contribute(): void
     {
         $this->postJson('/api/contributions', [
