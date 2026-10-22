@@ -74,7 +74,7 @@ return [
     'export_dir' => storage_path('app/abc/exports'),
 
     /**
-     * Nombre de sauvegardes quotidiennes conservées (rotation).
+     * Nombre de sauvegardes conservées (rotation ; 2/jour = 7 jours).
      */
     'backup_retention' => 14,
 
