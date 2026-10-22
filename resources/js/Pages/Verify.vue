@@ -43,7 +43,20 @@ const MOTIF_CLS = {
     'anomalie': 'anomalie',
 };
 
-const SUGG_TYPES = { statut: 'Statut', date_debut: 'Dates de début / fin', note: 'Note', lien: 'Lien', autre: 'Autre info' };
+const SUGG_TYPES = {
+    statut: 'Statut du projet',
+    date_debut: 'Années de début / fin',
+    note: 'Note',
+    lien: 'Lien (URL)',
+    autre: 'Autre information',
+};
+const SUGG_HELP = {
+    statut: "Le statut affiché est inexact : indiquez celui que vous avez constaté (terminé, en cours, à venir…).",
+    date_debut: "Corrigez les années de l'ABC. L'année de début seule suffit si c'est tout ce que vous avez pu confirmer ; l'année de fin et la source sont optionnelles.",
+    note: 'Proposez la note qui devrait remplacer celle affichée.',
+    lien: "Indiquez l'URL de la page officielle du projet (actuelle ou plus récente).",
+    autre: 'Décrivez la correction à apporter (nom, structure porteuse, communes…).',
+};
 const SUGG_STATUTS = { termine: 'Terminé', en_cours: 'En cours', va_debuter: 'À venir' };
 
 const sMotif = ref('');
@@ -58,6 +71,13 @@ const sugg = (p) => suggs[p.id] || (suggs[p.id] = {
     type: 'statut', statut: 'termine', annee_debut: '', annee_fin: '', source: '',
     note: '', lien: '', texte: '', commentaire: '', sending: false, message: '', ok: false,
 });
+
+// Modal de suggestion : un seul projet à la fois, l'utilisateur se concentre
+// sur la correction qu'il veut apporter.
+const suggOuvert = ref(null);
+const ouvrirSuggestion = (p) => { suggOuvert.value = p; };
+const fermerSuggestion = () => { suggOuvert.value = null; };
+const suggActif = computed(() => suggOuvert.value ? sugg(suggOuvert.value) : null);
 
 const fache = reactive({ type: '', message: '', login: false });
 
@@ -249,7 +269,7 @@ const sendSuggestion = async (p) => {
                 Les projets déjà vérifiés restent consultables : passez le filtre
                 « État » sur <b>Vérifiés</b> ou <b>Tous</b>. Une erreur sur un projet confirmé ?
                 <template v-if="peutTrancher">Re-sauvegardez un verdict corrigé, ou signalez-la depuis le popup de la carte.</template>
-                <template v-else-if="isContributeur">Envoyez une suggestion ci-contre, ou signalez-la depuis le popup de la carte.</template>
+                <template v-else-if="isContributeur">Utilisez le bouton « Suggérer une correction » de la ligne concernée, ou signalez-la depuis le popup de la carte.</template>
                 <template v-else>Les membres connectés peuvent envoyer une suggestion, examinée avant application.</template>
             </div>
 
@@ -263,7 +283,7 @@ const sendSuggestion = async (p) => {
                             <th>Motif</th>
                             <th>Recherche</th>
                             <th v-if="peutTrancher" style="min-width:290px">Verdict</th>
-                            <th v-else-if="user" style="min-width:290px">Suggestion de correction</th>
+                            <th v-else-if="user">Suggestion</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -291,6 +311,7 @@ const sendSuggestion = async (p) => {
                                     <div v-if="form(p).etat === 'confirme_date'" class="d-flex gap-1 w-100">
                                         <input type="number" min="1990" max="2040" placeholder="Début" class="form-control form-control-sm" style="width:90px" v-model="form(p).annee_debut" />
                                         <input type="number" min="1990" max="2040" placeholder="Fin" class="form-control form-control-sm" style="width:80px" v-model="form(p).annee_fin" />
+                                        <small class="text-muted w-100">Année de début seule suffisante, fin optionnelle.</small>
                                     </div>
                                     <button class="btn btn-sm btn-success" @click="save(p, form(p))">Sauver</button>
                                     <span v-if="p.etat !== 'a_verifier' && p.verifie_le" class="saved"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ formatDate(p.verifie_le) }}<template v-if="p.verifie_par"> · {{ p.verifie_par }}</template></span>
@@ -302,29 +323,9 @@ const sendSuggestion = async (p) => {
                                         Vérifiez votre adresse email (lien reçu à l'inscription) pour pouvoir envoyer une suggestion.
                                     </div>
                                 </template>
-                                <template v-else>
-                                    <div class="form">
-                                        <select class="form-select form-select-sm" style="width:auto" v-model="sugg(p).type">
-                                            <option v-for="(label, k) in SUGG_TYPES" :key="k" :value="k">{{ label }}</option>
-                                        </select>
-                                        <select v-if="sugg(p).type === 'statut'" class="form-select form-select-sm" style="width:auto" v-model="sugg(p).statut">
-                                            <option v-for="(label, k) in SUGG_STATUTS" :key="k" :value="k">{{ label }}</option>
-                                        </select>
-                                        <template v-if="sugg(p).type === 'date_debut'">
-                                            <input type="number" min="1990" max="2040" placeholder="Début" class="form-control form-control-sm" style="width:90px" v-model="sugg(p).annee_debut" />
-                                            <input type="number" min="1990" max="2040" placeholder="Fin" class="form-control form-control-sm" style="width:80px" v-model="sugg(p).annee_fin" />
-                                            <input type="text" placeholder="Source (optionnel)" class="form-control form-control-sm" v-model="sugg(p).source" />
-                                        </template>
-                                        <input v-if="sugg(p).type === 'note'" type="text" placeholder="Note" class="form-control form-control-sm" v-model="sugg(p).note" />
-                                        <input v-if="sugg(p).type === 'lien'" type="text" placeholder="Lien trouvé" class="form-control form-control-sm" v-model="sugg(p).lien" />
-                                        <input v-if="sugg(p).type === 'autre'" type="text" placeholder="Décrivez la correction" class="form-control form-control-sm" style="min-width:160px" v-model="sugg(p).texte" />
-                                        <button class="btn btn-sm btn-success" :disabled="sugg(p).sending" @click="sendSuggestion(p)">
-                                            {{ sugg(p).sending ? '…' : 'Envoyer' }}
-                                        </button>
-                                    </div>
-                                    <input type="text" placeholder="Commentaire pour la modération (optionnel)" class="form-control form-control-sm mt-1" v-model="sugg(p).commentaire" />
-                                    <div v-if="sugg(p).message" class="small mt-1" :class="sugg(p).ok ? 'text-success' : 'text-danger'">{{ sugg(p).message }}</div>
-                                </template>
+                                <button v-else type="button" class="btn btn-sm btn-outline-success" @click="ouvrirSuggestion(p)">
+                                    <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Suggérer une correction
+                                </button>
                             </td>
                         </tr>
                     </tbody>
@@ -372,6 +373,87 @@ const sendSuggestion = async (p) => {
                 peuvent suggérer une correction : elle sera étudiée par un administrateur avant d'être appliquée.
                 Votre adresse IP est conservée uniquement à des fins de modération (RGPD).
             </p>
+
+            <div v-if="suggOuvert" class="sugg-backdrop" @click.self="fermerSuggestion">
+                <div class="sugg-modal" role="dialog" aria-modal="true" aria-labelledby="sugg-titre" tabindex="-1" @keydown.esc="fermerSuggestion">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h2 id="sugg-titre" class="h6 mb-1">Suggérer une correction</h2>
+                            <div class="small text-muted">
+                                <span class="nom">{{ suggOuvert.nom }}</span>
+                                <span v-if="suggOuvert.structure_porteuse"> · {{ suggOuvert.structure_porteuse }}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" aria-label="Fermer" @click="fermerSuggestion"></button>
+                    </div>
+
+                    <p class="small text-muted mb-3">
+                        Choisissez le type de correction, puis détaillez-la. La suggestion sera
+                        examinée par un administrateur avant d'être appliquée.
+                    </p>
+
+                    <div class="mb-2">
+                        <div class="row g-2">
+                            <div v-for="(label, k) in SUGG_TYPES" :key="k" class="col-6 col-lg-4">
+                                <label class="sugg-type" :class="{ actif: suggActif.type === k }">
+                                    <input type="radio" class="d-none" :value="k" v-model="suggActif.type" />
+                                    {{ label }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="small text-muted mb-3">{{ SUGG_HELP[suggActif.type] }}</div>
+
+                    <div v-if="suggActif.type === 'statut'" class="mb-3">
+                        <label class="form-label small mb-1">Statut constaté</label>
+                        <select class="form-select" v-model="suggActif.statut">
+                            <option v-for="(label, k) in SUGG_STATUTS" :key="k" :value="k">{{ label }}</option>
+                        </select>
+                    </div>
+                    <template v-if="suggActif.type === 'date_debut'">
+                        <div class="d-flex gap-2 mb-3">
+                            <div class="flex-fill">
+                                <label class="form-label small mb-1">Année de début <span class="text-danger">*</span></label>
+                                <input type="number" min="1990" max="2040" class="form-control" placeholder="Ex. 2023" v-model="suggActif.annee_debut" />
+                            </div>
+                            <div class="flex-fill">
+                                <label class="form-label small mb-1">Année de fin <span class="text-muted">(optionnelle)</span></label>
+                                <input type="number" min="1990" max="2040" class="form-control" v-model="suggActif.annee_fin" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small mb-1">Source <span class="text-muted">(page confirmant les dates, optionnelle)</span></label>
+                            <input type="text" class="form-control" placeholder="https://…" v-model="suggActif.source" />
+                        </div>
+                    </template>
+                    <div v-if="suggActif.type === 'note'" class="mb-3">
+                        <label class="form-label small mb-1">Note proposée</label>
+                        <textarea class="form-control" rows="3" placeholder="Texte qui devrait remplacer la note actuelle" v-model="suggActif.note"></textarea>
+                    </div>
+                    <div v-if="suggActif.type === 'lien'" class="mb-3">
+                        <label class="form-label small mb-1">URL du projet</label>
+                        <input type="text" class="form-control" placeholder="https://…" v-model="suggActif.lien" />
+                    </div>
+                    <div v-if="suggActif.type === 'autre'" class="mb-3">
+                        <label class="form-label small mb-1">Correction à apporter <span class="text-danger">*</span></label>
+                        <textarea class="form-control" rows="3" placeholder="Décrivez la correction (nom, structure porteuse, communes…)" v-model="suggActif.texte"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small mb-1">Commentaire pour la modération <span class="text-muted">(optionnel)</span></label>
+                        <input type="text" class="form-control" placeholder="Contexte utile à l'administrateur qui examinera la suggestion" v-model="suggActif.commentaire" />
+                    </div>
+
+                    <div v-if="suggActif.message" class="small mb-2" :class="suggActif.ok ? 'text-success' : 'text-danger'">{{ suggActif.message }}</div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="fermerSuggestion">Fermer</button>
+                        <button type="button" class="btn btn-sm btn-success" :disabled="suggActif.sending" @click="sendSuggestion(suggOuvert)">
+                            {{ suggActif.sending ? 'Envoi…' : 'Envoyer la suggestion' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </Layout>
 </template>
@@ -393,5 +475,10 @@ const sendSuggestion = async (p) => {
 .form { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
 .form input[type=text] { width: 110px; }
 .saved { font-size: 11px; color: #1b5e20; white-space: nowrap; }
+.sugg-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); z-index: 1080; display: flex; align-items: flex-start; justify-content: center; padding: 3rem 1rem; overflow-y: auto; }
+.sugg-modal { background: #fff; border-radius: 0.75rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25); max-width: 580px; width: 100%; padding: 1.25rem; }
+.sugg-type { display: block; border: 1px solid #dee2e6; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 13px; cursor: pointer; }
+.sugg-type:hover { border-color: #14532d; }
+.sugg-type.actif { border-color: #14532d; background: #f0fdf4; color: #14532d; font-weight: 600; }
 .foot { font-size: 12px; color: #64748b; margin-top: 16px; line-height: 1.6; }
 </style>
