@@ -116,6 +116,7 @@ const save = async (p, f) => {
         target.etat = f.etat;
         target.note = f.note;
         target.verifie_le = new Date().toISOString();
+        target.verifie_par = user.value?.name || null;
         if (f.etat === 'confirme_date') {
             target.annee_debut = Number(f.annee_debut) || target.annee_debut;
             target.annee_fin = Number(f.annee_fin) || target.annee_fin;
@@ -292,7 +293,7 @@ const sendSuggestion = async (p) => {
                                         <input type="number" min="1990" max="2040" placeholder="Fin" class="form-control form-control-sm" style="width:80px" v-model="form(p).annee_fin" />
                                     </div>
                                     <button class="btn btn-sm btn-success" @click="save(p, form(p))">Sauver</button>
-                                    <span v-if="p.etat !== 'a_verifier' && p.verifie_le" class="saved"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ formatDate(p.verifie_le) }}</span>
+                                    <span v-if="p.etat !== 'a_verifier' && p.verifie_le" class="saved"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ formatDate(p.verifie_le) }}<template v-if="p.verifie_par"> · {{ p.verifie_par }}</template></span>
                                 </div>
                             </td>
                             <td v-else-if="user">

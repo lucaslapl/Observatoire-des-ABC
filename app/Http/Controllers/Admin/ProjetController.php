@@ -83,12 +83,13 @@ class ProjetController extends Controller
     }
 
     /**
-     * Export CSV du journal d'audit (suppressions / levées d'exclusion) pour contrôle.
+     * Export CSV du journal d'audit (suppressions, levées d'exclusion,
+     * vérifications manuelles) pour contrôle.
      */
     public function export(Request $request): StreamedResponse
     {
         $logs = AuditLog::query()
-            ->whereIn('action', ['projet_supprime', 'exclusion_retiree'])
+            ->whereIn('action', ['projet_supprime', 'exclusion_retiree', 'verification'])
             ->orderByDesc('created_at')
             ->get();
         $exclusions = ProjectExclusion::query()->orderByDesc('created_at')->get();
@@ -101,12 +102,13 @@ class ProjetController extends Controller
             fputcsv($out, ['ACTIONS']);
             fputcsv($out, ['date', 'action', 'projet_id', 'nom', 'par_admin'], ';');
             foreach ($logs as $log) {
-                $avant = json_decode($log->avant ?? '{}', true) ?: [];
+                $avant = json_decode($log->avant ?? 'null', true) ?: [];
+                $apres = json_decode($log->apres ?? 'null', true) ?: [];
                 fputcsv($out, [
                     $log->created_at?->toDateTimeString(),
                     $log->action,
-                    $avant['projet_id'] ?? $log->contribution_id ?? '',
-                    $avant['nom'] ?? '',
+                    $apres['projet_id'] ?? $avant['projet_id'] ?? $log->contribution_id ?? '',
+                    $apres['nom'] ?? $avant['nom'] ?? '',
                     $log->par_admin ?? '',
                 ], ';');
             }

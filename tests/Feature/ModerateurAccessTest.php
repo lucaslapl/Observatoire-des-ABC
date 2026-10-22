@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Contribution;
 use App\Models\Projet;
 use App\Models\User;
@@ -62,6 +63,7 @@ class ModerateurAccessTest extends TestCase
                 ->where('isAdmin', false)
                 ->has('contributions')
                 ->has('meta')
+                ->has('journalVerifications')
                 ->missing('comptes')
                 ->missing('actualites')
                 ->missing('exclusions'));
@@ -77,6 +79,7 @@ class ModerateurAccessTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('isAdmin', true)
                 ->has('contributions')
+                ->has('journalVerifications')
                 ->has('comptes')
                 ->has('actualites')
                 ->has('exclusions'));
@@ -142,6 +145,56 @@ class ModerateurAccessTest extends TestCase
             'etat' => 'confirme_termine',
             'lien' => 'https://example.org/abc-modo',
         ]);
+    }
+
+    public function test_un_verdict_direct_est_journalise_avec_son_auteur(): void
+    {
+        $this->actingAs($this->moderateur)
+            ->postJson('/api/verifications', [
+                'projet_id' => $this->projetId,
+                'etat' => 'confirme_termine',
+                'note' => 'Terrain terminé en 2023',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('verifications', [
+            'projet_id' => $this->projetId,
+            'etat' => 'confirme_termine',
+            'verifie_par' => $this->moderateur->name,
+        ]);
+
+        $this->assertDatabaseHas('audit_log', [
+            'action' => 'verification',
+            'par_admin' => $this->moderateur->name,
+        ]);
+
+        // Un second verdict sur le même projet : l'entrée d'audit trace
+        // l'état précédent, pour savoir qui a corrigé quoi.
+        $this->actingAs($this->moderateur)
+            ->postJson('/api/verifications', [
+                'projet_id' => $this->projetId,
+                'etat' => 'confirme_en_cours',
+            ])
+            ->assertOk();
+
+        $entries = AuditLog::where('action', 'verification')->orderBy('id')->get();
+        $this->assertCount(2, $entries);
+        $this->assertNull($entries[0]->avant);
+        $apres = json_decode($entries[0]->apres, true);
+        $this->assertSame($this->projetId, $apres['projet_id']);
+        $this->assertSame('ABC Modo Ville', $apres['nom']);
+        $this->assertSame('confirme_termine', $apres['etat']);
+        $this->assertSame('confirme_termine', json_decode($entries[1]->avant, true)['etat']);
+        $this->assertSame('confirme_en_cours', json_decode($entries[1]->apres, true)['etat']);
+
+        // Le panneau admin expose ce journal aux modérateurs comme aux admins.
+        $this->actingAs($this->moderateur)->get('/admin')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('journalVerifications', 2)
+                ->where('journalVerifications.0.par', $this->moderateur->name)
+                ->where('journalVerifications.0.etat', 'confirme_en_cours')
+                ->where('journalVerifications.0.etat_avant', 'confirme_termine'));
     }
 
     public function test_moderateur_peut_envoyer_sa_propre_suggestion(): void

@@ -16,7 +16,7 @@ class Verification extends Model
 
     protected $keyType = 'string';
 
-    protected $fillable = ['projet_id', 'etat', 'note', 'lien', 'verifie_le'];
+    protected $fillable = ['projet_id', 'etat', 'note', 'lien', 'verifie_le', 'verifie_par'];
 
     protected function casts(): array
     {

@@ -33,6 +33,7 @@ class VerificationService
                 'v.note',
                 'v.lien',
                 'v.verifie_le',
+                'v.verifie_par',
             ])
             ->when(! $tous, fn ($q) => $q->where(fn ($w) => $w
                 ->where('p.potentiellement_termine', true)
@@ -109,6 +110,7 @@ class VerificationService
                 'note' => $p->note,
                 'lien' => $p->lien,
                 'verifie_le' => $p->verifie_le,
+                'verifie_par' => $p->verifie_par,
             ];
         })->values();
 

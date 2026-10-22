@@ -34,6 +34,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    journalVerifications: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const ETAT_LABEL = { en_attente: 'en attente', validee: 'validée', refusee: 'refusée', annulee: 'annulée', retiree: 'retirée' };
@@ -57,6 +61,7 @@ const actualiteMsg = ref('');
 const actualiteOk = ref(true);
 
 const formatDateFr = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '');
+const formatDateTimeFr = (d) => (d ? new Date(d).toLocaleString('fr-FR') : '');
 
 function openActualite(a) {
     actualiteForm.id = a ? a.id : null;
@@ -453,6 +458,33 @@ async function collect() {
                     <div v-if="(meta?.stats || []).length" class="mt-2 d-flex gap-1 flex-wrap">
                         <span v-for="s in meta.stats" :key="s.statut" class="chip">{{ statutLabel(s.statut) }} : {{ s.n }}</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white fw-semibold py-2">Vérifications manuelles ({{ journalVerifications.length }})</div>
+                <div class="card-body py-2">
+                    <div v-if="journalVerifications.length === 0" class="text-muted small py-2">
+                        Aucune vérification manuelle enregistrée pour l'instant. Les verdicts posés depuis la page
+                        de vérification (/verify) apparaissent ici, avec leur auteur.
+                    </div>
+                    <ul v-else class="list-group list-group-flush">
+                        <li v-for="(v, i) in journalVerifications" :key="i" class="list-group-item px-0 py-2">
+                            <div class="d-flex flex-wrap align-items-baseline gap-2">
+                                <span class="fw-semibold small">{{ v.nom || v.projet_id }}</span>
+                                <span class="small text-muted">{{ v.projet_id }}</span>
+                                <span class="ms-auto small text-muted">{{ formatDateTimeFr(v.date) }}</span>
+                            </div>
+                            <div class="small text-muted">
+                                <i class="bi bi-person-check me-1" aria-hidden="true"></i>{{ v.par || 'compte supprimé' }} ·
+                                {{ verdictLabel(v.etat) }}<template v-if="v.etat_avant && v.etat_avant !== v.etat">
+                                    (remplace « {{ verdictLabel(v.etat_avant) }} »)</template>
+                                <template v-if="v.note"> — {{ v.note }}</template>
+                                <template v-if="v.lien"> · <a :href="v.lien" target="_blank" rel="noopener">Lien source</a></template>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="small text-muted mt-2">Les 200 dernières vérifications manuelles, toutes les plus récentes d'abord.</div>
                 </div>
             </div>
 

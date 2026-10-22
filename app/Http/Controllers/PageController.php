@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Actualite;
+use App\Models\AuditLog;
 use App\Models\Commune;
 use App\Models\Contribution;
 use App\Models\ProjectAlias;
@@ -178,6 +179,30 @@ class PageController extends Controller
             'isAdmin' => $isAdmin,
             'meta' => $this->stats->meta(),
             'contributions' => $contributions,
+            // Journal des vérifications manuelles (verdicts directs enregistrés
+            // depuis /verify) : visible des admins et des modérateurs pour
+            // savoir qui a tranché quoi, et quand.
+            'journalVerifications' => AuditLog::query()
+                ->where('action', 'verification')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->limit(200)
+                ->get()
+                ->map(function (AuditLog $log) {
+                    $avant = json_decode($log->avant ?? 'null', true) ?: [];
+                    $apres = json_decode($log->apres ?? 'null', true) ?: [];
+
+                    return [
+                        'date' => $log->created_at?->toDateTimeString(),
+                        'projet_id' => $apres['projet_id'] ?? $avant['projet_id'] ?? '',
+                        'nom' => $apres['nom'] ?? '',
+                        'etat_avant' => $avant['etat'] ?? null,
+                        'etat' => $apres['etat'] ?? '',
+                        'note' => $apres['note'] ?? null,
+                        'lien' => $apres['lien'] ?? null,
+                        'par' => $log->par_admin,
+                    ];
+                }),
         ];
 
         // Sections de maintenance : administrateurs uniquement. Les
