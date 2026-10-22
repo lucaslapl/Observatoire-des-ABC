@@ -6,6 +6,32 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Audit du 2026-10-21 — phase 0 : environnement et état de référence
+
+- **Base locale représentative vérifiée** : `docker compose up -d app` +
+  entrypoint (migrate, seed, `abc:import-legacy`) donne 1 263 projets,
+  5 421 lignes projet-commune et 3 070 snapshots — identiques aux compteurs
+  de production pour les projets et les communes (un `abc:collect` a déjà
+  été rejoué en local après l'import, d'où les snapshots supplémentaires ;
+  l'import pur de `data/abc.db` donne 1 338 projets / 5 437 communes /
+  1 958 snapshots).
+- **Sauvegarde pré-phase vérifiée restaurable** : `abc:backup` (format SQL,
+  `pg_dump` indisponible dans le conteneur), puis restauration complète dans
+  une base éphémère `abc_restore_test` (migrations + import du dump) :
+  compteurs identiques à la base locale avant suppression de la base de test.
+- **Aucun collect automatique possible en local** : `COLLECT_AUTOMATIC=false`
+  ajouté explicitement au `.env` local (défaut déjà `false` dans
+  `config/abc.php`) ; `php artisan schedule:list` ne planifie que
+  `abc:backup` et `ssr:watchdog`, jamais `abc:collect`.
+- **`abc:import-legacy` compatible SQLite (tests)** : le rétro-remplissage
+  de la colonne PostGIS `geom` est désormais ignoré hors PostgreSQL /
+  sans PostGIS (garde driver + colonne), permettant de rejouer l'import
+  dans les tests PHPUnit (SQLite `:memory:`).
+- **Test de référence** (`tests/Feature/ReferenceDatasetTest.php`) :
+  compteurs exacts après `abc:import-legacy` (1 338 projets, 5 437 lignes
+  projet-commune, 1 958 snapshots, 5 vérifications, 1 contribution) et
+  absence du collect dans le planning tant que `COLLECT_AUTOMATIC=false`.
+
 ### Corrigé
 - **Incident du 2026-10-19 (production) — `abc:collect` supprimait les projets
   aux données inchangées** : la suppression ciblée détectait les « disparus
