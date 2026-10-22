@@ -42,6 +42,17 @@ const submit = () => {
                         <input id="password" v-model="form.password" type="password" class="form-control" autocomplete="current-password" required />
                         <div v-if="form.errors.password" class="text-danger small mt-1">{{ form.errors.password }}</div>
 
+                        <div class="form-check mt-3">
+                            <input id="remember" v-model="form.remember" type="checkbox" class="form-check-input" />
+                            <label class="form-check-label" for="remember">Se souvenir de moi</label>
+                        </div>
+                        <p class="text-muted small mt-2 mb-0">
+                            Si vous cochez cette case, un cookie strictement nécessaire (exempté de
+                            consentement) garde votre session ouverte sur cet appareil, même après
+                            fermeture du navigateur. Sans cette case, la session expire après
+                            inactivité. <a href="/confidentialite">En savoir plus</a>.
+                        </p>
+
                         <button class="btn btn-success w-100 mt-3" :disabled="form.processing">Se connecter</button>
                     </form>
 

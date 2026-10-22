@@ -52,8 +52,28 @@ const site = computed(() => page.props.site || {});
                 l'exemption dédiée à la mesure d'audience (RGPD), elle est active par défaut —
                 vous pouvez vous y opposer à tout moment via le lien « Cookies » présent en pied
                 de page de chaque page. Votre choix est mémorisé dans votre navigateur (stockage
-                local, clé « abc-consent »). Le cookie de session de connexion est strictement nécessaire au
-                fonctionnement de l'espace membre et du panneau d'administration.
+                local, clé « abc-consent »).
+            </p>
+            <p>
+                Par ailleurs, deux cookies techniques strictement nécessaires au fonctionnement du
+                site sont posés, sans consentement préalable au sens des textes sur les cookies :
+            </p>
+            <ul>
+                <li>
+                    le <strong>cookie de session</strong> : il identifie votre session (formulaire
+                    de contact, espace membre, panneau d'administration). Il expire après une
+                    période d'inactivité et à la déconnexion ;
+                </li>
+                <li>
+                    le cookie <strong>« se souvenir de moi »</strong> (<code>remember_web_…</code>) :
+                    posé uniquement si vous cochez la case correspondante lors de la connexion, il
+                    vous garde identifié sur cet appareil pendant plusieurs années ou jusqu'à la
+                    déconnexion. Vous pouvez le supprimer à tout moment en vous déconnectant ou
+                    depuis votre navigateur.
+                </li>
+            </ul>
+            <p>
+                Ces cookies ne servent à aucune mesure d'audience ni à aucun partage avec des tiers.
             </p>
 
             <h2 class="h6">Conservation des données</h2>
