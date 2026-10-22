@@ -8,7 +8,7 @@
         "test:js": "node --test tests/js/*.test.mjs"
     },
     "devDependencies": {
-        "@vue/server-renderer": "3.5.41",
+        "@vue/server-renderer": "3.5.44",
         "concurrently": "^10.0.3",
         "laravel-vite-plugin": "^3.1",
         "vite": "^8.0.0"
