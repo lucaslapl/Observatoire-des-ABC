@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Models\Projet;
 use App\Models\ProjectAlias;
+use App\Models\Projet;
 use App\Services\SqlDumpService;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +13,7 @@ use Tests\TestCase;
 class SqlDumpServiceTest extends TestCase
 {
     use DatabaseMigrations;
+
     public function test_dump_writes_data_only_sql(): void
     {
         Schema::create('sql_dump_test', function ($table) {
