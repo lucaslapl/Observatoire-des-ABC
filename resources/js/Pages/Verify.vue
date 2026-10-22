@@ -30,9 +30,18 @@ const ETATS = {
     confirme_termine: { label: '✓ Confirmé terminé', cls: 'confirme_termine' },
     confirme_en_cours: { label: 'Confirmé en cours', cls: 'confirme_en_cours' },
     toujours_a_avenir: { label: 'Toujours à venir', cls: 'toujours_a_avenir' },
-    confirme_date: { label: '✓ Date vérifiée', cls: 'confirme_termine' },
+    confirme_date: { label: '✓ Date(s) vérifiée(s)', cls: 'confirme_termine' },
     introuvable: { label: 'Introuvable', cls: 'introuvable' },
     douteux: { label: 'Incertain', cls: 'douteux' },
+};
+const ETAT_HELP = {
+    a_verifier: "Remet le projet dans la liste à vérifier (annule le verdict actuel).",
+    confirme_termine: "L'ABC est terminé : le projet a abouti et n'est plus en cours de réalisation.",
+    confirme_en_cours: "L'ABC est en cours de réalisation.",
+    toujours_a_avenir: "Le projet n'a pas encore débuté, malgré une date annoncée antérieure.",
+    confirme_date: "Corrige ou confirme les années du projet. L'année de début seule suffit si c'est tout ce que vous avez pu vérifier ; l'année de fin est optionnelle. Le statut reste celui calculé automatiquement.",
+    introuvable: "Aucune trace du projet malgré les recherches (page disparue, bénéficiaire injoignable…).",
+    douteux: "Sources contradictoires ou trop anciennes : le projet est signalé comme incertain.",
 };
 // Les motifs renvoyés par l'API (contrat parité, cf. GeoJsonParityTest)
 // sont des libellés français ; on n'a ici que leur classe CSS.
@@ -78,6 +87,12 @@ const suggOuvert = ref(null);
 const ouvrirSuggestion = (p) => { suggOuvert.value = p; };
 const fermerSuggestion = () => { suggOuvert.value = null; };
 const suggActif = computed(() => suggOuvert.value ? sugg(suggOuvert.value) : null);
+
+// Modal de verdict (admin / modérateur), même principe.
+const verdictOuvert = ref(null);
+const ouvrirVerdict = (p) => { verdictOuvert.value = p; };
+const fermerVerdict = () => { verdictOuvert.value = null; };
+const formActif = computed(() => verdictOuvert.value ? form(verdictOuvert.value) : null);
 
 const fache = reactive({ type: '', message: '', login: false });
 
@@ -143,6 +158,7 @@ const save = async (p, f) => {
         }
         fache.type = 'success';
         fache.message = 'Vérification enregistrée.';
+        fermerVerdict();
     } catch (err) {
         fache.type = 'danger';
         if (err.response?.status === 401) {
@@ -268,7 +284,7 @@ const sendSuggestion = async (p) => {
             <div class="small text-muted mb-2">
                 Les projets déjà vérifiés restent consultables : passez le filtre
                 « État » sur <b>Vérifiés</b> ou <b>Tous</b>. Une erreur sur un projet confirmé ?
-                <template v-if="peutTrancher">Re-sauvegardez un verdict corrigé, ou signalez-la depuis le popup de la carte.</template>
+                <template v-if="peutTrancher">Rouvrez « Modifier le verdict » pour le corriger, ou signalez-la depuis le popup de la carte.</template>
                 <template v-else-if="isContributeur">Utilisez le bouton « Suggérer une correction » de la ligne concernée, ou signalez-la depuis le popup de la carte.</template>
                 <template v-else>Les membres connectés peuvent envoyer une suggestion, examinée avant application.</template>
             </div>
@@ -282,7 +298,7 @@ const sendSuggestion = async (p) => {
                             <th>Début</th>
                             <th>Motif</th>
                             <th>Recherche</th>
-                            <th v-if="peutTrancher" style="min-width:290px">Verdict</th>
+                            <th v-if="peutTrancher">Verdict</th>
                             <th v-else-if="user">Suggestion</th>
                         </tr>
                     </thead>
@@ -305,19 +321,11 @@ const sendSuggestion = async (p) => {
                                 <a v-if="p.lien" class="btn btn-sm btn-outline-secondary" :href="p.lien" target="_blank" rel="noopener"><i class="bi bi-globe me-1" aria-hidden="true"></i>Lien</a>
                             </td>
                             <td v-if="peutTrancher">
-                                <div class="form">
-                                    <select class="form-select form-select-sm" v-model="form(p).etat">
-                                        <option v-for="(v, k) in ETATS" :key="k" :value="k">{{ v.label }}</option>
-                                    </select>
-                                    <input type="text" placeholder="Note" class="form-control form-control-sm" v-model="form(p).note" />
-                                    <input type="text" placeholder="Lien trouvé" class="form-control form-control-sm" v-model="form(p).lien" />
-                                    <div v-if="form(p).etat === 'confirme_date'" class="d-flex gap-1 w-100">
-                                        <input type="number" min="1990" max="2040" placeholder="Début" class="form-control form-control-sm" style="width:90px" v-model="form(p).annee_debut" />
-                                        <input type="number" min="1990" max="2040" placeholder="Fin" class="form-control form-control-sm" style="width:80px" v-model="form(p).annee_fin" />
-                                        <small class="text-muted w-100">Année de début seule suffisante, fin optionnelle.</small>
-                                    </div>
-                                    <button class="btn btn-sm btn-success" @click="save(p, form(p))">Sauver</button>
-                                    <span v-if="p.etat !== 'a_verifier' && p.verifie_le" class="saved"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ formatDate(p.verifie_le) }}<template v-if="p.verifie_par"> · {{ p.verifie_par }}</template></span>
+                                <button type="button" class="btn btn-sm" :class="p.etat === 'a_verifier' ? 'btn-outline-primary' : 'btn-outline-secondary'" @click="ouvrirVerdict(p)">
+                                    <i class="bi bi-check2-square me-1" aria-hidden="true"></i>{{ p.etat === 'a_verifier' ? 'Rendre un verdict' : 'Modifier le verdict' }}
+                                </button>
+                                <div v-if="p.etat !== 'a_verifier' && p.verifie_le" class="saved">
+                                    <i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ formatDate(p.verifie_le) }}<template v-if="p.verifie_par"> · {{ p.verifie_par }}</template>
                                 </div>
                             </td>
                             <td v-else-if="user">
@@ -376,6 +384,63 @@ const sendSuggestion = async (p) => {
                 peuvent suggérer une correction : elle sera étudiée par un administrateur avant d'être appliquée.
                 Votre adresse IP est conservée uniquement à des fins de modération (RGPD).
             </p>
+
+            <div v-if="verdictOuvert" class="sugg-backdrop" @click.self="fermerVerdict">
+                <div class="sugg-modal" role="dialog" aria-modal="true" aria-labelledby="verdict-titre" tabindex="-1" @keydown.esc="fermerVerdict">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h2 id="verdict-titre" class="h6 mb-1">{{ verdictOuvert.etat === 'a_verifier' ? 'Rendre un verdict' : 'Modifier le verdict' }}</h2>
+                            <div class="small text-muted">
+                                <span class="nom">{{ verdictOuvert.nom }}</span>
+                                <span v-if="verdictOuvert.structure_porteuse"> · {{ verdictOuvert.structure_porteuse }}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" aria-label="Fermer" @click="fermerVerdict"></button>
+                    </div>
+
+                    <p class="small text-muted mb-3">
+                        Le verdict est appliqué immédiatement et affiché sur la fiche et la carte.
+                        Précisez si possible un lien source qui l'étaye.
+                    </p>
+
+                    <div class="mb-2">
+                        <label class="form-label small mb-1">Verdict</label>
+                        <select class="form-select" v-model="formActif.etat">
+                            <option v-for="(v, k) in ETATS" :key="k" :value="k">{{ v.label }}</option>
+                        </select>
+                    </div>
+                    <div class="small text-muted mb-3">{{ ETAT_HELP[formActif.etat] }}</div>
+
+                    <template v-if="formActif.etat === 'confirme_date'">
+                        <div class="d-flex gap-2 mb-3">
+                            <div class="flex-fill">
+                                <label class="form-label small mb-1">Année de début</label>
+                                <input type="number" min="1990" max="2040" class="form-control" placeholder="Ex. 2023" v-model="formActif.annee_debut" />
+                            </div>
+                            <div class="flex-fill">
+                                <label class="form-label small mb-1">Année de fin <span class="text-muted">(optionnelle)</span></label>
+                                <input type="number" min="1990" max="2040" class="form-control" v-model="formActif.annee_fin" />
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="mb-3">
+                        <label class="form-label small mb-1">Note <span class="text-muted">(optionnelle)</span></label>
+                        <input type="text" class="form-control" placeholder="Contexte du verdict" v-model="formActif.note" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small mb-1">Lien source <span class="text-muted">(optionnel)</span></label>
+                        <input type="text" class="form-control" placeholder="https://…" v-model="formActif.lien" />
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="fermerVerdict">Fermer</button>
+                        <button type="button" class="btn btn-sm btn-success" @click="save(verdictOuvert, formActif)">
+                            Enregistrer le verdict
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <div v-if="suggOuvert" class="sugg-backdrop" @click.self="fermerSuggestion">
                 <div class="sugg-modal" role="dialog" aria-modal="true" aria-labelledby="sugg-titre" tabindex="-1" @keydown.esc="fermerSuggestion">
@@ -475,8 +540,6 @@ const sendSuggestion = async (p) => {
 .nom { font-weight: 600; }
 .sub { color: #64748b; font-size: 12px; }
 .communes { max-width: 240px; white-space: normal; word-break: break-word; }
-.form { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-.form input[type=text] { width: 110px; }
 .saved { font-size: 11px; color: #1b5e20; white-space: nowrap; }
 .sugg-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); z-index: 1080; display: flex; align-items: flex-start; justify-content: center; padding: 3rem 1rem; overflow-y: auto; }
 .sugg-modal { background: #fff; border-radius: 0.75rem; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25); max-width: 580px; width: 100%; padding: 1.25rem; }
