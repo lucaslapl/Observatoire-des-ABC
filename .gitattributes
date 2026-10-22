@@ -6,6 +6,9 @@
 *.md diff=markdown
 *.php diff=php
 
+Dockerfile* linguist-ignore
+*.sh linguist-ignore
+
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
