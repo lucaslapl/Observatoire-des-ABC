@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\Commune;
 use Illuminate\Support\Facades\DB;
 
@@ -117,5 +118,38 @@ class VerificationService
         }
 
         return ['projets' => $projets->all(), 'compteurs' => $compteurs];
+    }
+
+    /**
+     * Candidats Fonds vert non rattachés : lignes du collect passées en file
+     * de vérification (audit_log, action worklist_fondsvert) qui ne sont
+     * toujours pas rattachées à un projet — une ligne rattachée plus tard
+     * (financement créé) disparaît automatiquement de cette liste.
+     *
+     * @return array<int, array{ligne_id: string, nom: string, beneficiaire: string|null, annee: int|null, montant: string|null, ambigu: array<int, string>|false}>
+     */
+    public function candidatsFondsVert(): array
+    {
+        $rattachees = DB::table('financements')->pluck('ligne_id')->all();
+
+        return AuditLog::query()
+            ->where('action', 'worklist_fondsvert')
+            ->orderByDesc('created_at')
+            ->get(['apres', 'created_at'])
+            ->map(function ($log) {
+                $payload = json_decode($log->apres, true) ?: [];
+
+                return [
+                    'ligne_id' => (string) ($payload['ligne_id'] ?? ''),
+                    'nom' => (string) ($payload['nom'] ?? ''),
+                    'beneficiaire' => $payload['beneficiaire'] ?? null,
+                    'annee' => $payload['annee'] ?? null,
+                    'montant' => $payload['ligne']['montant_engage'] ?? null,
+                    'ambigu' => $payload['ambigu'] ?? false,
+                ];
+            })
+            ->filter(fn ($c) => $c['nom'] !== '' && ! in_array($c['ligne_id'], $rattachees, true))
+            ->values()
+            ->all();
     }
 }

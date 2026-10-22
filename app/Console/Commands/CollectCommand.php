@@ -20,8 +20,10 @@ class CollectCommand extends Command
         $this->line("data.gouv : {$s['sources']['datagouv']['projets']} projets / {$s['sources']['datagouv']['communes']} communes");
         $this->line("wayback : {$s['sources']['wayback']['projets']} projets uniquement issus des archives (instantané 2022-12-06) + snapshots historiques");
         foreach ($s['sources']['fondsvert']['by_year'] as $year => $n) {
-            $this->line("fonds vert biodiversité {$year} : {$n} projets ABC");
+            $this->line("fonds vert biodiversité {$year} : {$n} candidats ABC (aucun projet créé)");
         }
+        $fv = $s['sources']['fondsvert'];
+        $this->line("fonds vert : {$fv['rattaches']} financement(s) rattaché(s), {$fv['en_worklist']} ligne(s) en file de vérification");
         $g = $s['geocoding'];
         $this->line("géocodage : {$g['distinct']} communes distinctes, {$g['fetched']} à récupérer, {$g['updated']} avec coordonnées");
         $this->line("suppression ciblée : {$s['stale_deleted']} projet(s) disparus des sources et sans travail humain");

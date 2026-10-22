@@ -23,6 +23,7 @@ class SqlDumpService
         'model_has_roles',
         'projets',
         'project_aliases',
+        'financements',
         'communes',
         'snapshots',
         'enrichissements',

@@ -43,7 +43,9 @@ class PageController extends Controller
 
     public function verify(): Response
     {
-        return Inertia::render('Verify', $this->verifications->list(true));
+        return Inertia::render('Verify', $this->verifications->list(true) + [
+            'candidats' => $this->verifications->candidatsFondsVert(),
+        ]);
     }
 
     /**

@@ -6,6 +6,42 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Audit du 2026-10-21 — phase 2 : financements Fonds vert et refonte du collector
+
+- **Nouvelle table `financements`** (migration réversible) : une ligne
+  Fonds vert P113 est désormais un FINANCEMENT accordé à un ABC existant
+  (source, bénéficiaire, année, montant, ligne brute JSON ; unicité sur
+  project_id + source + ligne_id). Le dump SQL de secours l'embarque.
+- **`FondsVertCollector` refondu : il ne crée plus JAMAIS de projet.**
+  Chaque ligne candidate ABC est rattachée par clé d'identité exacte,
+  puis via les alias de fusion (project_aliases), puis par nom normalisé
+  unique. Correspondance ambiguë (plusieurs projets au même nom) ou
+  nouvelle : entrée « doublon suspect »/« à vérifier » en worklist —
+  aucune création silencieuse. Le rattachement marque le projet comme
+  ingéré (protection de la suppression ciblée).
+- **Correctif filtre ABC (bug historique d'accents)** : le motif
+  `biodiversit[ée]` sans normalisation NFC ni drapeau `/u` ne matchait
+  jamais le « é » UTF-8 — le pipeline était aveugle aux lignes écrites
+  « Atlas de la biodiversité communale » sans le sigle « ABC ». C'est la
+  racine des ~75 candidats Fonds vert non ingérés identifiés par l'audit.
+- **Suppression ciblée renforcée** : un projet financé ne peut plus être
+  supprimé comme « disparu des sources » tant que son financement est
+  rattaché.
+- **Worklist élargie** : la page `/verify` affiche une section
+  « Candidats Fonds vert non rattachés » (nom, bénéficiaire, millésime,
+  montant) ; une ligne rattachée plus tard en disparaît automatiquement.
+  Le CSV `abc:verify` les inclut aussi. Journalisation dans audit_log
+  (action `worklist_fondsvert`, idempotente par ligne).
+- **Collect réel vérifié en local** (registre 20260709, FV 2024 rév.
+  20250731, FV 2025 rév. 20260728) : 140 candidats ABC (75 + 65),
+  **0 projet créé**, 65 financements rattachés aux projets Fonds vert
+  connus, 75 lignes en file (58 nouvelles + 17 ambiguës, conforme aux
+  75 candidats non ingérés de l'audit). Collect rejoué : strictement
+  aucun changement (idempotence).
+- **Tests** : `FondsVertCollectorTest` (10 cas : rattachement par id,
+  alias, nom, nouveau, ambigu, accents NFC/NFD, idempotence, worklist
+  page/CSV, auto-résolution, protection stale). Suite : 168 verts.
+
 ### Audit du 2026-10-21 — phase 1 : alias, journal de fusion et commande de fusion
 
 - **Nouvelle table `project_aliases`** (migration réversible) : un doublon
