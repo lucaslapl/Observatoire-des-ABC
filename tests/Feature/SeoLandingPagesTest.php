@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Actualite;
 use App\Models\Commune;
 use App\Models\Projet;
+use App\Models\Verification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -353,6 +354,38 @@ class SeoLandingPagesTest extends TestCase
                 ->where('departement.projets.2.commune_principale', 'Vitré')
                 ->where('departement.projets.2.annee_debut', 2010)
                 ->has('departement.communes', 2)
+        );
+    }
+
+    public function test_listing_pages_show_the_verified_status_over_the_computed_one(): void
+    {
+        $this->seedData();
+        // Le registre dit « va débuter », un vérificateur a constaté « en
+        // cours » : le badge des pages de liste et de la fiche doit montrer
+        // le verdict, comme le fait déjà la carte (statut_affichage).
+        Projet::query()->whereKey('abc-morbihan')->update(['statut' => 'a_venir']);
+        Verification::create([
+            'projet_id' => 'abc-morbihan',
+            'etat' => 'confirme_en_cours',
+        ]);
+
+        $this->get('/departement/56')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Departement')
+                ->where('departement.projets.0.statut', 'en_cours')
+                ->where('departement.projets.0.statut_label', 'En cours')
+        );
+
+        $this->get('/commune/56001')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Commune')
+                ->where('commune.projets.0.statut', 'en_cours')
+                ->where('commune.projets.0.statut_label', 'En cours')
+        );
+
+        $projet = Projet::firstOrFail();
+        $this->get('/abc/'.$projet->slug)->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Projet')
+                ->where('projet.statut', 'en_cours')
+                ->where('projet.statut_label', 'En cours')
         );
     }
 

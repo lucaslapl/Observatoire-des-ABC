@@ -10,7 +10,10 @@ use Illuminate\Support\Str;
 
 class LandingService
 {
-    public function __construct(private RegionService $regions) {}
+    public function __construct(
+        private RegionService $regions,
+        private StatusService $status,
+    ) {}
 
     public const STATUTS =
         ['a_venir' => 'Va débuter', 'en_cours' => 'En cours', 'termine' => 'Terminé', 'inconnu' => 'Statut inconnu'];
@@ -70,6 +73,10 @@ class LandingService
             ]
             : null;
 
+        // Statut affiché : le verdict de vérification prime sur le statut
+        // calculé, comme sur la carte (GeoJsonService::statut_affichage).
+        $statutAffiche = $this->status->statutDepuisVerification($projet->verification?->etat) ?? $projet->statut;
+
         return [
             'id' => $projet->id,
             'nom' => $projet->nom,
@@ -78,8 +85,8 @@ class LandingService
             'type_de_structure_porteuse' => $projet->type_de_structure_porteuse,
             'annee_debut' => $projet->annee_debut,
             'annee_fin' => $projet->annee_fin,
-            'statut' => $projet->statut,
-            'statut_label' => $this->statutLabel($projet->statut),
+            'statut' => $statutAffiche,
+            'statut_label' => $this->statutLabel($statutAffiche),
             'source' => $projet->source,
             'source_label' => $this->sourceLabel($projet->source),
             'url_page' => $projet->url_page,
@@ -105,6 +112,7 @@ class LandingService
         // On liste les projets même quand l'association est marquée « anomalie » :
         // la carte les affiche (points rouges) et la page doit refléter ces données.
         $rows = Commune::query()
+            ->with('projet:id,nom,slug,statut,annee_debut,source', 'projet.verification:projet_id,etat')
             ->where('code_geographique', $code)
             ->orderBy('projet_id')
             ->get();
@@ -134,12 +142,18 @@ class LandingService
                 $first = $communes->first();
                 $p = $first->projet;
 
+                // Statut affiché : le verdict de vérification prime sur le
+                // statut calculé, comme sur la carte.
+                $statutAffiche = $p
+                    ? ($this->status->statutDepuisVerification($p->verification?->etat) ?? $p->statut)
+                    : null;
+
                 return [
                     'projet_id' => $first->projet_id,
                     'nom' => $p?->nom,
                     'slug' => $p?->slug,
-                    'statut' => $p?->statut,
-                    'statut_label' => $p ? $this->statutLabel($p->statut) : null,
+                    'statut' => $statutAffiche,
+                    'statut_label' => $p ? $this->statutLabel($statutAffiche) : null,
                     'annee_debut' => $p?->annee_debut,
                     'source_label' => $p ? $this->sourceLabel($p->source) : null,
                     'anomalie' => (bool) $communes->where('anomalie', true)->count(),
@@ -170,7 +184,7 @@ class LandingService
         // on les rattrape via le préfixe du code INSEE (2 chiffres métropole/Corse,
         // 3 chiffres outre-mer), tout en gardant la colonne comme source de vérité.
         $rows = Commune::query()
-            ->with('projet:id,nom,slug,statut,annee_debut,source')
+            ->with('projet:id,nom,slug,statut,annee_debut,source', 'projet.verification:projet_id,etat')
             ->where(fn ($q) => $q
                 ->whereRaw('LOWER(SUBSTR(code_geographique, 1, ?)) = ?', [$len, $norm])
                 ->orWhereRaw('LOWER(departement) = ?', [$norm]))
@@ -204,13 +218,18 @@ class LandingService
             ->map(function (Collection $cs) {
                 $first = $cs->first();
                 $p = $first->projet;
+                // Statut affiché : le verdict de vérification prime sur le
+                // statut calculé, comme sur la carte.
+                $statutAffiche = $p
+                    ? ($this->status->statutDepuisVerification($p->verification?->etat) ?? $p->statut)
+                    : null;
 
                 return [
                     'projet_id' => $first->projet_id,
                     'nom' => $p?->nom,
                     'slug' => $p?->slug,
-                    'statut_label' => $p ? $this->statutLabel($p->statut) : null,
-                    'statut' => $p?->statut,
+                    'statut_label' => $p ? $this->statutLabel($statutAffiche) : null,
+                    'statut' => $statutAffiche,
                     'annee_debut' => $p?->annee_debut,
                     'commune_principale' => $first->libelle_geographique,
                     'source_label' => $p ? $this->sourceLabel($p->source) : null,
