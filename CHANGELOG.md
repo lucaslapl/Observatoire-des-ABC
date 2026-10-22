@@ -6,6 +6,17 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Ajouté
+
+- **Page publique « Comment les données sont construites »** (`/methodologie`) :
+  pédagogie du cycle de vie des données — collecte des trois sources
+  publiques et garde-fous, géocodage et détection d'anomalies, priorité
+  du travail humain sur la machine, traitement des doublons (fusion sans
+  perte, redirections 301, éditions distinctes), circuit de correction,
+  transparence (worklist publique, export GeoJSON). Chiffres en direct
+  (projets, communes, doublons fusionnés, en vérification). Liée depuis
+  le pied de page et la page « À propos », référencée dans le sitemap.
+
 ### Audit du 2026-10-21 — phase 1 : alias, journal de fusion et commande de fusion
 
 - **Nouvelle table `project_aliases`** (migration réversible) : un doublon
