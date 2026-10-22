@@ -9,6 +9,7 @@ use App\Models\ProjectAlias;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\User;
+use App\Models\Verification;
 use App\Services\LandingService;
 use App\Services\StatsService;
 use App\Services\VerificationService;
@@ -114,6 +115,21 @@ class PageController extends Controller
                 'projets' => $meta['countProjets'],
                 'communes' => Commune::query()->where('anomalie', false)->distinct()->count('code_geographique'),
                 'verifies' => $meta['countVerifies'],
+            ],
+        ]);
+    }
+
+    public function methodologie(): Response
+    {
+        $meta = $this->stats->meta();
+
+        return Inertia::render('Methodologie', [
+            'chiffres' => [
+                'projets' => $meta['countProjets'],
+                'communes' => Commune::query()->where('anomalie', false)->distinct()->count('code_geographique'),
+                'verifies' => $meta['countVerifies'],
+                'doublons_fusionnes' => ProjectAlias::count(),
+                'en_verification' => Verification::where('etat', 'a_verifier')->count(),
             ],
         ]);
     }
