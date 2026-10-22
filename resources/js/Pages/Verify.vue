@@ -118,28 +118,37 @@ const fermerFusion = () => { fusion.ouvert = false; fusion.projet = null; };
 // Tranchage « ce n'est pas un doublon » (admin) : la note automatique
 // « Doublon suspect » est retirée pour tout le groupe d'homonymes et la
 // décision est persistée — le collect ne la recréera pas.
-const pasUnDoublon = async (p) => {
-    const ok = window.confirm(
-        `Confirmer que « ${p.nom} » n'est PAS un doublon ?\n\n`
-        + `Les projets portant ce nom sont des ABC distincts : la note automatique « Doublon suspect »`
-        + ` disparaît pour tous et ne sera pas recréée au prochain collect.`
-    );
-    if (!ok) return;
-    const motif = window.prompt('Motif (journalisé, optionnel) :', '');
-    if (motif === null) return;
-    fache.type = '';
-    fache.message = '';
+const nonDoublon = reactive({
+    ouvert: false, projet: null, motif: '', sending: false, message: '', ok: false,
+});
+const ouvrirNonDoublon = (p) => {
+    nonDoublon.ouvert = true;
+    nonDoublon.projet = p;
+    nonDoublon.motif = '';
+    nonDoublon.message = '';
+    nonDoublon.ok = false;
+};
+const fermerNonDoublon = () => { nonDoublon.ouvert = false; nonDoublon.projet = null; };
+
+const confirmerNonDoublon = async () => {
+    if (!nonDoublon.projet || nonDoublon.sending) return;
+    nonDoublon.message = '';
+    nonDoublon.ok = false;
+    nonDoublon.sending = true;
     try {
-        const r = await axios.post(`/api/admin/projets/${encodeURIComponent(p.id)}/non-doublon`, {
-            motif: motif || null,
+        const r = await axios.post(`/api/admin/projets/${encodeURIComponent(nonDoublon.projet.id)}/non-doublon`, {
+            motif: nonDoublon.motif || null,
         });
+        fermerNonDoublon();
         fache.type = 'success';
         fache.message = `Marqué non-doublon : ${r.data.notes_retirees ?? 0} note(s) « Doublon suspect » retirée(s)`
             + ` — le collect ne les recréera pas.`;
         router.reload({ only: ['projets', 'compteurs'] });
     } catch (err) {
-        fache.type = 'danger';
-        fache.message = 'Erreur : ' + (err.response?.data?.error || err.message);
+        nonDoublon.ok = false;
+        nonDoublon.message = 'Erreur : ' + (err.response?.data?.error || err.message);
+    } finally {
+        nonDoublon.sending = false;
     }
 };
 
@@ -419,7 +428,7 @@ const sendSuggestion = async (p) => {
                                     <button
                                         type="button" class="btn btn-sm btn-outline-secondary"
                                         title="Les projets homonymes sont des ABC distincts : la note automatique disparaît et ne sera pas recréée"
-                                        @click="pasUnDoublon(p)"
+                                        @click="ouvrirNonDoublon(p)"
                                     >
                                         <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Ce n'est pas un doublon
                                     </button>
@@ -553,6 +562,43 @@ const sendSuggestion = async (p) => {
                         <button type="button" class="btn btn-sm btn-outline-secondary" @click="fermerFusion">Fermer</button>
                         <button type="button" class="btn btn-sm btn-danger" :disabled="fusion.sending || !fusion.canoniqueId" @click="fusionner">
                             {{ fusion.sending ? 'Fusion…' : 'Fusionner' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="nonDoublon.ouvert" class="sugg-backdrop" @click.self="fermerNonDoublon">
+                <div class="sugg-modal" role="dialog" aria-modal="true" aria-labelledby="non-doublon-titre" tabindex="-1" @keydown.esc="fermerNonDoublon">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h2 id="non-doublon-titre" class="h6 mb-1">Ce n'est pas un doublon</h2>
+                            <div class="small text-muted">
+                                <span class="nom">{{ nonDoublon.projet?.nom }}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" aria-label="Fermer" @click="fermerNonDoublon"></button>
+                    </div>
+
+                    <p class="small text-muted mb-3">
+                        À n'utiliser que si les projets portant ce nom sont des <b>ABC distincts</b>
+                        (même nom, territoires différents). La note automatique « Doublon suspect »
+                        disparaît pour tous les homonymes et ne sera pas recréée au prochain collect :
+                        cette décision est journalisée et prime sur le signalement automatique.
+                        Si c'est en réalité le même ABC, fermez cette fenêtre et utilisez plutôt
+                        « Fusionner ce doublon ».
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label small mb-1">Motif <span class="text-muted">(journalisé, optionnel)</span></label>
+                        <input type="text" class="form-control" placeholder="Ex. deux ABC distincts, territoires différents" v-model="nonDoublon.motif" />
+                    </div>
+
+                    <div v-if="nonDoublon.message" class="small mb-2" :class="nonDoublon.ok ? 'text-success' : 'text-danger'">{{ nonDoublon.message }}</div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="fermerNonDoublon">Fermer</button>
+                        <button type="button" class="btn btn-sm btn-secondary" :disabled="nonDoublon.sending" @click="confirmerNonDoublon">
+                            {{ nonDoublon.sending ? 'Application…' : 'Confirmer : ce n\'est pas un doublon' }}
                         </button>
                     </div>
                 </div>
