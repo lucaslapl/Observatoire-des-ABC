@@ -28,9 +28,22 @@ const crumbs = computed(() => {
 const statutClass = (s) =>
     ({ en_cours: 'text-bg-success', a_venir: 'text-bg-warning', termine: 'text-bg-primary', inconnu: 'text-bg-secondary' })[s] || 'text-bg-secondary';
 
-// La commune principale n'est affichée que sur la première ligne du groupe :
-// les ABC d'une même commune se suivent, le plus récent en premier.
+// La commune principale fusionne les lignes de son groupe (rowspan) : les
+// ABC d'une même commune se suivent, le plus récent en premier — une commune
+// qui a réalisé deux ABC distincts (Vitré 2010 puis 2026) se voit d'un coup
+// d'œil, et un doublon suspect aussi.
 const communeVisible = (i) => i === 0 || d.value.projets[i - 1].commune_principale !== d.value.projets[i].commune_principale;
+
+const rowSpan = (i) => {
+    const list = d.value.projets;
+    const commune = list[i].commune_principale;
+    let n = 1;
+    while (i + n < list.length && list[i + n].commune_principale === commune) {
+        n++;
+    }
+
+    return n;
+};
 
 const pageTitle = computed(() => `ABC — ${d.value.label} (${d.value.code.toUpperCase()})`);
 const pageDescription = computed(() =>
@@ -87,7 +100,7 @@ const jsonLd = computed(() => {
                     <tbody>
                         <tr v-for="(p, i) in departement.projets" :key="p.projet_id">
                             <td><Link v-if="p.slug" class="text-reset" :href="`/abc/${p.slug}`">{{ p.nom }}</Link><span v-else class="text-reset">{{ p.nom }}</span></td>
-                            <td class="text-muted small">{{ communeVisible(i) ? p.commune_principale : '' }}</td>
+                            <td v-if="communeVisible(i)" class="text-muted small" :rowspan="rowSpan(i)">{{ p.commune_principale }}</td>
                             <td class="small">{{ p.annee_debut || '—' }}</td>
                             <td><span class="badge" :class="statutClass(p.statut)">{{ p.statut_label }}</span></td>
                             <td class="text-muted small">{{ p.source_label }}</td>
