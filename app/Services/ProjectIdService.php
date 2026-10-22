@@ -11,6 +11,13 @@ namespace App\Services;
  */
 class ProjectIdService
 {
+    /**
+     * Slugs de noms trop génériques pour fonder une suspicion de doublon :
+     * ils désignent la démarche (« Atlas de la biodiversité communale »),
+     * pas un projet — des dizaines de communes les portent.
+     */
+    public const NOMS_GENERIQUES = ['atlas-de-la-biodiversite-communale', 'abc'];
+
     public function slug(string $key): string
     {
         $normalized = \Normalizer::normalize($key, \Normalizer::FORM_D);
@@ -23,6 +30,12 @@ class ProjectIdService
         $dashed = preg_replace('/[^a-z0-9]+/', '-', $lower) ?? $lower;
 
         return trim($dashed, '-');
+    }
+
+    /** Le nom désigne-t-il la démarche ABC elle-même plutôt qu'un projet ? */
+    public function estNomGenerique(string $nom): bool
+    {
+        return in_array($this->slug($nom), self::NOMS_GENERIQUES, true);
     }
 
     /**

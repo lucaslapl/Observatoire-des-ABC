@@ -105,6 +105,34 @@ class ContributionFlowTest extends TestCase
         ]);
     }
 
+    public function test_date_contribution_remplace_la_ligne_dates_confirmees(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        Verification::create([
+            'projet_id' => $this->projetId,
+            'etat' => 'a_verifier',
+            'note' => 'Vu sur le site officiel',
+        ]);
+
+        $send = fn (array $extra) => $this->actingAs($admin)->postJson('/api/contributions', [
+            'projet_id' => $this->projetId,
+            'type' => 'date_debut',
+        ] + $extra)->assertCreated();
+
+        $send(['annee_debut_suggeree' => 2026, 'source' => 'https://exemple.fr/article-1']);
+        $send(['annee_debut_suggeree' => 2026, 'annee_fin_suggeree' => 2029, 'statut_suggere' => 'en_cours', 'source' => 'https://exemple.fr/article-2']);
+
+        $verification = Verification::where('projet_id', $this->projetId)->first();
+        $this->assertSame('confirme_en_cours', $verification->etat);
+        $this->assertSame(1, substr_count((string) $verification->note, 'Dates confirmées'));
+        $this->assertSame(1, substr_count((string) $verification->note, 'Source : https'));
+        $this->assertStringContainsString('Vu sur le site officiel', (string) $verification->note);
+        $this->assertStringContainsString('Dates confirmées : 2026–2029', (string) $verification->note);
+        $this->assertStringContainsString('https://exemple.fr/article-2', (string) $verification->note);
+    }
+
     public function test_contributeur_contribution_stays_pending(): void
     {
         $this->postContribution([

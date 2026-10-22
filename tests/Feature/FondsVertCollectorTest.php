@@ -280,6 +280,69 @@ class FondsVertCollectorTest extends TestCase
         $this->assertDatabaseHas('projets', ['id' => 'projet-finance']);
     }
 
+    public function test_homonymes_tranches_par_le_beneficiaire(): void
+    {
+        // Plusieurs projets au même nom : le bénéficiaire de la ligne
+        // désigne la structure porteuse, l'ambiguïté est tranchée.
+        Projet::create(['id' => 'abc-vitre-2024', 'nom' => 'Atlas de la Biodiversité Communale', 'structure_porteuse' => 'COMMUNE DE VITRE', 'statut' => 'en_cours', 'source' => 'data.gouv', 'annee_debut' => 2024]);
+        Projet::create(['id' => 'abc-salaise-2024', 'nom' => 'Atlas de la biodiversité communale', 'structure_porteuse' => 'COMMUNE DE SALAISE SUR SANNE', 'statut' => 'en_cours', 'source' => 'data.gouv', 'annee_debut' => 2024]);
+
+        $this->ligneFv2025('Atlas de la biodiversité communale', 'COMMUNE DE SALAISE SUR SANNE', 11314748);
+        $result = $this->collect();
+
+        $this->assertSame(1, $result['rattaches']);
+        $this->assertSame(0, $result['en_worklist']);
+        $this->assertDatabaseHas('financements', ['project_id' => 'abc-salaise-2024', 'ligne_id' => '11314748']);
+        $this->assertSame(0, Verification::count(), 'aucun homonyme signalé');
+    }
+
+    public function test_nom_generique_ambigu_ne_flood_pas_les_homonymes(): void
+    {
+        // Nom générique porté par des dizaines de communes : l'homonymie est
+        // attendue, pas suspecte — aucune note automatique sur les homonymes,
+        // la ligne reste en worklist (audit).
+        Projet::create(['id' => 'abc-vitre-2024', 'nom' => 'Atlas de la Biodiversité Communale', 'structure_porteuse' => 'COMMUNE DE VITRE', 'statut' => 'en_cours', 'source' => 'data.gouv', 'annee_debut' => 2024]);
+        Projet::create(['id' => 'abc-salaise-2024', 'nom' => 'Atlas de la biodiversité communale', 'structure_porteuse' => 'COMMUNE DE SALAISE SUR SANNE', 'statut' => 'en_cours', 'source' => 'data.gouv', 'annee_debut' => 2024]);
+
+        $this->ligneFv2025('Atlas de la biodiversité communale', 'COMMUNE DE BARBENTANE', 11314749);
+        $result = $this->collect();
+
+        $this->assertSame(1, $result['en_worklist']);
+        $this->assertSame(0, Verification::count(), 'aucune note « Doublon suspect » sur les homonymes');
+
+        $payload = json_decode(AuditLog::where('action', 'worklist_fondsvert')->first()->apres, true);
+        $this->assertTrue($payload['nom_generique']);
+        $this->assertCount(2, $payload['ambigu']);
+    }
+
+    public function test_le_collect_nettoie_les_doublons_suspects_sur_nom_generique(): void
+    {
+        // Notes « Doublon suspect » héritées de l'ancienne heuristique sur un
+        // nom générique : obsolètes, elles disparaissent au collect.
+        $projet = Projet::create([
+            'id' => 'abc-vitre-2024',
+            'nom' => 'Atlas de la Biodiversité Communale',
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+        $note = 'Doublon suspect (Fonds vert P113 2024 ligne fv-x) : « Atlas de la Biodiversité Communale » (bénéficiaire : COMMUNE DE SALAISE SUR SANNE) semble financer ce projet, mais d\'autres projets portent le même nom.';
+        Verification::create([
+            'projet_id' => $projet->id,
+            'etat' => 'a_verifier',
+            'note_auto' => $note."\n".$note,
+        ]);
+
+        file_put_contents($this->cacheDir.'/fonds-vert-p113-2025-export.csv.csv',
+            "nom_du_projet,resume_du_projet,montant_engage,numero_dossier_ds,raison_sociale_beneficiaire,demarche\n".
+            "\"Renaturation du parking\",\"Un projet de voirie sans rapport avec les atlas, mentionné ici pour remplir le fichier de test avec suffisamment d'octets et vérifier la robustesse du lecteur CSV.\",120000.00,113,OFS TEST,Renaturation\n"
+        );
+
+        $result = $this->collect();
+
+        $this->assertSame(1, $result['notes_doublon_nettoyees']);
+        $this->assertNull(Verification::find($projet->id)->note_auto);
+    }
+
     public function test_le_collect_nettoie_les_doublons_suspects_resolus(): void
     {
         // Ambiguïté résolue depuis (fusion, homonyme supprimé) : la note

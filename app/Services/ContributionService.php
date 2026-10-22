@@ -46,6 +46,9 @@ class ContributionService
             $etat = $this->verificationEtatPourStatut((string) ($payload['statut_suggere'] ?? '')) ?? 'confirme_date';
             $debut = $payload['annee_debut_suggeree'] ?? null;
             $fin = $payload['annee_fin_suggeree'] ?? null;
+            // La ligne auto « Dates confirmées » d'une vérification antérieure
+            // est remplacée, pas empilée.
+            $note = $this->retirerLigneDates($note);
             if ($debut) {
                 $ligne = $fin ? "{$debut}–{$fin}" : $debut;
                 $note = $note ? "{$note}\n— Dates confirmées : {$ligne}" : "Dates confirmées : {$ligne}";
@@ -68,6 +71,24 @@ class ContributionService
         }
 
         return ['etat' => $etat, 'note' => $note, 'lien' => $lien];
+    }
+
+    /**
+     * Retire la ligne auto « Dates confirmées : … » (avec son « — Source : … »
+     * collé en fin) d'une note antérieure : une nouvelle suggestion de dates
+     * la remplace au lieu de l'empiler.
+     */
+    private function retirerLigneDates(?string $note): ?string
+    {
+        if (! $note) {
+            return null;
+        }
+        $restantes = array_values(array_filter(
+            preg_split('/\r\n|\r|\n/', $note) ?: [],
+            fn (string $ligne) => ! str_contains($ligne, 'Dates confirmées'),
+        ));
+
+        return $restantes === [] ? null : implode("\n", $restantes);
     }
 
     /**

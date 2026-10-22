@@ -48,8 +48,10 @@ class DoublonSuspectService
     /**
      * Une ligne « Doublon suspect » est obsolète si le nom qu'elle cite
      * (« … ») ne correspond plus qu'à zéro ou un projet : l'ambiguïté a
-     * été tranchée (fusion, suppression d'un homonyme). Les autres
-     * lignes (notes humaines, autres motifs automatiques) sont gardées.
+     * été tranchée (fusion, suppression d'un homonyme), ou si ce nom est
+     * générique — l'homonymie y est la norme et le collector ne crée plus
+     * ces notes. Les autres lignes (notes humaines, autres motifs
+     * automatiques) sont gardées.
      *
      * @param  array<int, string>  $ignorerIds
      */
@@ -61,6 +63,10 @@ class DoublonSuspectService
 
         if (preg_match('/« ([^»]+) »/u', $ligne, $m) !== 1) {
             return false;
+        }
+
+        if ($this->ids->estNomGenerique($m[1])) {
+            return true;
         }
 
         $slug = $this->ids->slug($m[1]);

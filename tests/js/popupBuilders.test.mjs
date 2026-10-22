@@ -86,6 +86,7 @@ test('noteHtml : texte echappe, URL en lien raccourci avec URL complete en title
     assert.match(html, new RegExp(`<a href="${url}"[^>]*title="${url}">exemple.org/[^<"…]*…</a>\\.`));
     const escaped = noteHtml('Note <b>html</b> & "quotes"');
     assert.match(escaped, /&lt;b&gt;html&lt;\/b&gt; &amp; &quot;quotes&quot;/);
+    assert.equal(noteHtml('Première ligne\n— Seconde ligne'), 'Première ligne<br>— Seconde ligne');
 });
 
 test('buildPopup : note de verification avec URL longue rendue cliquable et raccourcie', () => {

@@ -25,7 +25,7 @@ export function shortenUrl(raw, max = 48) {
     }
 }
 
-/** Note de vérification : texte échappé, URL rendues cliquables et raccourcies. */
+/** Note de vérification : texte échappé, URL rendues cliquables et raccourcies, sauts de ligne conservés. */
 export function noteHtml(note) {
     const re = /https?:\/\/[^\s<>"']+/g;
     let out = '';
@@ -42,7 +42,7 @@ export function noteHtml(note) {
         out += `<a href="${esc(url)}" target="_blank" rel="noopener" title="${esc(url)}">${esc(shortenUrl(url))}</a>${esc(trail)}`;
         last = m.index + m[0].length;
     }
-    return out + esc(note.slice(last));
+    return (out + esc(note.slice(last))).replace(/\n/g, '<br>');
 }
 
 /** Popup d'un point (une commune d'un projet). */

@@ -54,7 +54,7 @@ class FondsVertCollector
         $stats = ['rattaches' => 0, 'en_worklist' => 0];
 
         // Index des projets par nom normalisé (une passe pour tout le collect).
-        $projetsParNom = Projet::query()->get(['id', 'nom'])
+        $projetsParNom = Projet::query()->get(['id', 'nom', 'structure_porteuse'])
             ->groupBy(fn (Projet $p) => $this->ids->slug((string) $p->nom));
 
         foreach ($specs as $s) {
@@ -84,7 +84,8 @@ class FondsVertCollector
                     if ($candidats->count() === 1) {
                         $projet = $candidats->first();
                     } elseif ($candidats->count() > 1) {
-                        $ambigus = $candidats;
+                        $projet = $this->trancherParBeneficiaire($candidats, $benef);
+                        $ambigus = $projet ? null : $candidats;
                     }
                 }
 
@@ -156,11 +157,33 @@ class FondsVertCollector
     }
 
     /**
+     * Le bénéficiaire de la ligne tranche-t-il l'homonymie ? Un unique
+     * candidat dont la structure porteuse porte le même nom normalisé que
+     * le bénéficiaire : rattachement. Sinon l'ambiguïté reste.
+     */
+    private function trancherParBeneficiaire(Collection $candidats, string $benef): ?Projet
+    {
+        if ($benef === '') {
+            return null;
+        }
+        $slugBenef = $this->ids->slug($benef);
+        $correspondants = $candidats
+            ->filter(fn (Projet $p) => $this->ids->slug((string) $p->structure_porteuse) === $slugBenef)
+            ->values();
+
+        return $correspondants->count() === 1 ? $correspondants->first() : null;
+    }
+
+    /**
      * Ligne ambiguë ou nouvelle → worklist de vérification, sans jamais créer
      * de projet :
      * - les projets candidats reçoivent une vérification etat=a_verifier
      *   (visible dans /verify), sans écraser un verdict humain existant ;
      *   le motif automatique va dans note_auto, jamais dans la note humaine ;
+     * - un nom générique (« Atlas de la biodiversité communale ») est porté
+     *   par des dizaines de communes : l'homonymie est attendue, pas
+     *   suspecte — la ligne part en worklist (audit) sans flooder les
+     *   homonymes de notes automatiques ;
      * - chaque ligne est journalisée dans audit_log (idempotent par ligne).
      */
     private function mettreEnWorklist(int $year, string $nom, string $benef, array $r, ?Collection $ambigus): void
@@ -169,7 +192,7 @@ class FondsVertCollector
         $marqueur = "Fonds vert P113 {$year} ligne {$ligneId}";
         $detail = $benef !== '' ? " (bénéficiaire : {$benef})" : '';
 
-        if ($ambigus && $ambigus->isNotEmpty()) {
+        if ($ambigus && $ambigus->isNotEmpty() && ! $this->ids->estNomGenerique($nom)) {
             foreach ($ambigus as $candidat) {
                 $note = "Doublon suspect ({$marqueur}) : « {$nom} »{$detail} semble financer ce projet, mais d'autres projets portent le même nom.";
                 $verification = Verification::find($candidat->id);
@@ -196,6 +219,7 @@ class FondsVertCollector
                     'nom' => $nom,
                     'beneficiaire' => $benef !== '' ? $benef : null,
                     'ambigu' => $ambigus ? $ambigus->pluck('id')->all() : false,
+                    'nom_generique' => $this->ids->estNomGenerique($nom),
                     'ligne' => $r,
                 ], JSON_UNESCAPED_UNICODE),
                 'par_admin' => 'FondsVertCollector',
