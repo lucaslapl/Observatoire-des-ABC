@@ -18,9 +18,23 @@ class CollectServiceTest extends TestCase
 {
     use DatabaseMigrations;
 
+    private string $cacheDir;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Cache isolé : la suite de tests ne doit jamais toucher (ni purger)
+        // le vrai cache storage/app/abc/cache.
+        $this->cacheDir = sys_get_temp_dir().'/abc-collect-test-'.uniqid();
+        mkdir($this->cacheDir, 0777, true);
+        config(['abc.cache_dir' => $this->cacheDir]);
+    }
+
     protected function tearDown(): void
     {
-        @unlink(config('abc.cache_dir').'/abcexport');
+        array_map('unlink', glob($this->cacheDir.'/*') ?: []);
+        rmdir($this->cacheDir);
         parent::tearDown();
     }
 
