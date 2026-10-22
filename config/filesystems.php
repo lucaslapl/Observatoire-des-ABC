@@ -30,6 +30,14 @@ return [
 
     'disks' => [
 
+        // Données métier de l'Observatoire : exports, cache des sources,
+        // sauvegardes et snapshots de fusion (cf. config/abc.php).
+        'abc' => [
+            'driver' => 'local',
+            'root' => storage_path('app/abc'),
+            'throw' => true,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

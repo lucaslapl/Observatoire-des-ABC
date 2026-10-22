@@ -6,6 +6,7 @@ use App\Models\Commune;
 use App\Models\Projet;
 use App\Services\StatusService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class VerifyCommand extends Command
 {
@@ -21,10 +22,19 @@ class VerifyCommand extends Command
                 'projets.annee_debut', 'projets.statut', 'projets.source',
                 'projets.potentiellement_termine', 'projets.potentiellement_en_cours',
             ])
-            ->where('projets.potentiellement_termine', true)
-            ->orWhere('projets.potentiellement_en_cours', true)
-            ->orWhere('projets.source', 'wayback')
-            ->orWhereNull('projets.annee_debut')
+            ->where(function ($q) {
+                $q->where('projets.potentiellement_termine', true)
+                    ->orWhere('projets.potentiellement_en_cours', true)
+                    ->orWhere('projets.source', 'wayback')
+                    ->orWhereNull('projets.annee_debut')
+                    // Explicitement mis en file (ex. doublons à vérifier).
+                    ->orWhereExists(function ($q2) {
+                        $q2->select(DB::raw(1))
+                            ->from('verifications as v')
+                            ->whereColumn('v.projet_id', 'projets.id')
+                            ->where('v.etat', 'a_verifier');
+                    });
+            })
             ->orderBy('projets.statut')
             ->orderBy('projets.nom')
             ->get();

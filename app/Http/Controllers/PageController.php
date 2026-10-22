@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Actualite;
 use App\Models\Commune;
 use App\Models\Contribution;
+use App\Models\ProjectAlias;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\User;
@@ -45,8 +46,23 @@ class PageController extends Controller
         return Inertia::render('Verify', $this->verifications->list(true));
     }
 
-    public function projet(Projet $projet): Response
+    /**
+     * Page projet, résolue par slug. Un slug absent de `projets` mais présent
+     * dans `project_aliases` (projet fusionné) redirige en 301 vers la page
+     * du projet canonique : les URLs historiques ne deviennent jamais des 404.
+     */
+    public function projet(string $slug): Response|RedirectResponse
     {
+        $projet = Projet::where('slug', $slug)->first();
+
+        if (! $projet) {
+            $alias = ProjectAlias::where('alias_slug', $slug)->first();
+            if ($alias && ($canonique = Projet::find($alias->project_id))) {
+                return redirect()->to('/abc/'.$canonique->slug, 301);
+            }
+            abort(404);
+        }
+
         return Inertia::render('Projet', [
             'projet' => $this->landing->projet($projet),
         ]);

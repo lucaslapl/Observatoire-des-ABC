@@ -6,6 +6,48 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Unreleased]
 
+### Audit du 2026-10-21 — phase 1 : alias, journal de fusion et commande de fusion
+
+- **Nouvelle table `project_aliases`** (migration réversible) : un doublon
+  fusionné y conserve son id (`alias_project_id`), son slug (`alias_slug`),
+  sa source et le motif de fusion, rattachés au projet canonique
+  (`project_id`). Le journal existant `audit_log` est réutilisé pour tracer
+  chaque fusion (action `fusion`, états avant/après en JSON).
+- **Nouvelle commande `abc:merge-projects {doublon} {canonique} {--motif=}`** :
+  union des communes (dédupliquée sur le code INSEE, la valeur du canonique
+  gagne les conflits), union des snapshots (dédupliquée sur la date),
+  migration des vérifications, contributions et enrichissements (notes
+  concaténées, jamais perdues), création de l'alias, suppression du doublon,
+  journalisation. Un snapshot JSON de l'état complet du doublon est écrit
+  avant fusion dans `storage/app/abc/merges/` (rollback possible). Refus de
+  fusionner un alias, de fusionner dans un alias, ou deux fois le même id.
+- **Redirection 301 des anciens slugs** : la route `/abc/{slug}` est résolue
+  manuellement ; un slug d'alias redirige en 301 vers la page du canonique,
+  un slug inconnu reste un 404. Aucune page fusionnée ne casse.
+- **Le collect ne réintroduit pas un projet fusionné** :
+  `ProjetRepository::isAliased` ignore, comme les exclusions, tout id
+  présent dans `project_aliases` (upsert et snapshots).
+- **Worklist /verify** : un projet portant une vérification
+  `etat=a_verifier` apparaît désormais dans la page /verify et le CSV
+  `abc:verify`, même sans flag (critère explicite de mise en file).
+- **Scripts de triage versionnés** (`data/triage/*.csv`, extraits du
+  tableur fourni par `scripts/extract-triage.php`) :
+  48 paires « Fusionner » (canonique = registre OFB, copie wayback/Fonds
+  vert en alias) et 26 paires « À vérifier ».
+- **Application sur la base locale** (base = copie de production) :
+  48 fusions via `scripts/apply-merges.php` (validation préalable complète,
+  refus des chaînes et des doublons d'id) : projets 1 263 → 1 215
+  (-48 exactement), lignes projet-commune 5 421 → 5 274, snapshots
+  2 200 → 2 199, 48 alias créés, 8 vérifications et 6 contributions
+  conservées (migrées), 48 entrées `audit_log` `fusion`. Les 26 paires
+  « À vérifier » sont inscrites en worklist via
+  `scripts/queue-doublons-verification.php` (idempotent : 52 projets
+  listés dans /verify, notes de paires journalisées, jamais de perte des
+  états humains existants). Les 11 séries d'éditions et les décisions
+  « Conserver distincts » n'ont pas été touchées.
+- **Tests** : `MergeProjectsCommandTest` (6 cas : unions, alias, 301,
+  refus, anti-réimport, worklist). Suite : 157 tests verts.
+
 ### Audit du 2026-10-21 — phase 0 : environnement et état de référence
 
 - **Base locale = copie exacte de la production** : un dump `pg_dump`
