@@ -123,6 +123,10 @@ ayant bloqué l'IP du poste de travail). Règles :
 - Vérifier en local autant que possible (Docker, `http://localhost:8000`).
 - **Jamais de boucle curl/wget sur les pages de production** : au plus
   quelques pages clés, espacées (`sleep 1` entre chaque requête).
+- Une vérification qui reçoit des 403 ou un captcha (liste grise Imunify360)
+  **s'arrête immédiatement** : continuer mène à la liste noire — c'est
+  l'escalade qui a bloqué l'IP du poste le 2026-10-22 (fiches `/abc/abc-N`
+  parcourues en boucle après un déploiement).
 - Si le site semble down depuis le poste : tester en 4G avant tout ticket —
   c'est le plus souvent l'IP qui est bloquée, pas le site.
 
