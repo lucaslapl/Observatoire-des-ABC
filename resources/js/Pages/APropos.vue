@@ -71,6 +71,8 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 proposer des corrections depuis la fiche de chaque projet. Ce travail humain —
                 vérifications et contributions — prime toujours sur la collecte automatique :
                 il n'est jamais écrasé par une mise à jour des sources.
+                Le détail du parcours des données — collecte, anomalies, doublons, corrections —
+                est décrit sur la page <Link href="/methodologie">« Comment les données sont construites »</Link>.
             </p>
 
             <h2 class="h6">Comment le site a été développé</h2>
