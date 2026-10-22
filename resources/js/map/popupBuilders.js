@@ -7,6 +7,44 @@ import {
     dStatut, srcChip, delBtn,
 } from './constants.js';
 
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/** Libellé court d'une URL : domaine + début du chemin, jamais l'URL entière. */
+export function shortenUrl(raw, max = 48) {
+    try {
+        const u = new URL(raw);
+        let label = u.hostname.replace(/^www\./, '');
+        const path = (u.pathname && u.pathname !== '/') ? u.pathname : '';
+        if (path) {
+            const room = max - label.length;
+            label += path.length > room ? path.slice(0, Math.max(room - 1, 2)) + '…' : path;
+        }
+        return label;
+    } catch {
+        return raw.length > max ? raw.slice(0, max - 1) + '…' : raw;
+    }
+}
+
+/** Note de vérification : texte échappé, URL rendues cliquables et raccourcies. */
+export function noteHtml(note) {
+    const re = /https?:\/\/[^\s<>"']+/g;
+    let out = '';
+    let last = 0;
+    let m;
+    while ((m = re.exec(note)) !== null) {
+        out += esc(note.slice(last, m.index));
+        let url = m[0];
+        let trail = '';
+        while (/[.,;:!?)]$/.test(url)) {
+            trail = url.slice(-1) + trail;
+            url = url.slice(0, -1);
+        }
+        out += `<a href="${esc(url)}" target="_blank" rel="noopener" title="${esc(url)}">${esc(shortenUrl(url))}</a>${esc(trail)}`;
+        last = m.index + m[0].length;
+    }
+    return out + esc(note.slice(last));
+}
+
 /** Popup d'un point (une commune d'un projet). */
 export function buildPopup(p, isAdmin) {
     const src = p.source || '';
@@ -15,7 +53,7 @@ export function buildPopup(p, isAdmin) {
     const confirme = v && ['confirme_termine', 'confirme_en_cours', 'toujours_a_venir', 'confirme_date'].includes(p.verif_etat);
     const verifNote = v
         ? `<br><b style="color:${v.color}">${v.label}</b>` +
-        (p.verif_note ? `<br><small>${p.verif_note}</small>` : '') +
+        (p.verif_note ? `<br><small>${noteHtml(p.verif_note)}</small>` : '') +
         (p.verif_lien ? `<br><small><a href="${p.verif_lien.replace(/"/g, '&quot;')}" target="_blank" rel="noopener">Lien source</a></small>` : '')
         : '';
     const info = [
@@ -42,7 +80,10 @@ export function buildContribForm(pid) {
         `<select data-s-type class="form-select form-select-sm">` +
         `<option value="statut">Statut</option><option value="date_debut">Date de début</option><option value="note">Note</option><option value="lien">Lien</option><option value="autre">Autre info</option>` +
         `</select>` +
-        `<select data-s-statut class="form-select form-select-sm" hidden>${STATUT_SUGG.map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select>` +
+        `<select data-s-statut class="form-select form-select-sm" hidden>` +
+        `<option value="">Choisir un statut…</option>` +
+        STATUT_SUGG.map(([k, l]) => `<option value="${k}">${l}</option>`).join('') +
+        `</select>` +
         `<div data-s-date hidden class="d-flex gap-1 flex-wrap">` +
         `<input type="number" data-s-annee min="1990" max="2040" placeholder="Début (ex. 2023)" class="form-control form-control-sm" style="width:110px" />` +
         `<input type="number" data-s-annee-fin min="1990" max="2040" placeholder="Fin (optionnel)" class="form-control form-control-sm" style="width:110px" />` +

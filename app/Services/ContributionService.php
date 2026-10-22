@@ -40,7 +40,10 @@ class ContributionService
         }
 
         if ($type === 'date_debut') {
-            $etat = 'confirme_date';
+            // Statut facultatif : « a débuté en avril 2026 » doit pouvoir être
+            // signalé « en cours » sans attendre le recalcul automatique par
+            // année, qui le laisse « va débuter » jusqu'au 1er janvier suivant.
+            $etat = $this->verificationEtatPourStatut((string) ($payload['statut_suggere'] ?? '')) ?? 'confirme_date';
             $debut = $payload['annee_debut_suggeree'] ?? null;
             $fin = $payload['annee_fin_suggeree'] ?? null;
             if ($debut) {

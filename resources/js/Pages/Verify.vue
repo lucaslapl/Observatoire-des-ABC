@@ -61,7 +61,7 @@ const SUGG_TYPES = {
 };
 const SUGG_HELP = {
     statut: "Le statut affiché est inexact : indiquez celui que vous avez constaté (terminé, en cours, à venir…).",
-    date_debut: "Corrigez les années de l'ABC. L'année de début seule suffit si c'est tout ce que vous avez pu confirmer ; l'année de fin et la source sont optionnelles.",
+    date_debut: "Corrigez les années de l'ABC. L'année de début seule suffit si c'est tout ce que vous avez pu confirmer ; l'année de fin, le statut et la source sont optionnels. Précisez le statut si le recalcul automatique est faux (ex. ABC débuté en cours d'année encore affiché « à venir »).",
     note: 'Proposez la note qui devrait remplacer celle affichée.',
     lien: "Indiquez l'URL de la page officielle du projet (actuelle ou plus récente).",
     autre: 'Décrivez la correction à apporter (nom, structure porteuse, communes…).',
@@ -77,7 +77,7 @@ const form = (p) => forms[p.id] || (forms[p.id] = { etat: p.etat, note: p.note |
 
 const suggs = reactive({});
 const sugg = (p) => suggs[p.id] || (suggs[p.id] = {
-    type: 'statut', statut: 'termine', annee_debut: '', annee_fin: '', source: '',
+    type: 'statut', statut: 'termine', statut_date: '', annee_debut: '', annee_fin: '', source: '',
     note: '', lien: '', texte: '', commentaire: '', sending: false, message: '', ok: false,
 });
 
@@ -243,6 +243,7 @@ const sendSuggestion = async (p) => {
         const fin = Number(s.annee_fin);
         if (fin) body.annee_fin_suggeree = fin;
         if (s.source) body.source = s.source;
+        if (s.statut_date) body.statut_suggere = s.statut_date;
     }
     if (s.type === 'note') body.note = s.note;
     if (s.type === 'lien') body.lien = s.lien;
@@ -630,6 +631,13 @@ const sendSuggestion = async (p) => {
                         <div class="mb-3">
                             <label class="form-label small mb-1">Source <span class="text-muted">(page confirmant les dates, optionnelle)</span></label>
                             <input type="text" class="form-control" placeholder="https://…" v-model="suggActif.source" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small mb-1">Statut constaté <span class="text-muted">(optionnel)</span></label>
+                            <select class="form-select" v-model="suggActif.statut_date">
+                                <option value="">Laisser le statut calculé automatiquement</option>
+                                <option v-for="(label, k) in SUGG_STATUTS" :key="k" :value="k">{{ label }}</option>
+                            </select>
                         </div>
                     </template>
                     <div v-if="suggActif.type === 'note'" class="mb-3">

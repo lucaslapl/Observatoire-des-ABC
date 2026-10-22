@@ -466,7 +466,9 @@ function onSearchInput() {
 }
 
 function showSuggFields(root, t) {
-    root.querySelector('[data-s-statut]').hidden = t !== 'statut';
+    const statutSel = root.querySelector('[data-s-statut]');
+    statutSel.hidden = t !== 'statut' && t !== 'date_debut';
+    statutSel.querySelector('option').textContent = t === 'date_debut' ? 'Statut (optionnel)' : 'Choisir un statut…';
     root.querySelector('[data-s-date]').hidden = t !== 'date_debut';
     root.querySelector('[data-s-note]').hidden = t !== 'note';
     root.querySelector('[data-s-lien]').hidden = t !== 'lien';
@@ -523,7 +525,11 @@ async function onDocClick(e) {
         const root = send.closest('[data-sugg]');
         const t = root.querySelector('[data-s-type]').value;
         const body = { projet_id: root.dataset.pid, type: t, commentaire: root.querySelector('[data-s-commentaire]').value || undefined };
-        if (t === 'statut') body.statut_suggere = root.querySelector('[data-s-statut]').value;
+        if (t === 'statut') {
+            const st = root.querySelector('[data-s-statut]').value;
+            if (!st) { root.querySelector('[data-s-result]').textContent = 'Veuillez choisir un statut.'; return; }
+            body.statut_suggere = st;
+        }
         if (t === 'date_debut') {
             const an = Number(root.querySelector('[data-s-annee]').value);
             if (!an) { root.querySelector('[data-s-result]').textContent = "Veuillez renseigner au moins l'année de début."; return; }
@@ -532,6 +538,8 @@ async function onDocClick(e) {
             if (fin) body.annee_fin_suggeree = fin;
             const src = root.querySelector('[data-s-source]').value.trim();
             if (src) body.source = src;
+            const st = root.querySelector('[data-s-statut]').value;
+            if (st) body.statut_suggere = st;
         }
         if (t === 'note') body.note = root.querySelector('[data-s-note]').value;
         if (t === 'lien') body.lien = root.querySelector('[data-s-lien]').value;

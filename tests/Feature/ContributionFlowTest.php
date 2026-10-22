@@ -79,6 +79,32 @@ class ContributionFlowTest extends TestCase
         ]);
     }
 
+    public function test_admin_date_contribution_with_statut_sets_verdict_statut(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        // ABC débuté en cours d'année : le statut source reste « a_venir » et
+        // le recalcul par année l'afficherait « va débuter » jusqu'en 2027.
+        // Le contributeur précise « en cours » en même temps que la date.
+        $this->actingAs($admin)->postJson('/api/contributions', [
+            'projet_id' => $this->projetId,
+            'type' => 'date_debut',
+            'annee_debut_suggeree' => 2026,
+            'statut_suggere' => 'en_cours',
+            'source' => 'https://exemple.fr/abc-test-ville',
+        ])->assertCreated()->assertJson(['ok' => true, 'auto_validee' => true]);
+
+        $this->assertDatabaseHas('projets', [
+            'id' => $this->projetId,
+            'annee_debut' => 2026,
+        ]);
+        $this->assertDatabaseHas('verifications', [
+            'projet_id' => $this->projetId,
+            'etat' => 'confirme_en_cours',
+        ]);
+    }
+
     public function test_contributeur_contribution_stays_pending(): void
     {
         $this->postContribution([

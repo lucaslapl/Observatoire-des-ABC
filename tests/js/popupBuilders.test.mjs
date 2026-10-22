@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    buildPopup, buildContribForm, buildMultiRow, buildMultiHeader,
+    buildPopup, buildContribForm, buildMultiRow, buildMultiHeader, shortenUrl, noteHtml,
 } from '../../resources/js/map/popupBuilders.js';
 
 const base = {
@@ -58,6 +58,46 @@ test('buildPopup : alertes pour projets potentiellement termines / archives', ()
 
 test('buildContribForm : pid transmis au formulaire', () => {
     assert.match(buildContribForm('abc-42'), /data-pid="abc-42"/);
+});
+
+test('buildContribForm : select statut avec option vide (optionnel avec une date)', () => {
+    const html = buildContribForm('abc-42');
+    assert.match(html, /data-s-statut[^>]*>/);
+    assert.match(html, /<option value="">Choisir un statut…<\/option>/);
+    assert.match(html, /value="en_cours">En cours/);
+});
+
+test('shortenUrl : domaine + debut de chemin, jamais l\'URL entiere', () => {
+    const long = 'https://www.picardie-nature.org/etude-de-la-faune-sauvage/les-atlas-de-la-biodiversite/article/la-communaute-de-communes-du-val';
+    const s = shortenUrl(long);
+    assert.ok(s.startsWith('picardie-nature.org/'));
+    assert.ok(s.length <= 48);
+    assert.ok(s.endsWith('…'));
+    assert.equal(shortenUrl('https://exemple.fr'), 'exemple.fr');
+    const pasUrl = 'pas une url tres tres tres tres tres tres tres tres tres longue';
+    const t = shortenUrl(pasUrl);
+    assert.ok(t.length <= 48 && t.endsWith('…'));
+});
+
+test('noteHtml : texte echappe, URL en lien raccourci avec URL complete en title', () => {
+    const url = 'https://exemple.org/article/la-communaute-de-communes-du-val';
+    const note = `Dates confirmées : 2026 — Source : ${url}.`;
+    const html = noteHtml(note);
+    assert.match(html, new RegExp(`<a href="${url}"[^>]*title="${url}">exemple.org/[^<"…]*…</a>\\.`));
+    const escaped = noteHtml('Note <b>html</b> & "quotes"');
+    assert.match(escaped, /&lt;b&gt;html&lt;\/b&gt; &amp; &quot;quotes&quot;/);
+});
+
+test('buildPopup : note de verification avec URL longue rendue cliquable et raccourcie', () => {
+    const url = 'https://www.picardie-nature.org/etude-de-la-faune-sauvage/les-atlas-de-la-biodiversite/article/la-communaute-de-communes-du-val';
+    const html = buildPopup({
+        ...base,
+        verif_etat: 'confirme_date',
+        verif_note: `Dates confirmées : 2026 — Source : ${url}`,
+    }, false);
+    assert.match(html, /✓ Vérifié : Date confirmée/);
+    assert.match(html, new RegExp(`title="${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
+    assert.ok(!html.includes(`>${url}<`), 'l\'URL entière ne doit pas être affichée en texte');
 });
 
 test('buildMultiRow : badge statut, verdict et source figee', () => {
