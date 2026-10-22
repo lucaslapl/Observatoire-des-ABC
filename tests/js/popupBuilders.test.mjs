@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    buildPopup, buildContribForm, buildMultiRow, buildMultiHeader, shortenUrl, noteHtml,
+    buildPopup, buildContribLink, buildMultiRow, buildMultiHeader, shortenUrl, noteHtml,
 } from '../../resources/js/map/popupBuilders.js';
 
 const base = {
@@ -23,7 +23,7 @@ const base = {
     anomalie: false,
 };
 
-test('buildPopup : contenu principal et formulaire de contribution', () => {
+test('buildPopup : contenu principal et lien de contribution', () => {
     const html = buildPopup(base, false);
     assert.match(html, /<b>ABC Test<\/b>/);
     assert.match(html, /Loxeville \(54\)/);
@@ -56,15 +56,18 @@ test('buildPopup : alertes pour projets potentiellement termines / archives', ()
     assert.match(html2022, /archives 2022/);
 });
 
-test('buildContribForm : pid transmis au formulaire', () => {
-    assert.match(buildContribForm('abc-42'), /data-pid="abc-42"/);
+test('buildContribLink : renvoie vers /verify ciblé sur le projet', () => {
+    const html = buildContribLink('abc-42');
+    assert.match(html, /data-suggest/);
+    assert.match(html, /href="\/verify\?projet=abc-42"/);
+    assert.match(html, /Signaler une correction/);
+    // Plus de formulaire embarqué : la suggestion passe par /verify (compte requis).
+    assert.doesNotMatch(html, /data-sform/);
+    assert.doesNotMatch(html, /data-send/);
 });
 
-test('buildContribForm : select statut avec option vide (optionnel avec une date)', () => {
-    const html = buildContribForm('abc-42');
-    assert.match(html, /data-s-statut[^>]*>/);
-    assert.match(html, /<option value="">Choisir un statut…<\/option>/);
-    assert.match(html, /value="en_cours">En cours/);
+test('buildContribLink : pid échappé dans l\'URL', () => {
+    assert.match(buildContribLink('a b&c'), /href="\/verify\?projet=a%20b%26c"/);
 });
 
 test('shortenUrl : domaine + debut de chemin, jamais l\'URL entiere', () => {

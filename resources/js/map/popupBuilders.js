@@ -3,7 +3,7 @@
  * marqueurs multiples). Pures : testables sans DOM.
  */
 import {
-    COLOR, STATUT_SUGG, STATUT_LABEL, VERDICT, SRC_FR,
+    COLOR, STATUT_LABEL, VERDICT, SRC_FR,
     dStatut, srcChip, delBtn,
 } from './constants.js';
 
@@ -69,33 +69,16 @@ export function buildPopup(p, isAdmin) {
         `<br><small>${p.verifie ? 'Source initiale' : 'Source'} : ${srcFr}</small>`,
         delBtn(p, isAdmin),
     ].join('');
-    return info + buildContribForm(p.projet_id);
+    return info + buildContribLink(p.projet_id);
 }
 
-/** Formulaire de contribution intégré au popup. */
-export function buildContribForm(pid) {
+/** Lien « Signaler une correction » du popup : renvoie vers la page de
+ * vérification, ciblée sur le projet concerné. */
+export function buildContribLink(pid) {
     return `<div class="pop-contrib" data-sugg data-pid="${pid}">` +
-        `<button class="contrib-toggle" data-suggest role="button"><i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Signaler une correction</button>` +
-        `<div class="contrib-form" data-sform hidden>` +
-        `<select data-s-type class="form-select form-select-sm">` +
-        `<option value="statut">Statut</option><option value="date_debut">Date de début</option><option value="note">Note</option><option value="lien">Lien</option><option value="autre">Autre info</option>` +
-        `</select>` +
-        `<select data-s-statut class="form-select form-select-sm" hidden>` +
-        `<option value="">Choisir un statut…</option>` +
-        STATUT_SUGG.map(([k, l]) => `<option value="${k}">${l}</option>`).join('') +
-        `</select>` +
-        `<div data-s-date hidden class="d-flex gap-1 flex-wrap">` +
-        `<input type="number" data-s-annee min="1990" max="2040" placeholder="Début (ex. 2023)" class="form-control form-control-sm" style="width:110px" />` +
-        `<input type="number" data-s-annee-fin min="1990" max="2040" placeholder="Fin (optionnel)" class="form-control form-control-sm" style="width:110px" />` +
-        `<input type="text" data-s-source placeholder="Source (organisme, article…)" class="form-control form-control-sm" style="min-width:160px" />` +
-        `</div>` +
-        `<input type="text" data-s-note placeholder="Note" class="form-control form-control-sm" hidden />` +
-        `<input type="text" data-s-lien placeholder="Lien (URL)" class="form-control form-control-sm" hidden />` +
-        `<input type="text" data-s-texte placeholder="Votre information" class="form-control form-control-sm" hidden />` +
-        `<input type="text" data-s-commentaire placeholder="Commentaire (optionnel)" class="form-control form-control-sm" />` +
-        `<button type="button" class="btn btn-sm btn-success" data-send>Envoyer la suggestion</button>` +
-        `<span data-s-result class="saved"></span>` +
-        `</div></div>`;
+        `<a class="contrib-toggle" data-suggest href="/verify?projet=${encodeURIComponent(pid)}">` +
+        `<i class="bi bi-lightbulb me-1" aria-hidden="true"></i>Signaler une correction</a>` +
+        `</div>`;
 }
 
 /** Ligne « un projet » du popup multi-marqueur. */

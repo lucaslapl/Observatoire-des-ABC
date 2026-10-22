@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted, nextTick } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
@@ -90,6 +90,22 @@ const suggOuvert = ref(null);
 const ouvrirSuggestion = (p) => { suggOuvert.value = p; };
 const fermerSuggestion = () => { suggOuvert.value = null; };
 const suggActif = computed(() => suggOuvert.value ? sugg(suggOuvert.value) : null);
+
+// Arrivée depuis la carte (popup « Signaler une correction ») : le projet
+// ciblé est passé en paramètre d'URL — on affiche sa ligne et, si
+// l'utilisateur connecté a le droit de contribuer, on ouvre la modale.
+onMounted(async () => {
+    const pid = new URLSearchParams(window.location.search).get('projet');
+    const p = pid ? props.projets.find((x) => x.id === pid) : null;
+    if (!p) return;
+    sMotif.value = '';
+    sEtat.value = '';
+    sQ.value = '';
+    await nextTick();
+    document.querySelector(`tr[data-projet-id="${CSS.escape(p.id)}"]`)
+        ?.scrollIntoView({ block: 'center' });
+    if (user.value && user.value.email_verifie) ouvrirSuggestion(p);
+});
 
 // Modal de verdict (admin / modérateur), même principe.
 const verdictOuvert = ref(null);
@@ -393,7 +409,7 @@ const sendSuggestion = async (p) => {
                 Les projets déjà vérifiés restent consultables : passez le filtre
                 « État » sur <b>Vérifiés</b> ou <b>Tous</b>. Une erreur sur un projet confirmé ?
                 <template v-if="peutTrancher">Rouvrez « Modifier le verdict » pour statuer sur le projet, ou « Appliquer une correction » pour corriger une information sans verdict complet.</template>
-                <template v-else-if="isContributeur">Utilisez le bouton « Suggérer une correction » de la ligne concernée, ou signalez-la depuis le popup de la carte.</template>
+                <template v-else-if="isContributeur">Utilisez le bouton « Suggérer une correction » de la ligne concernée — le lien « Signaler une correction » des popups de la carte vous amène directement ici, sur le projet visé.</template>
                 <template v-else>Les membres connectés peuvent envoyer une suggestion, examinée avant application.</template>
             </div>
 
@@ -411,7 +427,7 @@ const sendSuggestion = async (p) => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="p in filtered" :key="p.id" :class="rowClass(p)">
+                        <tr v-for="p in filtered" :key="p.id" :class="rowClass(p)" :data-projet-id="p.id">
                             <td>
                                 <div class="nom">{{ p.nom }}</div>
                                 <div class="sub">{{ p.structure_porteuse || '—' }}{{ p.departements ? ' · ' + p.departements : '' }}</div>

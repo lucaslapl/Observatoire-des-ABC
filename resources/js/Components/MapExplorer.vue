@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
-import { router, usePage } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { COLOR, METRO, dStatut, fmtCount, visible } from '../map/constants.js';
 import { buildPopup as buildPopupHtml, buildMultiRow, buildMultiHeader } from '../map/popupBuilders.js';
 import { exportMap as exportMapImage } from '../map/exportImage.js';
@@ -54,9 +54,6 @@ let tileLayer = null;
 let layer = null;
 let all = [];
 let allProjs = new Set();
-
-const page = usePage();
-const authUser = computed(() => page.props.auth?.user || null);
 
 function inViewport(f) {
     if (!map) return false;
@@ -465,16 +462,6 @@ function onSearchInput() {
     }, 200);
 }
 
-function showSuggFields(root, t) {
-    const statutSel = root.querySelector('[data-s-statut]');
-    statutSel.hidden = t !== 'statut' && t !== 'date_debut';
-    statutSel.querySelector('option').textContent = t === 'date_debut' ? 'Statut (optionnel)' : 'Choisir un statut…';
-    root.querySelector('[data-s-date]').hidden = t !== 'date_debut';
-    root.querySelector('[data-s-note]').hidden = t !== 'note';
-    root.querySelector('[data-s-lien]').hidden = t !== 'lien';
-    root.querySelector('[data-s-texte]').hidden = t !== 'autre';
-}
-
 async function onDocClick(e) {
     const del = e.target.closest('[data-del-pid]');
     if (del) {
@@ -499,65 +486,12 @@ async function onDocClick(e) {
     }
     const suggest = e.target.closest('[data-suggest]');
     if (suggest) {
-        const root = suggest.closest('[data-sugg]');
-        if (!authUser.value) {
-            router.visit('/register', { data: { raison: 'contribution' } });
-            return;
-        }
-        if (!authUser.value.email_verifie) {
-            const form = root.querySelector('[data-sform]');
-            form.hidden = false;
-            root.querySelector('[data-s-result]').textContent = 'Vérifiez votre adresse email (lien reçu par mail) pour pouvoir envoyer une suggestion.';
-            return;
-        }
-        const form = root.querySelector('[data-sform]');
-        form.hidden = !form.hidden;
-        showSuggFields(root, form.querySelector('[data-s-type]').value);
+        // Le formulaire de suggestion vit désormais sur /verify (compte requis) :
+        // on y redirige directement sur le projet ciblé par la correction.
+        e.preventDefault();
+        const pid = suggest.closest('[data-sugg]').dataset.pid;
+        router.visit('/verify', { data: { projet: pid } });
         return;
-    }
-    const typeSel = e.target.closest('[data-s-type]');
-    if (typeSel) {
-        showSuggFields(typeSel.closest('[data-sugg]'), typeSel.value);
-        return;
-    }
-    const send = e.target.closest('[data-send]');
-    if (send) {
-        const root = send.closest('[data-sugg]');
-        const t = root.querySelector('[data-s-type]').value;
-        const body = { projet_id: root.dataset.pid, type: t, commentaire: root.querySelector('[data-s-commentaire]').value || undefined };
-        if (t === 'statut') {
-            const st = root.querySelector('[data-s-statut]').value;
-            if (!st) { root.querySelector('[data-s-result]').textContent = 'Veuillez choisir un statut.'; return; }
-            body.statut_suggere = st;
-        }
-        if (t === 'date_debut') {
-            const an = Number(root.querySelector('[data-s-annee]').value);
-            if (!an) { root.querySelector('[data-s-result]').textContent = "Veuillez renseigner au moins l'année de début."; return; }
-            body.annee_debut_suggeree = an;
-            const fin = Number(root.querySelector('[data-s-annee-fin]').value);
-            if (fin) body.annee_fin_suggeree = fin;
-            const src = root.querySelector('[data-s-source]').value.trim();
-            if (src) body.source = src;
-            const st = root.querySelector('[data-s-statut]').value;
-            if (st) body.statut_suggere = st;
-        }
-        if (t === 'note') body.note = root.querySelector('[data-s-note]').value;
-        if (t === 'lien') body.lien = root.querySelector('[data-s-lien]').value;
-        if (t === 'autre') body.texte = root.querySelector('[data-s-texte]').value;
-        send.disabled = true;
-        send.textContent = '…';
-        try {
-            await axios.post('/api/contributions', body);
-            root.querySelector('[data-sform]').hidden = true;
-            send.disabled = false;
-            send.textContent = 'Envoyer la suggestion';
-            root.querySelector('[data-s-result]').textContent = 'Merci, suggestion envoyée (en attente de modération)';
-        } catch (err) {
-            const msg = err.response && err.response.data && err.response.data.error ? err.response.data.error : err.message;
-            root.querySelector('[data-s-result]').textContent = 'Erreur : ' + msg;
-            send.disabled = false;
-            send.textContent = 'Envoyer la suggestion';
-        }
     }
 }
 
@@ -922,7 +856,6 @@ onBeforeUnmount(() => {
 </style>
 
 <style>
-[hidden] { display: none !important; }
 html, body { margin: 0; }
 :root { --ok: #2e7d32; --debut: #ef6c00; --fini: #1565c0; --inconnu: #9e9e9e; }
 .leaflet-popup-content { max-height: 300px; overflow-y: auto; }
@@ -931,11 +864,10 @@ html, body { margin: 0; }
 .pop-contrib { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
 .pop-contrib .contrib-toggle {
     border: 1px solid #cbd5e1; background: #fff; color: #14532d;
-    border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+    border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; text-decoration: none; display: inline-block;
 }
-.pop-contrib .contrib-toggle:hover { background: #f0fdf4; }
-.pop-contrib .contrib-form { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; max-width: 260px; }
-.pop-contrib .saved { font-size: 12px; font-weight: 600; }
+.pop-contrib .contrib-toggle:hover { background: #f0fdf4; color: #14532d; }
 .multi-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #111827; flex-wrap: wrap; }
 .multi-count {
     flex: none; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;

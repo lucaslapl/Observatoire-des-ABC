@@ -7,8 +7,6 @@ export const COLOR = { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c
 
 export const METRO = [[41.0, -5.6], [51.5, 10.0]];
 
-export const STATUT_SUGG = [['termine', 'Terminé'], ['en_cours', 'En cours'], ['va_debuter', 'Va débuter']];
-
 export const STATUT_LABEL = { en_cours: 'En cours', a_venir: 'Va débuter', termine: 'Terminé', inconnu: 'Statut inconnu' };
 
 export const VERDICT = {
