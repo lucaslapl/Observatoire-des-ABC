@@ -31,6 +31,7 @@ class CollectService
         private StatusRecomputeService $recompute,
         private GeocodeService $geocode,
         private AnomalyService $anomalies,
+        private DoublonSuspectService $doublons,
     ) {}
 
     public function collectAll(bool $init = false, bool $force = false): array
@@ -50,6 +51,12 @@ class CollectService
         $this->verifierCoherence($projetsAvant, ProjetRepository::createdIds());
 
         $stale = $this->deleteStaleProjects(ProjetRepository::ingestedIds(), $force);
+
+        // Après la suppression ciblée : les homonymes restants (éditions
+        // wayback / data.gouv d'un même ABC, doublons Fonds vert hérités)
+        // reçoivent un motif « Doublon suspect (homonymie) » — bouton de
+        // fusion dans /verify.
+        $homonymes = $this->doublons->signalerHomonymes();
 
         $this->recompute->recomputeStatuses();
         $geocoding = $this->geocode->enrichGeocoding();
@@ -72,6 +79,7 @@ class CollectService
             'communes' => $communes,
             'geocoded' => $geocoded,
             'stale_deleted' => $stale,
+            'homonymes_signales' => $homonymes,
             'anomalies' => $anomalies,
             'statuses' => $statuses,
             'geocoding' => $geocoding,

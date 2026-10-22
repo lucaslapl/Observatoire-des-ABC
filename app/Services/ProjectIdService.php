@@ -16,7 +16,11 @@ class ProjectIdService
      * ils désignent la démarche (« Atlas de la biodiversité communale »),
      * pas un projet — des dizaines de communes les portent.
      */
-    public const NOMS_GENERIQUES = ['atlas-de-la-biodiversite-communale', 'abc'];
+    public const NOMS_GENERIQUES = [
+        'atlas-de-la-biodiversite-communale',
+        'realisation-d-un-atlas-de-la-biodiversite-communale',
+        'abc',
+    ];
 
     public function slug(string $key): string
     {

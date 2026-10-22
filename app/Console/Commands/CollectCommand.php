@@ -27,6 +27,7 @@ class CollectCommand extends Command
         $g = $s['geocoding'];
         $this->line("géocodage : {$g['distinct']} communes distinctes, {$g['fetched']} à récupérer, {$g['updated']} avec coordonnées");
         $this->line("suppression ciblée : {$s['stale_deleted']} projet(s) disparus des sources et sans travail humain");
+        $this->line("homonymies : {$s['homonymes_signales']} projet(s) signalés « Doublon suspect » à fusionner dans /verify si nécessaire");
 
         $this->line("\n=== {$s['total']} projets / {$s['communes']} lignes communes / {$s['geocoded']} géo ===");
         foreach ($s['statuses'] as $statut => $n) {
