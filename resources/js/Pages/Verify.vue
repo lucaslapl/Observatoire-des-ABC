@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, reactive, onMounted, nextTick } from 'vue';
+import { ref, computed, reactive, onMounted, nextTick, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
@@ -101,6 +101,9 @@ onMounted(async () => {
     sMotif.value = '';
     sEtat.value = '';
     sQ.value = '';
+    // La ligne visée peut être sur une autre page : on y va directement.
+    const idx = filtered.value.findIndex((x) => x.id === pid);
+    if (idx >= 0) currentPage.value = Math.floor(idx / perPage.value) + 1;
     await nextTick();
     document.querySelector(`tr[data-projet-id="${CSS.escape(p.id)}"]`)
         ?.scrollIntoView({ block: 'center' });
@@ -229,6 +232,41 @@ const filtered = computed(() => {
 
 const aVerifierCount = computed(() => props.projets.filter((p) => p.etat === 'a_verifier' && p.motifs.length > 0).length);
 const verifiesCount = computed(() => props.projets.filter((p) => p.etat !== 'a_verifier').length);
+
+// Pagination côté client : le tableau complet reste trop lourd à parcourir,
+// surtout sur mobile où il faut en plus le faire défiler horizontalement.
+const PAR_PAGE = [25, 50, 100];
+const perPage = ref(25);
+const currentPage = ref(1);
+const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / perPage.value)));
+const paged = computed(() => filtered.value.slice((currentPage.value - 1) * perPage.value, currentPage.value * perPage.value));
+const plage = computed(() => ({
+    debut: filtered.value.length === 0 ? 0 : (currentPage.value - 1) * perPage.value + 1,
+    fin: Math.min(currentPage.value * perPage.value, filtered.value.length),
+    total: filtered.value.length,
+}));
+const pagesList = computed(() => {
+    const total = totalPages.value;
+    const cur = currentPage.value;
+    if (total <= 7) {
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const items = [1];
+    if (cur > 3) items.push('…');
+    for (let i = Math.max(2, cur - 1); i <= Math.min(total - 1, cur + 1); i++) items.push(i);
+    if (cur < total - 2) items.push('…');
+    items.push(total);
+    return items;
+});
+watch([sMotif, sEtat, sQ], () => {
+    currentPage.value = 1;
+});
+watch([totalPages, perPage], () => {
+    if (currentPage.value > totalPages.value) currentPage.value = totalPages.value;
+});
+const allerPage = (n) => {
+    currentPage.value = Math.min(Math.max(1, n), totalPages.value);
+};
 
 const faits = computed(() => {
     const c = props.compteurs;
@@ -427,7 +465,7 @@ const sendSuggestion = async (p) => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="p in filtered" :key="p.id" :class="rowClass(p)" :data-projet-id="p.id">
+                        <tr v-for="p in paged" :key="p.id" :class="rowClass(p)" :data-projet-id="p.id">
                             <td>
                                 <div class="nom">{{ p.nom }}</div>
                                 <div class="sub">{{ p.structure_porteuse || '—' }}{{ p.departements ? ' · ' + p.departements : '' }}</div>
@@ -482,6 +520,34 @@ const sendSuggestion = async (p) => {
                 </table>
             </div>
             <div v-if="filtered.length === 0" class="text-center text-body-secondary py-5">Aucun projet ne correspond aux filtres.</div>
+
+            <div v-else-if="totalPages > 1" class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
+                <div class="small text-muted">
+                    {{ plage.debut }}–{{ plage.fin }} sur {{ plage.total }}
+                    <label class="d-inline-flex align-items-center gap-1 ms-2">
+                        <span>Par page</span>
+                        <select v-model.number="perPage" class="form-select form-select-sm w-auto d-inline-block" @change="allerPage(1)">
+                            <option v-for="n in PAR_PAGE" :key="n" :value="n">{{ n }}</option>
+                        </select>
+                    </label>
+                </div>
+                <nav aria-label="Pagination des projets">
+                    <ul class="pagination pagination-sm mb-0 flex-wrap">
+                        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                            <button type="button" class="page-link" :disabled="currentPage === 1" @click="allerPage(currentPage - 1)">Précédent</button>
+                        </li>
+                        <template v-for="(n, i) in pagesList" :key="`${n}-${i}`">
+                            <li v-if="n === '…'" class="page-item disabled"><span class="page-link">…</span></li>
+                            <li v-else class="page-item" :class="{ active: n === currentPage }">
+                                <button type="button" class="page-link" @click="allerPage(n)">{{ n }}</button>
+                            </li>
+                        </template>
+                        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                            <button type="button" class="page-link" :disabled="currentPage === totalPages" @click="allerPage(currentPage + 1)">Suivant</button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
 
             <div v-if="candidats.length" class="mt-5">
                 <h2 class="h6">Candidats Fonds vert non rattachés ({{ candidats.length }})</h2>

@@ -1,5 +1,6 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import BrandMark from './BrandMark.vue';
 import ConsentBanner from './ConsentBanner.vue';
 import InfoBanner from './InfoBanner.vue';
@@ -14,6 +15,14 @@ const pages = [
     { name: 'verify', component: 'Verify', label: 'Vérification', icon: 'bi-clipboard-check', href: '/verify' },
     { name: 'actualites', component: 'Actualites', label: 'Actualités', icon: 'bi-newspaper', href: '/actualites' },
 ];
+
+// Menu mobile : le JS Bootstrap n'est pas chargé (seul le CSS l'est), la
+// bascule du collapse est donc pilotée par un état Vue local.
+const page = usePage();
+const navOpen = ref(false);
+watch(() => page.component, () => {
+    navOpen.value = false;
+});
 </script>
 
 <template>
@@ -22,10 +31,11 @@ const pages = [
         <nav class="navbar navbar-dark navbar-abc navbar-expand-lg py-2">
             <div class="container-fluid">
                 <Link href="/" class="navbar-brand fs-6 mb-0 d-inline-flex align-items-center gap-2"><BrandMark /> Observatoire des ABC</Link>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navAbc">
+                <button class="navbar-toggler" type="button" :aria-expanded="navOpen" aria-controls="navAbc"
+                    @click="navOpen = !navOpen">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse" id="navAbc">
+                <div class="collapse navbar-collapse" :class="{ show: navOpen }" id="navAbc">
                     <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
                         <li v-for="p in pages" :key="p.name" class="nav-item">
                             <Link :href="p.href"
