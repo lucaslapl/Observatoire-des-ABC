@@ -184,6 +184,8 @@ class FondsVertCollector
      *   par des dizaines de communes : l'homonymie est attendue, pas
      *   suspecte — la ligne part en worklist (audit) sans flooder les
      *   homonymes de notes automatiques ;
+     * - un nom tranché « non-doublon » depuis /verify (doublon_decisions)
+     *   n'est pas re-signé non plus : la décision humaine prime ;
      * - chaque ligne est journalisée dans audit_log (idempotent par ligne).
      */
     private function mettreEnWorklist(int $year, string $nom, string $benef, array $r, ?Collection $ambigus): void
@@ -192,7 +194,9 @@ class FondsVertCollector
         $marqueur = "Fonds vert P113 {$year} ligne {$ligneId}";
         $detail = $benef !== '' ? " (bénéficiaire : {$benef})" : '';
 
-        if ($ambigus && $ambigus->isNotEmpty() && ! $this->ids->estNomGenerique($nom)) {
+        if ($ambigus && $ambigus->isNotEmpty()
+            && ! $this->ids->estNomGenerique($nom)
+            && ! $this->doublons->estNonDoublon($this->ids->slug($nom))) {
             foreach ($ambigus as $candidat) {
                 $note = "Doublon suspect ({$marqueur}) : « {$nom} »{$detail} semble financer ce projet, mais d'autres projets portent le même nom.";
                 $verification = Verification::find($candidat->id);

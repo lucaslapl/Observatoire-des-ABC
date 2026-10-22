@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
+use App\Services\DoublonSuspectService;
 use App\Services\ProjectMergeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,35 @@ class ProjetController extends Controller
         }
 
         return response()->json(['ok' => true, 'stats' => $result['stats']]);
+    }
+
+    /**
+     * Bouton « Ce n'est pas un doublon » de /verify : un admin tranche que
+     * les projets homonymes sont des ABC distincts. Les notes automatiques
+     * « Doublon suspect » du groupe sont retirées et ne seront pas
+     * recréées au collect suivant ; la décision est journalisée.
+     */
+    public function nonDoublon(Request $request, Projet $projet, DoublonSuspectService $service): JsonResponse
+    {
+        $validated = $request->validate([
+            'motif' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $result = $service->marquerNonDoublon(
+            $projet->id,
+            $validated['motif'] ?? null,
+            $request->user()?->email,
+        );
+
+        if (! $result['ok']) {
+            return response()->json(['error' => $result['error'] ?? 'Action impossible.'], 400);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'homonymes' => $result['homonymes'],
+            'notes_retirees' => $result['notes_retirees'],
+        ]);
     }
 
     /**
@@ -131,13 +161,14 @@ class ProjetController extends Controller
     }
 
     /**
-     * Export CSV du journal d'audit (suppressions, levées d'exclusion,
-     * vérifications manuelles) pour contrôle.
+     * Export CSV du journal d'audit (fusions, suppressions, levées
+     * d'exclusion, tranchages « non-doublon », vérifications manuelles)
+     * pour contrôle.
      */
     public function export(Request $request): StreamedResponse
     {
         $logs = AuditLog::query()
-            ->whereIn('action', ['projet_supprime', 'exclusion_retiree', 'verification'])
+            ->whereIn('action', ['fusion', 'projet_supprime', 'exclusion_retiree', 'doublon_non_confirme', 'verification'])
             ->orderByDesc('created_at')
             ->get();
         $exclusions = ProjectExclusion::query()->orderByDesc('created_at')->get();
@@ -155,8 +186,8 @@ class ProjetController extends Controller
                 fputcsv($out, [
                     $log->created_at?->toDateTimeString(),
                     $log->action,
-                    $apres['projet_id'] ?? $avant['projet_id'] ?? $log->contribution_id ?? '',
-                    $apres['nom'] ?? $avant['nom'] ?? '',
+                    $apres['projet_id'] ?? $avant['projet_id'] ?? $avant['doublon']['id'] ?? $log->contribution_id ?? '',
+                    $apres['nom'] ?? $avant['nom'] ?? $avant['doublon']['nom'] ?? '',
                     $log->par_admin ?? '',
                 ], ';');
             }

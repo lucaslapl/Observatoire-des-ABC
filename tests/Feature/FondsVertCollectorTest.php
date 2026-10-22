@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Collectors\FondsVertCollector;
 use App\Models\AuditLog;
+use App\Models\DoublonDecision;
 use App\Models\Financement;
 use App\Models\ProjectAlias;
 use App\Models\Projet;
@@ -312,6 +313,31 @@ class FondsVertCollectorTest extends TestCase
 
         $payload = json_decode(AuditLog::where('action', 'worklist_fondsvert')->first()->apres, true);
         $this->assertTrue($payload['nom_generique']);
+        $this->assertCount(2, $payload['ambigu']);
+    }
+
+    public function test_nom_tranche_non_doublon_n_est_pas_re_signe(): void
+    {
+        // Un admin a tranché « ce n'est pas un doublon » depuis /verify
+        // (doublon_decisions) : la ligne ambiguë reste en worklist (audit)
+        // mais les homonymes ne reçoivent pas de note « Doublon suspect ».
+        Projet::create(['id' => 'abc-d-ambigu-a-2020', 'nom' => "ABC d'Ambigu", 'statut' => 'termine', 'source' => 'data.gouv', 'annee_debut' => 2020]);
+        Projet::create(['id' => 'abc-d-ambigu-b-2024', 'nom' => "ABC d'Ambigu", 'statut' => 'en_cours', 'source' => 'data.gouv', 'annee_debut' => 2024]);
+        DoublonDecision::create([
+            'nom_slug' => 'abc-d-ambigu',
+            'nom' => "ABC d'Ambigu",
+            'decision' => 'non_doublon',
+            'motif' => 'deux ABC distincts',
+            'par_admin' => 'admin@obs.test',
+        ]);
+
+        $this->ligneFv2025("ABC d'Ambigu", 'COMMUNE D\'AMBIGU', 11314750);
+        $result = $this->collect();
+
+        $this->assertSame(1, $result['en_worklist']);
+        $this->assertSame(0, Verification::count(), 'aucune note « Doublon suspect » sur les homonymes tranchés');
+
+        $payload = json_decode(AuditLog::where('action', 'worklist_fondsvert')->first()->apres, true);
         $this->assertCount(2, $payload['ambigu']);
     }
 

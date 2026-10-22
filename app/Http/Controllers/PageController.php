@@ -203,6 +203,30 @@ class PageController extends Controller
                         'par' => $log->par_admin,
                     ];
                 }),
+            // Journal des fusions de doublons (bouton « Fusionner ce
+            // doublon » de /verify et abc:merge-projects) : qui a fusionné
+            // quoi, dans quoi, pourquoi, et quand — visible des admins et
+            // des modérateurs.
+            'journalFusions' => AuditLog::query()
+                ->where('action', 'fusion')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->limit(200)
+                ->get()
+                ->map(function (AuditLog $log) {
+                    $avant = json_decode($log->avant ?? 'null', true) ?: [];
+                    $apres = json_decode($log->apres ?? 'null', true) ?: [];
+
+                    return [
+                        'date' => $log->created_at?->toDateTimeString(),
+                        'doublon_id' => $avant['doublon']['id'] ?? '',
+                        'doublon' => $avant['doublon']['nom'] ?? '',
+                        'canonique_id' => $apres['canonique']['id'] ?? '',
+                        'canonique' => $apres['canonique']['nom'] ?? '',
+                        'motif' => $apres['motif'] ?? '',
+                        'par' => $log->par_admin,
+                    ];
+                }),
         ];
 
         // Sections de maintenance : administrateurs uniquement. Les

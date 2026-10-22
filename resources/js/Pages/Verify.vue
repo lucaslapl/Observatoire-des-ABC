@@ -115,6 +115,34 @@ const ouvrirFusion = (p) => {
 };
 const fermerFusion = () => { fusion.ouvert = false; fusion.projet = null; };
 
+// Tranchage « ce n'est pas un doublon » (admin) : la note automatique
+// « Doublon suspect » est retirée pour tout le groupe d'homonymes et la
+// décision est persistée — le collect ne la recréera pas.
+const pasUnDoublon = async (p) => {
+    const ok = window.confirm(
+        `Confirmer que « ${p.nom} » n'est PAS un doublon ?\n\n`
+        + `Les projets portant ce nom sont des ABC distincts : la note automatique « Doublon suspect »`
+        + ` disparaît pour tous et ne sera pas recréée au prochain collect.`
+    );
+    if (!ok) return;
+    const motif = window.prompt('Motif (journalisé, optionnel) :', '');
+    if (motif === null) return;
+    fache.type = '';
+    fache.message = '';
+    try {
+        const r = await axios.post(`/api/admin/projets/${encodeURIComponent(p.id)}/non-doublon`, {
+            motif: motif || null,
+        });
+        fache.type = 'success';
+        fache.message = `Marqué non-doublon : ${r.data.notes_retirees ?? 0} note(s) « Doublon suspect » retirée(s)`
+            + ` — le collect ne les recréera pas.`;
+        router.reload({ only: ['projets', 'compteurs'] });
+    } catch (err) {
+        fache.type = 'danger';
+        fache.message = 'Erreur : ' + (err.response?.data?.error || err.message);
+    }
+};
+
 let fusionTimer = null;
 const chercherProjets = (q) => {
     if (fusionTimer) clearTimeout(fusionTimer);
@@ -381,13 +409,21 @@ const sendSuggestion = async (p) => {
                                 <div v-if="p.note_auto" class="small text-muted mt-1" :title="p.note_auto">
                                     <div v-for="(ligne, i) in p.note_auto.split('\n')" :key="i">{{ ligne }}</div>
                                 </div>
-                                <button
-                                    v-if="isAdmin && p.note_auto && p.note_auto.includes('Doublon suspect')"
-                                    type="button" class="btn btn-sm btn-outline-danger mt-1"
-                                    @click="ouvrirFusion(p)"
-                                >
-                                    <i class="bi bi-union me-1" aria-hidden="true"></i>Fusionner ce doublon
-                                </button>
+                                <div v-if="isAdmin && p.note_auto && p.note_auto.includes('Doublon suspect')" class="d-flex gap-1 flex-wrap mt-1">
+                                    <button
+                                        type="button" class="btn btn-sm btn-outline-danger"
+                                        @click="ouvrirFusion(p)"
+                                    >
+                                        <i class="bi bi-union me-1" aria-hidden="true"></i>Fusionner ce doublon
+                                    </button>
+                                    <button
+                                        type="button" class="btn btn-sm btn-outline-secondary"
+                                        title="Les projets homonymes sont des ABC distincts : la note automatique disparaît et ne sera pas recréée"
+                                        @click="pasUnDoublon(p)"
+                                    >
+                                        <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Ce n'est pas un doublon
+                                    </button>
+                                </div>
                             </td>
                             <td class="communes" :title="p.communes || ''">{{ p.communes || '—' }}</td>
                             <td>{{ p.annee_debut || '—' }}</td>

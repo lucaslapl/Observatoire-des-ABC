@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
+use App\Models\DoublonDecision;
 use App\Models\Projet;
 use App\Models\Verification;
 
@@ -24,8 +26,9 @@ class DoublonSuspectService
      * « Fusionner ce doublon » de /verify s'appuie sur ces notes. Indépendant
      * du Fonds vert : deux éditions d'un même ABC (instantané wayback 2022 /
      * registre data.gouv) ne passent jamais par une ligne de financement.
-     * Les noms génériques sont exclus — l'homonymie y est la norme — et les
-     * lignes des groupes fusionnés partent avec nettoyer().
+     * Les noms génériques sont exclus — l'homonymie y est la norme —, les
+     * groupes tranchés « non-doublon » (marquerNonDoublon) sont ignorés, et
+     * les lignes des groupes fusionnés partent avec nettoyer().
      *
      * @return int nombre de projets signalés
      */
@@ -36,8 +39,10 @@ class DoublonSuspectService
             ->groupBy(fn (Projet $p) => $this->ids->slug((string) $p->nom));
 
         $signales = 0;
-        foreach ($groupes as $membres) {
-            if ($membres->count() < 2 || $this->ids->estNomGenerique((string) $membres->first()->nom)) {
+        foreach ($groupes as $slug => $membres) {
+            if ($membres->count() < 2
+                || $this->ids->estNomGenerique((string) $membres->first()->nom)
+                || $this->estNonDoublon((string) $slug)) {
                 continue;
             }
 
@@ -71,6 +76,108 @@ class DoublonSuspectService
         }
 
         return $signales;
+    }
+
+    /**
+     * Un admin a tranché depuis /verify que les projets portant ce nom
+     * (normalisé) sont des ABC distincts : le collecteur ne recrée pas
+     * les notes « Doublon suspect » pour ce nom tant que la décision tient.
+     */
+    public function estNonDoublon(string $slug): bool
+    {
+        return DoublonDecision::query()
+            ->where('nom_slug', $slug)
+            ->where('decision', 'non_doublon')
+            ->exists();
+    }
+
+    /**
+     * Bouton « Ce n'est pas un doublon » de /verify : persiste la décision
+     * humaine (elle prime sur le signalement automatique aux collects
+     * suivants), retire les notes « Doublon suspect » de tous les homonymes
+     * du groupe, et journalise le tranchage dans audit_log.
+     *
+     * @return array{ok: bool, error?: string, homonymes?: array<int, string>, notes_retirees?: int}
+     */
+    public function marquerNonDoublon(string $projetId, ?string $motif, ?string $parAdmin): array
+    {
+        $projet = Projet::find($projetId);
+        if (! $projet) {
+            return ['ok' => false, 'error' => "Projet introuvable : {$projetId}"];
+        }
+
+        $nom = (string) $projet->nom;
+        if ($this->ids->estNomGenerique($nom)) {
+            return ['ok' => false, 'error' => "« {$nom} » est un nom générique porté par des dizaines de communes : l'homonymie y est la norme, rien à trancher."];
+        }
+
+        $slug = $this->ids->slug($nom);
+        $homonymes = Projet::query()
+            ->get(['id', 'nom'])
+            ->filter(fn (Projet $p) => $this->ids->slug((string) $p->nom) === $slug);
+        $idsHomonymes = $homonymes->pluck('id')->sort()->values();
+
+        DoublonDecision::updateOrCreate(
+            ['nom_slug' => $slug],
+            [
+                'nom' => $nom,
+                'decision' => 'non_doublon',
+                'motif' => $motif,
+                'par_admin' => $parAdmin,
+            ],
+        );
+
+        $retirees = 0;
+        Verification::query()
+            ->whereNotNull('note_auto')
+            ->whereIn('projet_id', $idsHomonymes)
+            ->get()
+            ->each(function (Verification $v) use (&$retirees): void {
+                $nettoyee = $this->retirerLignesDoublon($v->note_auto);
+                if ($nettoyee !== $v->note_auto) {
+                    $v->update(['note_auto' => $nettoyee]);
+                    $retirees++;
+                }
+            });
+
+        AuditLog::create([
+            'action' => 'doublon_non_confirme',
+            'avant' => json_encode([
+                'projet_id' => $projet->id,
+                'nom' => $nom,
+                'homonymes' => $idsHomonymes->all(),
+            ], JSON_UNESCAPED_UNICODE),
+            'apres' => json_encode([
+                'projet_id' => $projet->id,
+                'nom' => $nom,
+                'decision' => 'non_doublon',
+                'motif' => $motif,
+                'notes_retirees' => $retirees,
+            ], JSON_UNESCAPED_UNICODE),
+            'par_admin' => $parAdmin,
+        ]);
+
+        return ['ok' => true, 'homonymes' => $idsHomonymes->all(), 'notes_retirees' => $retirees];
+    }
+
+    /**
+     * Retire toutes les lignes « Doublon suspect » d'une note automatique,
+     * sans toucher aux autres motifs ni aux notes humaines.
+     */
+    private function retirerLignesDoublon(?string $noteAuto): ?string
+    {
+        if ($noteAuto === null || trim($noteAuto) === '') {
+            return $noteAuto;
+        }
+
+        $restantes = array_values(array_filter(
+            preg_split('/\r\n|\r|\n/', $noteAuto) ?: [],
+            fn (string $l) => ! str_contains($l, 'Doublon suspect'),
+        ));
+
+        $nettoyee = trim(implode("\n", $restantes));
+
+        return $nettoyee === '' ? null : $nettoyee;
     }
 
     /**
@@ -143,6 +250,12 @@ class DoublonSuspectService
         }
 
         $slug = $this->ids->slug($m[1]);
+
+        // Décision humaine « ce n'est pas un doublon » : la ligne est
+        // obsolète quoi qu'il arrive, le collecteur ne la recréera pas.
+        if ($this->estNonDoublon($slug)) {
+            return true;
+        }
 
         $homonymes = Projet::query()
             ->whereKeyNot($ignorerIds)

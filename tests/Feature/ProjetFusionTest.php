@@ -12,6 +12,7 @@ use App\Models\Verification;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 /**
@@ -105,6 +106,36 @@ class ProjetFusionTest extends TestCase
 
         // Snapshot de rollback écrit.
         $this->assertCount(1, Storage::disk('abc')->files('merges'));
+    }
+
+    public function test_la_fusion_est_visible_dans_le_journal_et_lexport(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $this->actingAs($admin)->postJson("/api/admin/projets/{$this->doublon->id}/fusion", [
+            'canonique_id' => $this->canonique->id,
+            'motif' => 'même ABC décrit sous deux noms',
+        ])->assertOk();
+
+        // Panneau d'administration : journal des fusions — qui a fusionné
+        // quoi, dans quoi, pourquoi, et quand.
+        $this->actingAs($admin)->get('/admin')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('journalFusions', 1)
+                ->where('journalFusions.0.doublon', 'ABC de Test Fusion')
+                ->where('journalFusions.0.doublon_id', $this->doublon->id)
+                ->where('journalFusions.0.canonique_id', $this->canonique->id)
+                ->where('journalFusions.0.motif', 'même ABC décrit sous deux noms')
+                ->where('journalFusions.0.par', $admin->email));
+
+        // Export CSV d'audit : la fusion y figure, avec son auteur.
+        $response = $this->actingAs($admin)->get('/api/admin/exclusions/export');
+        $csv = $response->streamedContent();
+        $this->assertStringContainsString('fusion', $csv);
+        $this->assertStringContainsString($this->doublon->id, $csv);
+        $this->assertStringContainsString($admin->email, $csv);
     }
 
     public function test_contribution_et_verification_migrent_sans_perte(): void

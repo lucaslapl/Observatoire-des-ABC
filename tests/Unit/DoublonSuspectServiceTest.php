@@ -72,6 +72,30 @@ class DoublonSuspectServiceTest extends TestCase
         $this->assertNull($this->service->nettoyer($noteRestante));
     }
 
+    public function test_marquer_non_doublon_retire_les_notes_et_bloque_le_signalement(): void
+    {
+        // Le bouton « Ce n'est pas un doublon » de /verify : la décision
+        // humaine prime sur le signalement automatique aux collects suivants.
+        $a = Projet::create(['id' => 'abc-distinct-a', 'nom' => 'ABC Distinct', 'statut' => 'termine', 'source' => 'data.gouv']);
+        $b = Projet::create(['id' => 'abc-distinct-b', 'nom' => 'abc distinct', 'statut' => 'en_cours', 'source' => 'wayback']);
+        $this->service->signalerHomonymes();
+        $this->assertNotNull(Verification::find($a->id)->note_auto);
+
+        $result = $this->service->marquerNonDoublon($a->id, 'territoires différents', 'admin@obs.test');
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame([$a->id, $b->id], $result['homonymes']);
+        $this->assertSame(2, $result['notes_retirees']);
+        $this->assertNull(Verification::find($a->id)->note_auto);
+        $this->assertNull(Verification::find($b->id)->note_auto);
+
+        // Le collect ne recrée pas la note, et une ligne résiduelle citant
+        // ce nom est obsolète pour nettoyer().
+        $this->assertSame(0, $this->service->signalerHomonymes());
+        $stale = 'Doublon suspect (Fonds vert P113 2025 ligne 11314799) : « ABC Distinct » semble financer ce projet, mais d\'autres projets portent le même nom.';
+        $this->assertNull($this->service->nettoyer($stale));
+    }
+
     public function test_les_noms_generiques_ne_sont_pas_signales(): void
     {
         Projet::create(['id' => 'atlas-alba', 'nom' => "Réalisation d'un atlas de la biodiversité communale", 'statut' => 'en_cours', 'source' => 'fondsvert-p113-2024']);

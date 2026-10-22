@@ -38,6 +38,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    journalFusions: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const ETAT_LABEL = { en_attente: 'en attente', validee: 'validée', refusee: 'refusée', annulee: 'annulée', retiree: 'retirée' };
@@ -485,6 +489,35 @@ async function collect() {
                         </li>
                     </ul>
                     <div class="small text-muted mt-2">Les 200 dernières vérifications manuelles, toutes les plus récentes d'abord.</div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white fw-semibold py-2">Fusions de doublons ({{ journalFusions.length }})</div>
+                <div class="card-body py-2">
+                    <div v-if="journalFusions.length === 0" class="text-muted small py-2">
+                        Aucune fusion enregistrée pour l'instant. Les doublons fusionnés depuis la page de
+                        vérification (/verify) ou la commande abc:merge-projects apparaissent ici, avec leur
+                        auteur et le projet canonique retenu.
+                    </div>
+                    <ul v-else class="list-group list-group-flush">
+                        <li v-for="(f, i) in journalFusions" :key="i" class="list-group-item px-0 py-2">
+                            <div class="d-flex flex-wrap align-items-baseline gap-2">
+                                <span class="fw-semibold small">{{ f.doublon || f.doublon_id }}</span>
+                                <span class="small text-muted">→ fusionné dans</span>
+                                <span class="fw-semibold small">{{ f.canonique || f.canonique_id }}</span>
+                                <span class="ms-auto small text-muted">{{ formatDateTimeFr(f.date) }}</span>
+                            </div>
+                            <div class="small text-muted">
+                                <i class="bi bi-person-check me-1" aria-hidden="true"></i>{{ f.par || 'import / commande' }}
+                                <template v-if="f.motif"> — motif : {{ f.motif }}</template>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="small text-muted mt-2">
+                        Le doublon devient un alias : son slug redirige en 301 vers le canonique et il n'est
+                        pas réimporté au collect. Un snapshot de rollback est écrit à chaque fusion.
+                    </div>
                 </div>
             </div>
 
