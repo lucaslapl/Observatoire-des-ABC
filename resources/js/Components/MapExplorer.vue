@@ -699,6 +699,10 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="map-sidebar" ref="sidebarRef">
+                <a v-if="fullPage" class="map-sidebar-btn" href="/" title="Retour à l'accueil">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <span class="tip">Accueil</span>
+                </a>
                 <div class="map-sidebar-btn" role="button" tabindex="0" title="Fond de carte" @click.stop="toggleTile">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
                     <span class="tip">Fond de carte</span>
