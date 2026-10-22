@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Collectors\DatagouvCollector;
 use App\Collectors\FondsVertCollector;
 use App\Collectors\WaybackCollector;
+use App\Models\AuditLog;
 use App\Models\Commune;
 use App\Models\Contribution;
 use App\Models\Financement;
@@ -37,9 +38,16 @@ class CollectService
         ProjetRepository::refreshExclusions();
         ProjetRepository::resetIngested();
 
+        $projetsAvant = Projet::count();
+
         $datagouv = $this->datagouv->collect();
         $wayback = $this->wayback->collect();
         $fondsVert = $this->fondsVert->collect();
+
+        // Contrôle post-collect : le pipeline ne crée jamais en silence.
+        // Bloqué AVANT la suppression ciblée et les recalculs : rien ne doit
+        // être détruit sur la foi d'un collect suspect.
+        $this->verifierCoherence($projetsAvant, ProjetRepository::createdIds());
 
         $stale = $this->deleteStaleProjects(ProjetRepository::ingestedIds(), $force);
 
@@ -123,5 +131,86 @@ class CollectService
         Projet::whereIn('id', $candidates)->delete();
 
         return $candidates->count();
+    }
+
+    /**
+     * Contrôle post-collect (audit du 2026-10-21, phase 4) : un collect ne
+     * doit jamais insérer en silence des projets suspects. Deux alertes
+     * bloquantes, journalisées dans audit_log (action alerte_collect) :
+     *
+     * - plus de 5 % de créations nettes par rapport à l'état avant collect
+     *   (une source qui triple subitement le registre a un problème) ;
+     *   ignoré sur base vide : un import initial crée nécessairement tout ;
+     * - un nouveau projet partageant un nom normalisé avec un projet
+     *   EXISTANT AVANT le collect (doublon probable : édition distincte à
+     *   confirmer, ou projet scindé — jamais inséré à l'aveugle). Les
+     *   doublons inter-sources créés au sein du même collect relèvent du
+     *   triage de fusion, pas de cette alerte.
+     *
+     * L'exception interrompt le collect avant toute suppression ciblée :
+     * les projets incriminés restent en base, l'alerte les liste, et
+     * l'opérateur décide (restauration depuis la sauvegarde, fusion,
+     * exclusion ou correction de la source).
+     *
+     * @param  array<int, string>  $creees
+     */
+    private function verifierCoherence(int $projetsAvant, array $creees): void
+    {
+        if ($creees === []) {
+            return;
+        }
+
+        $ids = app(ProjectIdService::class);
+        $alertes = [];
+
+        if ($projetsAvant > 0) {
+            $seuil = max(1, (int) ceil($projetsAvant * 0.05));
+            if (count($creees) > $seuil) {
+                $alertes[] = sprintf(
+                    '%d créations nettes (> %d, seuil de 5 %% de %d projets) : une source a-t-elle changé de format ?',
+                    count($creees),
+                    $seuil,
+                    $projetsAvant
+                );
+            }
+        }
+
+        // Index des noms normalisés des projets EXISTANTS avant ce collect :
+        // un nouveau projet qui partage le nom d'un ancien est un doublon
+        // probable.
+        $existants = Projet::query()
+            ->whereNotIn('id', $creees)
+            ->pluck('nom', 'id')
+            ->groupBy(fn ($nom) => $ids->slug((string) $nom));
+        foreach ($creees as $id) {
+            $projet = Projet::find($id);
+            if (! $projet) {
+                continue; // déjà supprimé ou fusionné entre-temps
+            }
+            $freres = ($existants->get($ids->slug((string) $projet->nom)) ?? collect())->keys();
+            if ($freres->isNotEmpty()) {
+                $alertes[] = "« {$projet->nom} » ({$id}) partage son nom normalisé avec : ".$freres->implode(', ');
+            }
+        }
+
+        if ($alertes === []) {
+            return;
+        }
+
+        AuditLog::create([
+            'action' => 'alerte_collect',
+            'avant' => json_encode(['projets_avant' => $projetsAvant], JSON_UNESCAPED_UNICODE),
+            'apres' => json_encode([
+                'crees' => $creees,
+                'alertes' => $alertes,
+            ], JSON_UNESCAPED_UNICODE),
+            'par_admin' => 'CollectService',
+        ]);
+
+        throw new RuntimeException(
+            "COLLECT SUSPECT — aucune donnée n'est supprimée, le collect est interrompu :\n- ".
+            implode("\n- ", $alertes).
+            "\nLes projets listés sont en base : examiner, puis restaurer depuis la sauvegarde, fusionner, exclure ou corriger la source."
+        );
     }
 }

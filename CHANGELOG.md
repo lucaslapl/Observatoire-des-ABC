@@ -17,6 +17,46 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
   (projets, communes, doublons fusionnés, en vérification). Liée depuis
   le pied de page et la page « À propos », référencée dans le sitemap.
 
+### Audit du 2026-10-21 — phase 4 : fiabilisation du pipeline
+
+- **Résolution dynamique des sources sans silence** : `DataGouvResolver`
+  re-résout la dernière révision de chaque CSV via l'API data.gouv (repli
+  sur l'URL pinnée de `config/abc.php`) ; tout repli (échec d'appel HTTP,
+  ressource introuvable, exception) est désormais **journalisé** dans les
+  logs applicatifs — une source qui suivrait indéfiniment une vieille
+  révision devient visible.
+- **Contrôle post-collect bloquant** (`CollectService::verifierCoherence`) :
+  après ingestion des 3 sources et AVANT toute suppression ciblée, deux
+  alertes interrompent le collect et sont journalisées dans `audit_log`
+  (action `alerte_collect`) :
+  - plus de 5 % de créations nettes par rapport à l'état avant collect
+    (ignoré sur base vide : un import initial crée nécessairement tout) ;
+  - un nouveau projet partageant un nom normalisé avec un projet
+    **existant avant le collect** (doublon probable — jamais inséré
+    silencieusement ; l'opérateur décide : restauration depuis la
+    sauvegarde, fusion, exclusion, correction de la source).
+- **Correctif SQLite révélé par les tests d'intégration** :
+  `recordSnapshot` sérialise la date en `Carbon` — sur SQLite, un re-collect
+  le même jour violait la clé composite `snapshots` (comparaison texte
+  `'2026-10-22'` ≠ `'2026-10-22 00:00:00'` ; PostgreSQL échappait grâce au
+  type DATE). Les tests de la suite n'écrivent plus jamais dans le vrai
+  cache des sources (`CollectServiceTest` isolé en répertoire temporaire).
+- **Tests d'intégration** (`CollectIntegrationTest`) : un collect complet
+  rejoué deux fois sur des copies locales (fixtures des 3 sources) ne crée
+  ni doublon ni différence ; un CSV piégé contenant un doublon de nom
+  normalisé fait échouer le collect (alerte journalisée, projets incriminés
+  listés) ; un registre gonflé (> 5 % de créations) déclenche la même
+  alerte.
+- **Vérifié sur la base locale** : collect complet rejoué deux fois —
+  strictement aucune différence (1 213 projets, 5 283 communes, 65
+  financements), zéro alerte.
+- **README** : comportement des financements Fonds vert, garde-fous du
+  collect (dont le contrôle post-collect), nouvelles commandes
+  (`abc:merge-projects`, `abc:data-fix`), nouvelles tables
+  (`project_aliases`, `financements`).
+- **Tests** : suite 181 verts (3 tests d'intégration + 1 test de
+  journalisation du repli).
+
 ### Audit du 2026-10-21 — phase 3 : corrections de données scriptées
 
 - **Nouvelle commande `abc:data-fix`** (idempotente, journalisée dans

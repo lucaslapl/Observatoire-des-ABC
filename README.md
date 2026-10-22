@@ -62,17 +62,20 @@ l'ancien endpoint de l'application historique.
 
 | Source | Contenu |
 | --- | --- |
-| data.gouv.fr (registre OFB) | Projets ABC financés, ré-ingérés par upsert à chaque collect ; les URLs CSV sont re-résolues via l'API data.gouv à chaque collect pour suivre la dernière révision (repli sur l'URL pinnée de `config/abc.php`, désactivable via `SOURCES_AUTO_RESOLVE=false`) |
-| Fonds vert — lot biodiversité (P113) | 65 projets ABC (16 en 2024, 49 en 2025). L'export général du Fonds vert ne contient que des faux positifs « ABC » (bâtiments, etc.) et n'est pas utilisé |
+| data.gouv.fr (registre OFB) | Projets ABC financés, ré-ingérés par upsert à chaque collect ; les URLs CSV sont re-résolues via l'API data.gouv à chaque collect pour suivre la dernière révision (repli sur l'URL pinnée de `config/abc.php` **journalisé** dans les logs, désactivable via `SOURCES_AUTO_RESOLVE=false`) |
+| Fonds vert — lot biodiversité (P113) | **Financements** accordés à des ABC existants (table `financements`, ligne source complète en JSON) : une ligne Fonds vert ne crée JAMAIS de projet — rattachement par clé d'identité, alias de fusion ou nom normalisé unique ; correspondance ambiguë ou nouvelle → worklist `/verify`, aucune création silencieuse |
 | Wayback Machine | Archives 2022 du registre, pour l'historique des projets |
 | `data/abc.db` | Base SQLite historique (140 projets Fonds vert issue d'une version plus riche des exports, indisponible aujourd'hui), importée une seule fois via `abc:import-legacy` |
-| geo.api.gouv.fr | Géocodage des communes manquantes |
+| geo.api.gouv.fr | Géocodage des communes manquantes ; localisation par nom (nom normalisé exact) pour les projets Fonds vert 2024 sans colonne commune |
 
 Garde-fous du collect : sources HTML refusées, suppression massive refusée
 sans `--force`, suppression ciblée uniquement des projets disparus des sources
-ET sans vérifications ni contributions. Aucun superuser PostgreSQL n'est
-requis (l'ancienne purge via `session_replication_role = replica` a été
-supprimée).
+ET sans vérifications ni contributions ni financements rattachés. **Contrôle
+post-collect bloquant** : plus de 5 % de créations nettes, ou un nouveau projet
+partageant un nom normalisé avec un projet existant → alerte journalisée
+(`audit_log`, action `alerte_collect`) et interruption du collect AVANT toute
+suppression. Aucun superuser PostgreSQL n'est requis (l'ancienne purge via
+`session_replication_role = replica` a été supprimée).
 
 ## Stack technique
 
@@ -107,15 +110,23 @@ supprimée).
 
 | Commande | Rôle |
 | --- | --- |
-| `abc:collect` | Collecte des 4 sources puis statuts, géocodage, anomalies (synchronisation par upsert + suppression ciblée) |
+| `abc:collect` | Collecte des 4 sources puis statuts, géocodage, anomalies (synchronisation par upsert + suppression ciblée) ; contrôle post-collect bloquant (> 5 % de créations ou doublon de nom normalisé) |
+| `abc:merge-projects {doublon} {canonique} {--motif=}` | Fusionne un projet doublon dans son canonique : unions dédupliquées, migration du travail humain, alias + redirection 301 de l'ancien slug, journal `audit_log`, snapshot JSON pré-fusion réversible |
+| `abc:data-fix` | Corrections scriptées de l'audit (idempotent, `--dry-run`, journalisé) : années invalides, projets scindés, statuts inconnus, localisation Fonds vert 2024, worklist du registre incomplet |
 | `abc:import-legacy` | Importe `data/abc.db` (SQLite) vers PostgreSQL (une seule fois) |
 | `abc:status` | Recalcule les statuts et les anomalies |
 | `abc:geocode` | Géocode les communes manquantes (geo.api.gouv.fr) |
 | `abc:export --fmt=csv\|geojson` | Export CSV ou GeoJSON (`storage/app/abc/exports`) |
 | `abc:export-deploy` | Export portable (SQL, sans `geom`) pour hébergement sans PostGIS |
-| `abc:verify` | Worklist de vérification (CSV) |
+| `abc:verify` | Worklist de vérification (CSV), incluant les candidats Fonds vert non rattachés |
 | `abc:backup` | Sauvegarde pg_dump avec rotation (14), copie distante optionnelle |
 | `ssr:watchdog [--restart]` | Maintient le serveur SSR Inertia en vie (cron chaque minute) |
+
+Tables métier principales : `projets`, `communes` (lignes projet-commune),
+`snapshots` (historique d'avancement), `verifications` (verdicts humains),
+`contributions`, `audit_log` (journal), `project_aliases` (doublons fusionnés :
+redirection 301 + anti-réimport), `financements` (lignes Fonds vert rattachées),
+`project_exclusions`, `geo_cache`.
 
 ## Rôles & permissions
 

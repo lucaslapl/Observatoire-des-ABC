@@ -8,6 +8,7 @@ use App\Models\ProjectAlias;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\Snapshot;
+use Illuminate\Support\Carbon;
 
 /**
  * Upsert d'un projet + ses communes + snapshot (port de upsertProjet /
@@ -24,6 +25,9 @@ class ProjetRepository
     /** Ids vus dans les sources pendant le collect courant (mémoire). */
     private static array $ingestedIds = [];
 
+    /** Ids créés pendant le collect courant (mémoire) : contrôle post-collect. */
+    private static array $createdIds = [];
+
     /**
      * Démarre une nouvelle fenêtre de collect : vide les ids ingérés.
      * À appeler avant les collectors.
@@ -31,6 +35,18 @@ class ProjetRepository
     public static function resetIngested(): void
     {
         self::$ingestedIds = [];
+        self::$createdIds = [];
+    }
+
+    /**
+     * Ids créés depuis resetIngested() (contrôle post-collect : le pipeline
+     * ne doit jamais créer en silence un doublon ou une masse de projets).
+     *
+     * @return array<int, string>
+     */
+    public static function createdIds(): array
+    {
+        return array_keys(self::$createdIds);
     }
 
     /**
@@ -117,6 +133,7 @@ class ProjetRepository
             $projet->save();
         } else {
             $projet = Projet::create(['id' => $p['id']] + $data);
+            self::$createdIds[$p['id']] = true;
         }
 
         Commune::where('projet_id', $p['id'])->delete();
@@ -172,8 +189,12 @@ class ProjetRepository
             return;
         }
 
+        // Date passée en Carbon : la clé de recherche doit se sérialiser
+        // exactement comme la valeur stockée (SQLite compare les dates en
+        // texte, '2026-10-22' ≠ '2026-10-22 00:00:00' — un re-collect le
+        // même jour violait sinon la clé primaire composite).
         Snapshot::updateOrCreate(
-            ['snapshot_date' => $snapshotDate, 'projet_id' => $projetId],
+            ['snapshot_date' => Carbon::parse($snapshotDate), 'projet_id' => $projetId],
             ['avancement' => $avancement, 'source' => $source],
         );
     }

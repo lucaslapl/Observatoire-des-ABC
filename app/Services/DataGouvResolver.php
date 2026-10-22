@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Résolution de la dernière version d'une ressource data.gouv.
@@ -10,7 +11,9 @@ use Illuminate\Support\Facades\Http;
  * Les URLs pinnées dans config('abc.sources') datent du jour où elles ont été
  * copiées : quand l'OFB ou le MTEC republient un CSV, l'URL pinnée reste sur
  * l'ancienne révision. On interroge l'API data.gouv pour retrouver la
- * ressource actuelle, avec repli sur l'URL pinnée en cas d'échec.
+ * ressource actuelle, avec repli sur l'URL pinnée en cas d'échec (chaque
+ * repli est journalisé : une source qui suivrait indéfiniment une vieille
+ * révision doit être visible).
  */
 class DataGouvResolver
 {
@@ -40,6 +43,8 @@ class DataGouvResolver
                 ->get(self::API.$spec['dataset'].'/');
 
             if (! $response->successful()) {
+                $this->repli($key, "API data.gouv HTTP {$response->status()}", $pinned);
+
                 return $pinned;
             }
 
@@ -49,9 +54,26 @@ class DataGouvResolver
                 ->sortByDesc(fn ($r) => $r['last_modified'] ?? $r['created_at'] ?? '')
                 ->values();
 
+            if ($resources->isEmpty()) {
+                $this->repli($key, 'aucune ressource CSV ne correspond au motif', $pinned);
+
+                return $pinned;
+            }
+
             return (string) ($resources->first()['url'] ?? $pinned);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->repli($key, $e->getMessage(), $pinned);
+
             return $pinned;
         }
+    }
+
+    /**
+     * Journalise un repli sur l'URL pinnée (révision potentiellement
+     * obsolète) : jamais silencieux.
+     */
+    private function repli(string $key, string $raison, string $pinned): void
+    {
+        Log::warning("Résolution data.gouv a échoué pour « {$key} » ({$raison}) : repli sur l'URL pinnée (révision possiblement obsolète) {$pinned}");
     }
 }

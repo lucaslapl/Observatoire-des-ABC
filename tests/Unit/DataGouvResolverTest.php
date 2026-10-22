@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\DataGouvResolver;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class DataGouvResolverTest extends TestCase
@@ -65,5 +66,16 @@ class DataGouvResolverTest extends TestCase
     public function test_unknown_key_returns_pinned_url(): void
     {
         $this->assertSame(config('abc.sources.wayback'), app(DataGouvResolver::class)->resolve('wayback'));
+    }
+
+    public function test_fallback_is_never_silent(): void
+    {
+        Http::fake([
+            'www.data.gouv.fr/api/1/datasets/*' => Http::response(null, 500),
+        ]);
+        Log::shouldReceive('warning')->once()->andReturnNull();
+
+        $pinned = config('abc.sources.fondsvert2024');
+        $this->assertSame($pinned, app(DataGouvResolver::class)->resolve('fondsvert2024'));
     }
 }
