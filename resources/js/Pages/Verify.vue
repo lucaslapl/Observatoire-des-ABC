@@ -29,7 +29,7 @@ const ETATS = {
     a_verifier: { label: 'À vérifier', cls: '' },
     confirme_termine: { label: '✓ Confirmé terminé', cls: 'confirme_termine' },
     confirme_en_cours: { label: 'Confirmé en cours', cls: 'confirme_en_cours' },
-    toujours_a_avenir: { label: 'Toujours à venir', cls: 'toujours_a_avenir' },
+    toujours_a_venir: { label: 'Toujours à venir', cls: 'toujours_a_venir' },
     confirme_date: { label: '✓ Date(s) vérifiée(s)', cls: 'confirme_termine' },
     introuvable: { label: 'Introuvable', cls: 'introuvable' },
     douteux: { label: 'Incertain', cls: 'douteux' },
@@ -38,8 +38,8 @@ const ETAT_HELP = {
     a_verifier: "Remet le projet dans la liste à vérifier (annule le verdict actuel).",
     confirme_termine: "L'ABC est terminé : le projet a abouti et n'est plus en cours de réalisation.",
     confirme_en_cours: "L'ABC est en cours de réalisation.",
-    toujours_a_avenir: "Le projet n'a pas encore débuté, malgré une date annoncée antérieure.",
-    confirme_date: "Corrige ou confirme les années du projet. L'année de début seule suffit si c'est tout ce que vous avez pu vérifier ; l'année de fin est optionnelle. Le statut reste celui calculé automatiquement.",
+    toujours_a_venir: "Le projet n'a pas encore débuté, malgré une date annoncée antérieure.",
+    confirme_date: "Corrige ou confirme les années du projet. L'année de début seule suffit si c'est tout ce que vous avez pu vérifier ; l'année de fin est optionnelle. Par défaut le statut reste celui calculé automatiquement : s'il est erroné, sélectionnez le statut constaté.",
     introuvable: "Aucune trace du projet malgré les recherches (page disparue, bénéficiaire injoignable…).",
     douteux: "Sources contradictoires ou trop anciennes : le projet est signalé comme incertain.",
 };
@@ -67,13 +67,16 @@ const SUGG_HELP = {
     autre: 'Décrivez la correction à apporter (nom, structure porteuse, communes…).',
 };
 const SUGG_STATUTS = { termine: 'Terminé', en_cours: 'En cours', va_debuter: 'À venir' };
+// Statut constaté choisi avec un verdict « confirme_date » → verdict de statut
+// enregistré (même mapping que le backend, cf. StatusService).
+const ETAT_POUR_STATUT = { termine: 'confirme_termine', en_cours: 'confirme_en_cours', va_debuter: 'toujours_a_venir' };
 
 const sMotif = ref('');
 const sEtat = ref('a_verifier');
 const sQ = ref('');
 
 const forms = reactive({});
-const form = (p) => forms[p.id] || (forms[p.id] = { etat: p.etat, note: p.note || '', lien: p.lien || '', annee_debut: p.annee_debut || '', annee_fin: p.annee_fin || '' });
+const form = (p) => forms[p.id] || (forms[p.id] = { etat: p.etat, statut: '', note: p.note || '', lien: p.lien || '', annee_debut: p.annee_debut || '', annee_fin: p.annee_fin || '' });
 
 const suggs = reactive({});
 const sugg = (p) => suggs[p.id] || (suggs[p.id] = {
@@ -176,7 +179,7 @@ const verifiesCount = computed(() => props.projets.filter((p) => p.etat !== 'a_v
 
 const faits = computed(() => {
     const c = props.compteurs;
-    return (c.confirme_termine || 0) + (c.confirme_en_cours || 0) + (c.toujours_a_avenir || 0) + (c.confirme_date || 0) + (c.introuvable || 0) + (c.douteux || 0);
+    return (c.confirme_termine || 0) + (c.confirme_en_cours || 0) + (c.toujours_a_venir || 0) + (c.confirme_date || 0) + (c.introuvable || 0) + (c.douteux || 0);
 });
 
 const rowClass = (p) => ({ 'table-success': p.etat === 'confirme_termine', 'table-danger': p.etat === 'douteux' });
@@ -200,17 +203,20 @@ const save = async (p, f) => {
         if (an) body.annee_debut = an;
         const fin = Number(f.annee_fin);
         if (fin) body.annee_fin = fin;
+        if (f.statut) body.statut_suggere = f.statut;
     }
     try {
         await axios.post('/api/verifications', body);
         const target = props.projets.find((x) => x.id === p.id);
-        target.etat = f.etat;
+        // Avec un statut constaté, le backend enregistre le verdict de statut
+        // correspondant au lieu de « confirme_date ».
+        target.etat = (f.etat === 'confirme_date' && f.statut) ? ETAT_POUR_STATUT[f.statut] : f.etat;
         target.note = f.note;
         target.verifie_le = new Date().toISOString();
         target.verifie_par = user.value?.name || null;
-        if (f.etat === 'confirme_date') {
-            target.annee_debut = Number(f.annee_debut) || target.annee_debut;
-            target.annee_fin = Number(f.annee_fin) || target.annee_fin;
+        if (f.etat === 'confirme_date' && (Number(f.annee_debut) || Number(f.annee_fin))) {
+            target.annee_debut = Number(f.annee_debut) || null;
+            target.annee_fin = Number(f.annee_fin) || null;
         }
         fache.type = 'success';
         fache.message = 'Vérification enregistrée.';
@@ -324,7 +330,7 @@ const sendSuggestion = async (p) => {
                         <option value="verifies">Vérifiés</option>
                         <option value="confirme_termine">Confirmé terminé</option>
                         <option value="confirme_en_cours">Confirmé en cours</option>
-                        <option value="toujours_a_avenir">Toujours à venir</option>
+                        <option value="toujours_a_venir">Toujours à venir</option>
                         <option value="confirme_date">Date vérifiée</option>
                         <option value="introuvable">Introuvable</option>
                         <option value="douteux">Incertain</option>
@@ -339,7 +345,7 @@ const sendSuggestion = async (p) => {
                     <span v-if="verifiesCount" class="badge text-bg-light" title="Projets déjà vérifiés — visibles via le filtre État"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ verifiesCount }} vérifiés</span>
                     <span v-if="compteurs.confirme_termine" class="badge text-bg-success"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ compteurs.confirme_termine }} terminés</span>
                     <span v-if="compteurs.confirme_en_cours" class="badge text-bg-warning">{{ compteurs.confirme_en_cours }} en cours</span>
-                    <span v-if="compteurs.toujours_a_avenir" class="badge text-bg-warning">{{ compteurs.toujours_a_avenir }} à venir</span>
+                    <span v-if="compteurs.toujours_a_venir" class="badge text-bg-warning">{{ compteurs.toujours_a_venir }} à venir</span>
                     <span v-if="compteurs.confirme_date" class="badge text-bg-info">{{ compteurs.confirme_date }} dates vérifiées</span>
                     <span v-if="compteurs.introuvable" class="badge text-bg-secondary">{{ compteurs.introuvable }} introuvables</span>
                     <span v-if="compteurs.douteux" class="badge text-bg-danger">{{ compteurs.douteux }} incertains</span>
@@ -555,6 +561,16 @@ const sendSuggestion = async (p) => {
                                 <input type="number" min="1990" max="2040" class="form-control" v-model="formActif.annee_fin" />
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label small mb-1">Statut constaté <span class="text-muted">(optionnel, si le statut calculé est erroné)</span></label>
+                            <select class="form-select" v-model="formActif.statut">
+                                <option value="">Laisser le statut calculé automatiquement</option>
+                                <option v-for="(label, k) in SUGG_STATUTS" :key="k" :value="k">{{ label }}</option>
+                            </select>
+                            <div v-if="formActif.statut" class="small text-muted mt-1">
+                                Le verdict enregistré sera « {{ ETATS[ETAT_POUR_STATUT[formActif.statut]].label }} » : les dates sont corrigées et le statut affiché sur la fiche et la carte devient celui constaté.
+                            </div>
+                        </div>
                     </template>
 
                     <div class="mb-3">
@@ -680,7 +696,7 @@ const sendSuggestion = async (p) => {
 .badge-cell.anomalie { background: #fde8e8; color: #b91c1c; }
 .badge-cell.confirme_termine { background: #e8f5e9; color: #1b5e20; }
 .badge-cell.confirme_en_cours { background: #fff3e0; color: #b45309; }
-.badge-cell.toujours_a_avenir { background: #fef9c3; color: #854d0e; }
+.badge-cell.toujours_a_venir { background: #fef9c3; color: #854d0e; }
 .badge-cell.introuvable { background: #e2e8f0; color: #475569; }
 .badge-cell.douteux { background: #fde8e8; color: #7f1d1d; }
 .nom { font-weight: 600; }

@@ -197,6 +197,73 @@ class ModerateurAccessTest extends TestCase
                 ->where('journalVerifications.0.etat_avant', 'confirme_termine'));
     }
 
+    public function test_verdict_de_date_avec_statut_constate_corrige_aussi_le_statut(): void
+    {
+        $this->actingAs($this->moderateur)
+            ->postJson('/api/verifications', [
+                'projet_id' => $this->projetId,
+                'etat' => 'confirme_date',
+                'annee_debut' => 2023,
+                'statut_suggere' => 'en_cours',
+            ])
+            ->assertOk()
+            ->assertJson(['ok' => true, 'etat' => 'confirme_en_cours']);
+
+        // Le verdict enregistré est celui du statut constaté : la carte et la
+        // fiche affichent ce statut via statutDepuisVerification.
+        $this->assertDatabaseHas('verifications', [
+            'projet_id' => $this->projetId,
+            'etat' => 'confirme_en_cours',
+        ]);
+        $this->assertDatabaseHas('projets', [
+            'id' => $this->projetId,
+            'annee_debut' => 2023,
+            'annee_fin' => null,
+        ]);
+
+        // Le statut constaté est tracé dans le journal d'audit.
+        $apres = json_decode(AuditLog::where('action', 'verification')->latest('id')->value('apres'), true);
+        $this->assertSame('en_cours', $apres['statut_constate']);
+        $this->assertSame('confirme_en_cours', $apres['etat']);
+        $this->assertSame(2023, $apres['annee_debut']);
+    }
+
+    public function test_verdict_de_date_sans_statut_constate_garde_le_statut_calcule(): void
+    {
+        $this->actingAs($this->moderateur)
+            ->postJson('/api/verifications', [
+                'projet_id' => $this->projetId,
+                'etat' => 'confirme_date',
+                // L'année de début seule doit suffire, comme promis dans l'aide.
+                'annee_debut' => 2022,
+            ])
+            ->assertOk()
+            ->assertJson(['ok' => true, 'etat' => 'confirme_date']);
+
+        $this->assertDatabaseHas('verifications', [
+            'projet_id' => $this->projetId,
+            'etat' => 'confirme_date',
+        ]);
+        $this->assertDatabaseHas('projets', [
+            'id' => $this->projetId,
+            'annee_debut' => 2022,
+            'annee_fin' => null,
+        ]);
+    }
+
+    public function test_statut_constate_invalide_est_refuse(): void
+    {
+        $this->actingAs($this->moderateur)
+            ->postJson('/api/verifications', [
+                'projet_id' => $this->projetId,
+                'etat' => 'confirme_date',
+                'statut_suggere' => 'peut_etre',
+            ])
+            ->assertInvalid(['statut_suggere']);
+
+        $this->assertDatabaseMissing('verifications', ['projet_id' => $this->projetId]);
+    }
+
     public function test_moderateur_suggestion_is_applied_immediately(): void
     {
         $this->actingAs($this->moderateur)
