@@ -171,6 +171,12 @@ class SeoLandingPagesTest extends TestCase
             ->assertSee('verifies');
         $this->get('/mentions-legales')->assertOk();
         $this->get('/confidentialite')->assertOk();
+
+        $this->get('/methodologie')
+            ->assertOk()
+            ->assertSee('chiffres')
+            ->assertSee('doublons_fusionnes')
+            ->assertSee('en_verification');
     }
 
     public function test_robots_txt_points_to_sitemap(): void
@@ -231,6 +237,7 @@ class SeoLandingPagesTest extends TestCase
             ->assertSee('/actualites')
             ->assertSee('/contact')
             ->assertSee('/a-propos')
+            ->assertSee('/methodologie')
             ->assertSee('/mentions-legales')
             ->assertSee('/confidentialite');
     }
