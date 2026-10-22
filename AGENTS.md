@@ -112,6 +112,20 @@ compte est supprimé — le travail humain n'est jamais perdu.
    d'audience) se charge **par défaut** et reste révocable (bannière, lien
    « Cookies ») (`ConsentBanner.vue`, `config/seo.php`).
 
+## Accès à la production — ne jamais requêter le site en rafale
+
+La production est protégée par Imunify360 (hébergeur) : une rafale de
+requêtes (~100 en 30 s) déclenche le **blocage automatique de l'IP
+émettrice** — le site semble alors « indisponible » alors qu'il ne l'est
+que pour cette IP (incident du 2026-10-22, une boucle curl de vérification
+ayant bloqué l'IP du poste de travail). Règles :
+
+- Vérifier en local autant que possible (Docker, `http://localhost:8000`).
+- **Jamais de boucle curl/wget sur les pages de production** : au plus
+  quelques pages clés, espacées (`sleep 1` entre chaque requête).
+- Si le site semble down depuis le poste : tester en 4G avant tout ticket —
+  c'est le plus souvent l'IP qui est bloquée, pas le site.
+
 ## Conventions
 
 - PHP : PSR-12, 4 espaces, ordre alphabétique des imports ; vérifier avec
