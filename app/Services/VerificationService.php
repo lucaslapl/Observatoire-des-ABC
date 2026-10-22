@@ -38,6 +38,9 @@ class VerificationService
                 ->orWhere('p.potentiellement_en_cours', true)
                 ->orWhere('p.source', 'wayback')
                 ->orWhereNull('p.annee_debut')
+                // Explicitement mis en file de vérification (ex. paires de
+                // doublons « à vérifier » du triage, financements ambigus).
+                ->orWhere('v.etat', 'a_verifier')
                 ->orWhereExists(function ($q2) {
                     $q2->select(DB::raw(1))
                         ->from('communes as c3')

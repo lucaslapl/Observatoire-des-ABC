@@ -50,7 +50,7 @@ Route::get('/verify', [PageController::class, 'verify'])->name('verify');
 Route::get('/actualites', [PageController::class, 'actualites'])->name('actualites');
 Route::get('/actualites/{actualite:slug}', [PageController::class, 'actualite'])->name('actualites.show');
 
-Route::get('/abc/{projet:slug}', [PageController::class, 'projet'])->name('abc.show');
+Route::get('/abc/{slug}', [PageController::class, 'projet'])->name('abc.show');
 Route::get('/commune/{code}', [PageController::class, 'commune'])->name('commune.show');
 Route::get('/departement/{code}', [PageController::class, 'departement'])->where('code', '[0-9a-zA-Z]{1,3}')->name('departement.show');
 Route::get('/region/{slug}', [PageController::class, 'region'])->where('slug', '[a-z0-9-]+')->name('region.show');

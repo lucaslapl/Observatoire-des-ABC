@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Commune;
 use App\Models\Contribution;
+use App\Models\ProjectAlias;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\Snapshot;
@@ -16,6 +17,9 @@ class ProjetRepository
 {
     /** Ids exclus, chargés une fois par collect (mémoire). */
     private static ?array $excludedIds = null;
+
+    /** Ids alias (projets fusionnés), chargés une fois par collect (mémoire). */
+    private static ?array $aliasedIds = null;
 
     /** Ids vus dans les sources pendant le collect courant (mémoire). */
     private static array $ingestedIds = [];
@@ -52,6 +56,20 @@ class ProjetRepository
     public static function refreshExclusions(): void
     {
         self::$excludedIds = ProjectExclusion::query()->pluck('projet_id')->all();
+        self::$aliasedIds = ProjectAlias::query()->pluck('alias_project_id')->all();
+    }
+
+    /**
+     * Id d'un projet fusionné (alias) : il ne doit jamais être recréé par
+     * un collect, sous peine d'annuler la fusion.
+     */
+    public function isAliased(string $id): bool
+    {
+        if (self::$aliasedIds === null) {
+            $this->refreshExclusions();
+        }
+
+        return in_array($id, self::$aliasedIds ?? [], true);
     }
 
     public function isExcluded(string $id): bool
@@ -68,6 +86,10 @@ class ProjetRepository
         $this->markIngested($p['id']);
 
         if ($this->isExcluded($p['id'])) {
+            return;
+        }
+
+        if ($this->isAliased($p['id'])) {
             return;
         }
 
@@ -143,6 +165,10 @@ class ProjetRepository
     public function recordSnapshot(string $snapshotDate, string $projetId, string $avancement, string $source): void
     {
         if ($this->isExcluded($projetId)) {
+            return;
+        }
+
+        if ($this->isAliased($projetId)) {
             return;
         }
 
