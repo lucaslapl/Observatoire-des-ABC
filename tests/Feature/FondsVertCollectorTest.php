@@ -179,9 +179,11 @@ class FondsVertCollectorTest extends TestCase
         $this->assertSame(0, Financement::count(), 'aucun rattachement silencieux');
         $this->assertSame(1, $result['en_worklist']);
 
-        // Les deux candidats sont en file /verify avec une note explicite.
+        // Les deux candidats sont en file /verify, le motif automatique dans
+        // note_auto — jamais dans la note humaine (verdicts, GeoJSON).
         $this->assertSame(2, Verification::where('etat', 'a_verifier')->count());
-        $this->assertStringContainsString('Fonds vert P113 2025 ligne 11314746', (string) Verification::first()->note);
+        $this->assertStringContainsString('Fonds vert P113 2025 ligne 11314746', (string) Verification::first()->note_auto);
+        $this->assertNull(Verification::first()->note);
 
         $payload = json_decode(AuditLog::where('action', 'worklist_fondsvert')->first()->apres, true);
         $this->assertCount(2, $payload['ambigu']);

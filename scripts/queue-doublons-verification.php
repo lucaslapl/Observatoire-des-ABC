@@ -5,11 +5,11 @@
  * (data/triage/doublons-a-verifier-phase1.csv : n;id_projet_1;id_projet_2;motif).
  *
  * Pour chaque projet de chaque paire :
- * - sans vérification : création d'une entrée etat=a_verifier avec note
- *   explicitant la paire → le projet apparaît dans la page /verify ;
- * - avec vérification existante (travail humain) : l'état est conservé et la
- *   note est complétée (idempotent : le marqueur « paire N°x » n'est pas
- *   dupliqué).
+ * - sans vérification : création d'une entrée etat=a_verifier avec le motif
+ *   de la paire dans note_auto → le projet apparaît dans la page /verify ;
+ * - avec vérification existante (travail humain) : l'état est conservé et le
+ *   motif automatique est complété dans note_auto, jamais dans la note
+ *   humaine (idempotent : le marqueur « paire N°x » n'est pas dupliqué).
  *
  * Chaque paire traitée est journalisée dans audit_log.
  *
@@ -71,11 +71,11 @@ foreach ($rows as $r) {
 
         $verification = Verification::find($projetId);
         if (! $verification) {
-            Verification::create(['projet_id' => $projetId, 'etat' => 'a_verifier', 'note' => $note]);
+            Verification::create(['projet_id' => $projetId, 'etat' => 'a_verifier', 'note_auto' => $note]);
             $change = true;
-        } elseif (! str_contains((string) $verification->note, $marqueur)) {
+        } elseif (! str_contains((string) $verification->note_auto, $marqueur)) {
             $verification->update([
-                'note' => trim(($verification->note ? $verification->note."\n" : '').$note),
+                'note_auto' => trim(($verification->note_auto ? $verification->note_auto."\n" : '').$note),
             ]);
             $change = true;
         }

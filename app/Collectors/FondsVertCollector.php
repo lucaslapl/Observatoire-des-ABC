@@ -131,6 +131,7 @@ class FondsVertCollector
      * de projet :
      * - les projets candidats reçoivent une vérification etat=a_verifier
      *   (visible dans /verify), sans écraser un verdict humain existant ;
+     *   le motif automatique va dans note_auto, jamais dans la note humaine ;
      * - chaque ligne est journalisée dans audit_log (idempotent par ligne).
      */
     private function mettreEnWorklist(int $year, string $nom, string $benef, array $r, ?Collection $ambigus): void
@@ -144,10 +145,10 @@ class FondsVertCollector
                 $note = "Doublon suspect ({$marqueur}) : « {$nom} »{$detail} semble financer ce projet, mais d'autres projets portent le même nom.";
                 $verification = Verification::find($candidat->id);
                 if (! $verification) {
-                    Verification::create(['projet_id' => $candidat->id, 'etat' => 'a_verifier', 'note' => $note]);
-                } elseif (! str_contains((string) $verification->note, $marqueur)) {
+                    Verification::create(['projet_id' => $candidat->id, 'etat' => 'a_verifier', 'note_auto' => $note]);
+                } elseif (! str_contains((string) $verification->note_auto, $marqueur)) {
                     $verification->update([
-                        'note' => trim(($verification->note ? $verification->note."\n" : '').$note),
+                        'note_auto' => trim(($verification->note_auto ? $verification->note_auto."\n" : '').$note),
                     ]);
                 }
             }

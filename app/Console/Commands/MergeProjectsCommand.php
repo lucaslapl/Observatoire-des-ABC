@@ -162,8 +162,9 @@ class MergeProjectsCommand extends Command
 
     /**
      * Migration de la vérification : le travail humain n'est jamais perdu.
-     * Si les deux projets en ont une, l'état du canonique est conservé et
-     * la note du doublon est concaténée.
+     * Si les deux projets en ont une, l'état du canonique est conservé, la
+     * note du doublon est concaténée, et les motifs automatiques (note_auto)
+     * sont unis de la même façon.
      */
     private function mergeVerification(Projet $doublon, Projet $canonique): string
     {
@@ -181,7 +182,12 @@ class MergeProjectsCommand extends Command
 
         $note = trim(($verifCanonique->note ? $verifCanonique->note."\n" : '')
             .'[fusion de '.$doublon->id.'] '.trim((string) $verifDoublon->note));
-        $verifCanonique->update(['note' => $note !== '' ? $note : null]);
+        $noteAuto = trim(($verifCanonique->note_auto ? $verifCanonique->note_auto."\n" : '')
+            .trim((string) $verifDoublon->note_auto));
+        $verifCanonique->update([
+            'note' => $note !== '' ? $note : null,
+            'note_auto' => $noteAuto !== '' ? $noteAuto : null,
+        ]);
 
         $verifDoublon->delete();
 

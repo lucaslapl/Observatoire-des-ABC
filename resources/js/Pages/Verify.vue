@@ -291,6 +291,9 @@ const sendSuggestion = async (p) => {
                             <td>
                                 <div class="nom">{{ p.nom }}</div>
                                 <div class="sub">{{ p.structure_porteuse || '—' }}{{ p.departements ? ' · ' + p.departements : '' }}</div>
+                                <div v-if="p.note_auto" class="small text-muted mt-1" :title="p.note_auto">
+                                    <div v-for="(ligne, i) in p.note_auto.split('\n')" :key="i">{{ ligne }}</div>
+                                </div>
                             </td>
                             <td class="communes" :title="p.communes || ''">{{ p.communes || '—' }}</td>
                             <td>{{ p.annee_debut || '—' }}</td>
