@@ -89,7 +89,7 @@ const seoJsonLd = computed(() => {
                             démarches financées par l'État (Registre OFB et Fonds vert) pour connaître la biodiversité
                             d'une commune et la faire découvrir à ses habitants. La carte ci-dessus recense
                             <strong>{{ meta?.countProjets ?? 0 }} projets</strong> sur
-                            <strong>{{ meta?.countCommunes ?? 'plus de 5 400' }} communes</strong>,
+                            <strong>{{ meta?.countCommunes ?? 'de nombreuses' }} communes</strong>,
                             avec leur statut (en cours, va débuter, terminé), leur porteur et leurs périodes.
                         </p>
                         <p>

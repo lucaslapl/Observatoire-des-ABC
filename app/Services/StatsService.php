@@ -39,6 +39,9 @@ class StatsService
                 ->values()
                 ->all(),
             'countProjets' => (int) $rows->sum('n'),
+            // Communes couvertes distinctes (hors anomalies), mêmes règles
+            // que les chiffres des pages À propos / Méthodologie.
+            'countCommunes' => Commune::where('anomalie', false)->distinct()->count('code_geographique'),
             'countPotentiellementTermines' => (int) $rows->sum('pt'),
             'countPotentiellementEnCours' => (int) $rows->sum('pec'),
             'countDonnees2022' => (int) $rows->sum('wayback'),

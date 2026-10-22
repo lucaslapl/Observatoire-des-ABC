@@ -103,6 +103,8 @@ class GeoJsonParityTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('countProjets', 2);
         $response->assertJsonPath('countNonLocalises', 1);
+        // countCommunes : distinct hors anomalies (le front d'accueil l'affiche).
+        $response->assertJsonPath('countCommunes', 2);
     }
 
     public function test_verification_list_endpoint(): void
