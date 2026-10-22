@@ -35,7 +35,7 @@ class DoublonSuspectService
 
         $restantes = [];
         foreach ($lignes as $ligne) {
-            if ($ligne !== '' && ! $this->ambiguiteResolue($ligne, $ignorerIds)) {
+            if (! $this->ambiguiteResolue($ligne, $ignorerIds)) {
                 $restantes[] = $ligne;
             }
         }
