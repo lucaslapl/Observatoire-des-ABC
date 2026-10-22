@@ -4,8 +4,8 @@ namespace App\Collectors;
 
 use App\Models\AuditLog;
 use App\Models\Financement;
-use App\Models\Projet;
 use App\Models\ProjectAlias;
+use App\Models\Projet;
 use App\Models\Verification;
 use App\Services\CsvReaderService;
 use App\Services\DataGouvResolver;
