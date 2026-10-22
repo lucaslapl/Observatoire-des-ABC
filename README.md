@@ -34,8 +34,9 @@ l'ancien endpoint de l'application historique.
   pour éviter la confusion), communes reliées par des traits au clic.
 - **Pages publiques indexables** : fiche d'un projet (`/abc/{slug}`), page
   commune (`/commune/{code}`), page département (`/departement/{code}`), page
-  région (`/region/{slug}`), fil d'actualités (`/actualites`), mentions légales
-  et politique de confidentialité.
+  région (`/region/{slug}`), fil d'actualités (`/actualites`), page
+  méthodologie (`/methodologie` : comment les données sont collectées,
+  vérifiées et corrigées), mentions légales et politique de confidentialité.
 - **Signalement de correction** (public) : depuis le popup de la carte, chaque
   visiteur peut proposer une correction ; la contribution est modérée par un
   administrateur ou un modérateur avant publication.
@@ -45,7 +46,9 @@ l'ancien endpoint de l'application historique.
   d'un compte supprimé sont conservées et anonymisées — le travail humain
   n'est jamais perdu.
 - **Worklist de vérification** (`/verify`) : file « À vérifier » avec filtres
-  *Vérifiés* / *Tous*, pour confirmer ou corriger les projets un par un.
+  *Vérifiés* / *Tous*, pour confirmer ou corriger les projets un par un ;
+  inclut les paires de doublons à départager et les candidats Fonds vert non
+  rattachés (une ligne rattachée en disparaît automatiquement).
 - **Exclusions administrateur** : suppression d'un projet depuis la carte avec
   motif optionnel consigné dans le journal d'audit ; le projet n'est pas
   ré-importé au collect tant que l'exclusion tient. Levée d'exclusion depuis
