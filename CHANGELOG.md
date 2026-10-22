@@ -17,6 +17,45 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
   (projets, communes, doublons fusionnés, en vérification). Liée depuis
   le pied de page et la page « À propos », référencée dans le sitemap.
 
+### Audit du 2026-10-21 — phase 3 : corrections de données scriptées
+
+- **Nouvelle commande `abc:data-fix`** (idempotente, journalisée dans
+  `audit_log` action `data_fix:*`, `--dry-run`) qui corrige les anomalies
+  de l'audit :
+  - **années invalides** (Redon « 1 », Baie-Mahault « 2029 ») : l'année
+    correcte est cherchée dans le registre OFB ; le registre portant
+    lui-même l'erreur, les deux projets passent en file /verify
+    (aucune correction aveugle par script) ;
+  - **projets scindés du registre** fusionnés via `abc:merge-projects` :
+    IBC de Garancières-en-Drouais (2014 → alias de la ligne 2015, qui
+    porte la structure porteuse) et ABC de Vendôme (2011 → alias de la
+    ligne 2010, première année de l'ABC). ABC Bagnères-de-Bigorre reste
+    en deux éditions distinctes (jamais touché) ;
+  - **statut inconnu** (ABC du Nord de la Martinique) → file /verify ;
+  - **16 projets Fonds vert 2024 non localisés** : le fichier P113 2024
+    n'expose aucune colonne commune (cause racine). 12 projets localisés
+    via geo.api.gouv.fr à partir du nom du projet puis de la structure
+    porteuse — correspondance par nom normalisé EXACT uniquement (aucune
+    approximation acceptée), le nom du projet prioritaire sur la
+    structure (libellé juridique parfois tronqué : Bussac-sur-Charente
+    vs « COMMUNE DE BUSSAC »). Les 4 autres (EPCI, périmètres
+    intercommunaux, projet post-ABC sans commune identifiable) passent en
+    file /verify ;
+  - **registre incomplet** : les 10 projets sans année et 88 sans
+    structure porteuse sont mis en file /verify — jamais corrigés par
+    script (enrichissement humain progressif) ;
+  - **projet Tournefort** (source Fonds vert 2024, absent du registre et
+    des archives) : origine documentée et marqué à vérifier, jamais
+    supprimé — avec renvoi vers le projet registre au nom proche.
+- **Application vérifiée sur la base locale** : projets 1 215 → 1 213
+  (-2 fusions), 50 alias, +12 communes géocodées, worklist /verify
+  enrichie (93 nouvelles entrées, 12 notes complétées), 23 entrées
+  `audit_log`. Trois exécutions successives ne changent plus rien.
+- **Tests** : `DataFixCommandTest` (9 cas : année corrigée depuis le
+  registre, année en file, fusions + Bagnères intouché, statut inconnu,
+  localisation réussie/refusée, worklist registre, Tournefort,
+  idempotence). Suite : 177 verts.
+
 ### Audit du 2026-10-21 — phase 2 : financements Fonds vert et refonte du collector
 
 - **Nouvelle table `financements`** (migration réversible) : une ligne
