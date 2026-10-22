@@ -1,4 +1,5 @@
 <script setup>
+import { Link } from '@inertiajs/vue3';
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
 
