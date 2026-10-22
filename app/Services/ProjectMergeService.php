@@ -34,6 +34,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class ProjectMergeService
 {
+    public function __construct(private DoublonSuspectService $doublonsSuspects) {}
+
     /**
      * @return array{ok: bool, error?: string, stats?: array<string, mixed>}
      */
@@ -137,7 +139,9 @@ class ProjectMergeService
      * Migration de la vérification : le travail humain n'est jamais perdu.
      * Si les deux projets en ont une, l'état du canonique est conservé, la
      * note du doublon est concaténée, et les motifs automatiques (note_auto)
-     * sont unis de la même façon.
+     * sont unis — dédoublonnés, et débarrassés des « Doublon suspect » que
+     * la fusion vient justement de résoudre (le collecteur les recréera si
+     * l'ambiguïté persiste avec d'autres homonymes).
      */
     private function mergeVerification(Projet $doublon, Projet $canonique): string
     {
@@ -148,18 +152,24 @@ class ProjectMergeService
 
         $verifCanonique = Verification::find($canonique->id);
         if (! $verifCanonique) {
-            Verification::where('projet_id', $doublon->id)->update(['projet_id' => $canonique->id]);
+            $verifDoublon->update([
+                'projet_id' => $canonique->id,
+                'note_auto' => $this->doublonsSuspects->nettoyer($verifDoublon->note_auto, [$doublon->id]),
+            ]);
 
             return 'déplacée';
         }
 
         $note = trim(($verifCanonique->note ? $verifCanonique->note."\n" : '')
             .'[fusion de '.$doublon->id.'] '.trim((string) $verifDoublon->note));
-        $noteAuto = trim(($verifCanonique->note_auto ? $verifCanonique->note_auto."\n" : '')
-            .trim((string) $verifDoublon->note_auto));
+        $noteAuto = $this->doublonsSuspects->nettoyer(
+            trim(($verifCanonique->note_auto ? $verifCanonique->note_auto."\n" : '')
+                .trim((string) $verifDoublon->note_auto)),
+            [$doublon->id]
+        );
         $verifCanonique->update([
             'note' => $note !== '' ? $note : null,
-            'note_auto' => $noteAuto !== '' ? $noteAuto : null,
+            'note_auto' => $noteAuto,
         ]);
 
         $verifDoublon->delete();

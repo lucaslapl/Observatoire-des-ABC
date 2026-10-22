@@ -9,6 +9,7 @@ use App\Models\Projet;
 use App\Models\Verification;
 use App\Services\CsvReaderService;
 use App\Services\DataGouvResolver;
+use App\Services\DoublonSuspectService;
 use App\Services\DownloadService;
 use App\Services\ProjectIdService;
 use App\Services\ProjetRepository;
@@ -39,6 +40,7 @@ class FondsVertCollector
         private ProjetRepository $projects,
         private ProjectIdService $ids,
         private DataGouvResolver $resolver,
+        private DoublonSuspectService $doublons,
     ) {}
 
     public function collect(): array
@@ -98,7 +100,34 @@ class FondsVertCollector
             }
         }
 
+        // Fin de collect : les « Doublon suspect » dont l'ambiguïté a disparu
+        // (fusion, suppression d'un homonyme) quittent les notes automatiques.
+        $stats['notes_doublon_nettoyees'] = $this->nettoyerNotesDoublonResolues();
+
         return ['total' => array_sum($byYear), 'by_year' => $byYear] + $stats;
+    }
+
+    /**
+     * Ces notes sont dérivables : ce pass ne fait que retirer celles devenues
+     * obsolètes ; une ambiguïté persistante serait recréée au collect
+     * suivant par mettreEnWorklist().
+     */
+    private function nettoyerNotesDoublonResolues(): int
+    {
+        $nettoyees = 0;
+
+        Verification::query()
+            ->whereNotNull('note_auto')
+            ->get()
+            ->each(function (Verification $v) use (&$nettoyees): void {
+                $nettoyee = $this->doublons->nettoyer($v->note_auto);
+                if ($nettoyee !== $v->note_auto) {
+                    $v->update(['note_auto' => $nettoyee]);
+                    $nettoyees++;
+                }
+            });
+
+        return $nettoyees;
     }
 
     /**

@@ -28,16 +28,20 @@ class ProjetFusionTest extends TestCase
 
     private Projet $canonique;
 
+    private string $noteDoublon = "Doublon suspect (Fonds vert P113 2024 ligne fv-ligne-x) : « ABC de Test Fusion » (bénéficiaire : Commune de Test) semble financer ce projet, mais d'autres projets portent le même nom.";
+
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(RolePermissionSeeder::class);
         Storage::fake('abc');
 
+        // Deux projets homonymes (même nom normalisé, sources distinctes) :
+        // la situation exacte qui déclenche « Doublon suspect » au collect.
         $this->canonique = Projet::create([
             'id' => 'abc-fusion-canonical-test-2021',
-            'nom' => 'ABC de Fusion-Cano',
-            'slug' => 'abc-de-fusion-cano',
+            'nom' => 'ABC de Test Fusion',
+            'slug' => 'abc-de-test-fusion',
             'statut' => 'en_cours',
             'source' => 'data.gouv',
             'annee_debut' => 2021,
@@ -45,8 +49,8 @@ class ProjetFusionTest extends TestCase
 
         $this->doublon = Projet::create([
             'id' => 'abc-fusion-doublon-test-2021',
-            'nom' => 'ABC de Fusion-Doublon',
-            'slug' => 'abc-de-fusion-doublon',
+            'nom' => 'ABC de Test Fusion',
+            'slug' => 'abc-de-test-fusion-2021-bis',
             'statut' => 'en_cours',
             'source' => 'fonds_vert',
             'annee_debut' => 2021,
@@ -55,7 +59,7 @@ class ProjetFusionTest extends TestCase
         Verification::create([
             'projet_id' => $this->doublon->id,
             'etat' => 'a_verifier',
-            'note_auto' => 'Doublon suspect (Fonds vert P113 2024 ligne x) : semble financer ce projet, mais d\'autres projets portent le même nom.',
+            'note_auto' => $this->noteDoublon,
         ]);
 
         Financement::create([
@@ -87,7 +91,7 @@ class ProjetFusionTest extends TestCase
         $this->assertDatabaseHas('project_aliases', [
             'project_id' => $this->canonique->id,
             'alias_project_id' => $this->doublon->id,
-            'alias_slug' => 'abc-de-fusion-doublon',
+            'alias_slug' => 'abc-de-test-fusion-2021-bis',
             'created_by' => 'panneau-admin',
         ]);
         $this->assertDatabaseHas('financements', [
@@ -123,11 +127,38 @@ class ProjetFusionTest extends TestCase
             'projet_id' => $this->canonique->id,
             'statut' => 'validee',
         ]);
-        // Le travail humain (note automatique du doublon) est concaténé,
-        // jamais perdu.
-        $this->assertDatabaseHas('verifications', ['projet_id' => $this->canonique->id]);
+        // Le travail humain (la vérification) migre, mais le « Doublon
+        // suspect » — signal automatique dérivable — disparaît : la fusion
+        // vient de trancher l'ambiguïté (plus d'homonyme).
         $verif = Verification::find($this->canonique->id);
+        $this->assertNotNull($verif);
+        $this->assertNull($verif->note_auto);
+    }
+
+    public function test_doublon_suspect_conserve_si_un_autre_homonyme_persiste(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        Projet::create([
+            'id' => 'abc-fusion-troisieme-test-2021',
+            'nom' => 'ABC de Test Fusion',
+            'slug' => 'abc-de-test-fusion-2021-ter',
+            'statut' => 'va_debuter',
+            'source' => 'fonds_vert',
+            'annee_debut' => 2021,
+        ]);
+
+        $this->actingAs($admin)->postJson("/api/admin/projets/{$this->doublon->id}/fusion", [
+            'canonique_id' => $this->canonique->id,
+        ])->assertOk();
+
+        // L'ambiguïté persiste avec le troisième homonyme : la note reste,
+        // le collect la régénérerait de toute façon.
+        $verif = Verification::find($this->canonique->id);
+        $this->assertNotNull($verif);
         $this->assertStringContainsString('Doublon suspect', (string) $verif->note_auto);
+        $this->assertEquals(1, substr_count((string) $verif->note_auto, 'Doublon suspect'));
     }
 
     public function test_moderateur_et_contributeur_ne_peuvent_pas_fusionner(): void
@@ -181,7 +212,7 @@ class ProjetFusionTest extends TestCase
 
         // Insensible à la casse, sur PostgreSQL comme en test (SQLite).
         $this->actingAs($admin)
-            ->getJson('/api/admin/projets/recherche?q=fusion-cano')
+            ->getJson('/api/admin/projets/recherche?q=test fusion')
             ->assertOk()
             ->assertJsonPath('projets.0.id', $this->canonique->id);
 

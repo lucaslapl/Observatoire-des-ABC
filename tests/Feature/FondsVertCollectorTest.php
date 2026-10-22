@@ -279,4 +279,33 @@ class FondsVertCollectorTest extends TestCase
         $this->assertSame(0, $deleted);
         $this->assertDatabaseHas('projets', ['id' => 'projet-finance']);
     }
+
+    public function test_le_collect_nettoie_les_doublons_suspects_resolus(): void
+    {
+        // Ambiguïté résolue depuis (fusion, homonyme supprimé) : la note
+        // automatique est périmée — et dupliquée ici.
+        $projet = Projet::create([
+            'id' => 'abc-de-test-fusion-2021',
+            'nom' => 'ABC de Test Fusion',
+            'slug' => 'abc-de-test-fusion',
+            'statut' => 'en_cours',
+            'source' => 'fondsvert-p113-2025',
+        ]);
+        $note = 'Doublon suspect (Fonds vert P113 2024 ligne fv-x) : « ABC de Test Fusion » semble financer ce projet, mais d\'autres projets portent le même nom.';
+        Verification::create([
+            'projet_id' => $projet->id,
+            'etat' => 'a_verifier',
+            'note_auto' => $note."\n".$note,
+        ]);
+
+        file_put_contents($this->cacheDir.'/fonds-vert-p113-2025-export.csv.csv',
+            "nom_du_projet,resume_du_projet,montant_engage,numero_dossier_ds,raison_sociale_beneficiaire,demarche\n".
+            "\"Renaturation du parking\",\"Un projet de voirie sans rapport avec les atlas, mentionné ici pour remplir le fichier de test avec suffisamment d'octets et vérifier la robustesse du lecteur CSV.\",120000.00,112,OFS TEST,Renaturation\n"
+        );
+
+        $result = $this->collect();
+
+        $this->assertSame(1, $result['notes_doublon_nettoyees']);
+        $this->assertNull(Verification::find($projet->id)->note_auto);
+    }
 }
