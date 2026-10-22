@@ -251,6 +251,47 @@ class ModerateurAccessTest extends TestCase
         ]);
     }
 
+    public function test_verdict_de_date_porte_la_ligne_dates_confirmees(): void
+    {
+        // Comme une contribution validée, un verdict de correction de date
+        // écrit la ligne « Dates confirmées : … » dans la note : affichage
+        // homogène sur la fiche et protection contre l'écrasement par le
+        // collect (ProjetRepository). Une ligne antérieure est remplacée.
+        $this->actingAs($this->moderateur)
+            ->postJson('/api/verifications', [
+                'projet_id' => $this->projetId,
+                'etat' => 'confirme_date',
+                'annee_debut' => 2026,
+                'note' => 'Communiqué de la ville',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('verifications', [
+            'projet_id' => $this->projetId,
+            'note' => "Communiqué de la ville\n— Dates confirmées : 2026",
+        ]);
+
+        // Second verdict avec statut constaté : le verdict de statut remplace
+        // « confirme_date », la ligne de dates est remplacée sans empiler.
+        $this->actingAs($this->moderateur)
+            ->postJson('/api/verifications', [
+                'projet_id' => $this->projetId,
+                'etat' => 'confirme_date',
+                'annee_debut' => 2027,
+                'annee_fin' => 2030,
+                'statut_suggere' => 'va_debuter',
+                'note' => 'Communiqué de la ville',
+            ])
+            ->assertOk()
+            ->assertJson(['ok' => true, 'etat' => 'toujours_a_venir']);
+
+        $this->assertDatabaseHas('verifications', [
+            'projet_id' => $this->projetId,
+            'etat' => 'toujours_a_venir',
+            'note' => "Communiqué de la ville\n— Dates confirmées : 2027–2030",
+        ]);
+    }
+
     public function test_statut_constate_invalide_est_refuse(): void
     {
         $this->actingAs($this->moderateur)

@@ -170,6 +170,7 @@ class LandingService
         // on les rattrape via le préfixe du code INSEE (2 chiffres métropole/Corse,
         // 3 chiffres outre-mer), tout en gardant la colonne comme source de vérité.
         $rows = Commune::query()
+            ->with('projet:id,nom,slug,statut,annee_debut,source')
             ->where(fn ($q) => $q
                 ->whereRaw('LOWER(SUBSTR(code_geographique, 1, ?)) = ?', [$len, $norm])
                 ->orWhereRaw('LOWER(departement) = ?', [$norm]))
@@ -218,7 +219,13 @@ class LandingService
             ->values()
             ->all();
 
-        usort($projets, fn ($a, $b) => strcmp((string) $a['nom'], (string) $b['nom']));
+        // Les ABC d'une même commune principale se suivent, le plus récent
+        // en premier : une commune qui refait un ABC (Vitré 2010 puis 2026)
+        // se lit d'un coup d'œil — et un doublon suspect aussi.
+        usort($projets, function ($a, $b) {
+            return strcmp((string) $a['commune_principale'], (string) $b['commune_principale'])
+                ?: (($b['annee_debut'] ?? 0) <=> ($a['annee_debut'] ?? 0));
+        });
 
         return [
             'code' => $norm,

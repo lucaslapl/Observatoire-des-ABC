@@ -28,6 +28,10 @@ const crumbs = computed(() => {
 const statutClass = (s) =>
     ({ en_cours: 'text-bg-success', a_venir: 'text-bg-warning', termine: 'text-bg-primary', inconnu: 'text-bg-secondary' })[s] || 'text-bg-secondary';
 
+// La commune principale n'est affichée que sur la première ligne du groupe :
+// les ABC d'une même commune se suivent, le plus récent en premier.
+const communeVisible = (i) => i === 0 || d.value.projets[i - 1].commune_principale !== d.value.projets[i].commune_principale;
+
 const pageTitle = computed(() => `ABC — ${d.value.label} (${d.value.code.toUpperCase()})`);
 const pageDescription = computed(() =>
     `Les Atlas de la Biodiversité Communale (ABC) du département ${d.value.label} (${d.value.code.toUpperCase()}) : ${d.value.n_projets} projet(s) ABC sur ${d.value.n_communes} commune(s).`
@@ -81,9 +85,9 @@ const jsonLd = computed(() => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="p in departement.projets" :key="p.projet_id">
+                        <tr v-for="(p, i) in departement.projets" :key="p.projet_id">
                             <td><Link v-if="p.slug" class="text-reset" :href="`/abc/${p.slug}`">{{ p.nom }}</Link><span v-else class="text-reset">{{ p.nom }}</span></td>
-                            <td class="text-muted small">{{ p.commune_principale }}</td>
+                            <td class="text-muted small">{{ communeVisible(i) ? p.commune_principale : '' }}</td>
                             <td class="small">{{ p.annee_debut || '—' }}</td>
                             <td><span class="badge" :class="statutClass(p.statut)">{{ p.statut_label }}</span></td>
                             <td class="text-muted small">{{ p.source_label }}</td>
@@ -97,8 +101,7 @@ const jsonLd = computed(() => {
             <div v-else class="d-flex flex-wrap gap-2 mb-4">
                 <Link v-for="c in departement.communes" :key="c.code" :href="`/commune/${c.code}`" class="list-group-item border rounded-3 px-3 py-2 small text-decoration-none text-reset">
                     {{ c.libelle }}
-                    <template v-if="c.n > 1"><small class="text-muted"> · {{ c.n }} ABC</small></template>
-                    <template v-else><small class="text-muted"> · {{ c.n }} ABC</small></template>
+                    <small class="text-muted"> · {{ c.n }} ABC</small>
                 </Link>
             </div>
 

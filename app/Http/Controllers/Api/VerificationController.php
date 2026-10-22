@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Projet;
 use App\Models\Verification;
+use App\Services\ContributionService;
 use App\Services\StatusService;
 use App\Services\VerificationService;
 use Illuminate\Http\JsonResponse;
@@ -40,6 +41,19 @@ class VerificationController extends Controller
             $etat = $status->verificationEtatPourStatut($statutConstate) ?? $etat;
         }
 
+        // Un verdict de correction de date porte la ligne « Dates confirmées »
+        // dans la note, comme les contributions validées : même affichage sur
+        // la fiche, et même protection contre l'écrasement par le collect
+        // (ProjetRepository). Une ligne antérieure est remplacée.
+        $note = $validated['note'] ?? null;
+        $debut = $validated['annee_debut'] ?? null;
+        $fin = $validated['annee_fin'] ?? null;
+        if ($validated['etat'] === 'confirme_date' && $debut !== null) {
+            $note = ContributionService::retirerLigneDates($note);
+            $ligne = $fin ? "{$debut}–{$fin}" : (string) $debut;
+            $note = $note !== null ? "{$note}\n— Dates confirmées : {$ligne}" : "Dates confirmées : {$ligne}";
+        }
+
         $previous = Verification::find($validated['projet_id']);
         $avant = $previous ? [
             'projet_id' => $previous->projet_id,
@@ -54,7 +68,7 @@ class VerificationController extends Controller
             ['projet_id' => $validated['projet_id']],
             [
                 'etat' => $etat,
-                'note' => $validated['note'] ?? null,
+                'note' => $note,
                 'lien' => $validated['lien'] ?? null,
                 'verifie_le' => now(),
                 'verifie_par' => $user->name,
@@ -84,7 +98,7 @@ class VerificationController extends Controller
                 'statut_constate' => $statutConstate,
                 'annee_debut' => $validated['annee_debut'] ?? null,
                 'annee_fin' => $validated['annee_fin'] ?? null,
-                'note' => $validated['note'] ?? null,
+                'note' => $note,
                 'lien' => $validated['lien'] ?? null,
             ]),
             'par_admin' => $user->name,

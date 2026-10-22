@@ -74,11 +74,30 @@ class ContributionService
     }
 
     /**
+     * Extrait les dates confirmées d'une note de vérification : la ligne
+     * « Dates confirmées : 2026 » ou « Dates confirmées : 2025–2027 »,
+     * éventuellement préfixée « — » ou suivie d'un « — Source : … » collé
+     * en fin de ligne.
+     *
+     * @return array{0: int, 1: int|null}|null [année de début, année de fin], null si la note n'en porte pas
+     */
+    public static function datesFromNote(?string $note): ?array
+    {
+        if ($note === null
+            || preg_match('/dates confirm\p{L}*\s*:\s*(\d{4})(?:\s*[–—-]\s*(\d{4}))?/iu', $note, $m) !== 1
+        ) {
+            return null;
+        }
+
+        return [(int) $m[1], isset($m[2]) ? (int) $m[2] : null];
+    }
+
+    /**
      * Retire la ligne auto « Dates confirmées : … » (avec son « — Source : … »
      * collé en fin) d'une note antérieure : une nouvelle suggestion de dates
      * la remplace au lieu de l'empiler.
      */
-    private function retirerLigneDates(?string $note): ?string
+    public static function retirerLigneDates(?string $note): ?string
     {
         if (! $note) {
             return null;

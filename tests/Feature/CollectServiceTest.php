@@ -330,4 +330,68 @@ class CollectServiceTest extends TestCase
 
         $this->assertDatabaseHas('projets', ['id' => 'projet-revert', 'annee_debut' => 2021]);
     }
+
+    public function test_upsert_preserves_dates_from_confirmed_date_verification(): void
+    {
+        // Vitré : verdict « Date confirmée » enregistré sur un projet Fonds
+        // vert que la source ne date pas — le collect suivant (source sans
+        // année) ne doit pas effacer la date humaine.
+        Projet::create([
+            'id' => 'projet-verdict',
+            'nom' => 'ABC Verdict',
+            'annee_debut' => 2026,
+            'statut' => 'a_venir',
+            'source' => 'fondsvert-p113-2025',
+        ]);
+        Verification::create([
+            'projet_id' => 'projet-verdict',
+            'etat' => 'confirme_date',
+            'note' => 'Dates confirmées : 2026 — Source : Ville de Vitré',
+            'verifie_le' => now(),
+            'verifie_par' => 'admin',
+        ]);
+
+        app(ProjetRepository::class)->upsertProjet([
+            'id' => 'projet-verdict',
+            'nom' => 'ABC Verdict renommé',
+            'annee_debut' => null,
+            'statut' => 'a_venir',
+            'source' => 'fondsvert-p113-2025',
+        ]);
+
+        $this->assertDatabaseHas('projets', [
+            'id' => 'projet-verdict',
+            'nom' => 'ABC Verdict renommé',
+            'annee_debut' => 2026,
+        ]);
+    }
+
+    public function test_upsert_preserves_dates_with_confirmees_line_even_after_status_verdict(): void
+    {
+        // Verdict de date avec statut constaté : l'état devient celui du
+        // statut, mais la ligne « Dates confirmées » de la note garde la
+        // protection contre la source.
+        Projet::create([
+            'id' => 'projet-ligne',
+            'nom' => 'ABC Ligne',
+            'annee_debut' => 2027,
+            'statut' => 'a_venir',
+            'source' => 'data.gouv',
+        ]);
+        Verification::create([
+            'projet_id' => 'projet-ligne',
+            'etat' => 'confirme_en_cours',
+            'note' => '— Dates confirmées : 2027 — Source : bulletin municipal',
+        ]);
+
+        app(ProjetRepository::class)->upsertProjet([
+            'id' => 'projet-ligne',
+            'nom' => 'ABC Ligne',
+            'annee_debut' => 2024,
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+
+        $this->assertDatabaseHas('projets', ['id' => 'projet-ligne', 'annee_debut' => 2027]);
+    }
 }

@@ -306,6 +306,56 @@ class SeoLandingPagesTest extends TestCase
         );
     }
 
+    public function test_departement_page_groups_projects_by_commune_most_recent_first(): void
+    {
+        $this->seedData();
+        // Vitré a fait un ABC en 2010, puis un nouveau (Fonds vert) qui
+        // débutera en 2026 : les deux lignes se suivent, la plus récente
+        // d'abord — une commune qui refait un ABC se lit d'un coup d'œil.
+        Projet::create([
+            'id' => 'abc-vitre-2010',
+            'nom' => 'ABC de Vitré',
+            'statut' => 'termine',
+            'source' => 'data.gouv',
+            'annee_debut' => 2010,
+        ]);
+        Projet::create([
+            'id' => 'atlas-vitre-2026',
+            'nom' => 'Atlas de la Biodiversité Communale',
+            'statut' => 'a_venir',
+            'source' => 'fondsvert-p113-2025',
+            'annee_debut' => 2026,
+        ]);
+        Commune::create([
+            'projet_id' => 'abc-vitre-2010',
+            'code_geographique' => '56010',
+            'libelle_geographique' => 'Vitré',
+            'departement' => '56',
+            'anomalie' => false,
+        ]);
+        Commune::create([
+            'projet_id' => 'atlas-vitre-2026',
+            'code_geographique' => '56010',
+            'libelle_geographique' => 'Vitré',
+            // Sans colonne département : rattrapé par le préfixe INSEE 56.
+            'departement' => null,
+            'anomalie' => false,
+        ]);
+
+        $this->get('/departement/56')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Departement')
+                ->has('departement.projets', 3)
+                // Groupes de communes par ordre alphabétique…
+                ->where('departement.projets.0.commune_principale', 'Vannes')
+                // …et, au sein d'un groupe, l'ABC le plus récent en premier.
+                ->where('departement.projets.1.commune_principale', 'Vitré')
+                ->where('departement.projets.1.annee_debut', 2026)
+                ->where('departement.projets.2.commune_principale', 'Vitré')
+                ->where('departement.projets.2.annee_debut', 2010)
+                ->has('departement.communes', 2)
+        );
+    }
+
     public function test_carte_page_returns_map_payload(): void
     {
         $this->seedData();

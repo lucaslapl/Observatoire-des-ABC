@@ -8,6 +8,7 @@ use App\Models\ProjectAlias;
 use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\Snapshot;
+use App\Models\Verification;
 use Illuminate\Support\Carbon;
 
 /**
@@ -123,10 +124,11 @@ class ProjetRepository
 
         $projet = Projet::find($p['id']);
         if ($projet) {
-            if ($this->hasValidatedDateContribution($p['id'])) {
-                // Dates confirmées par un membre : la source ne doit pas les
+            if ($this->hasConfirmedDates($p['id'])) {
+                // Dates confirmées par un humain (contribution validée ou
+                // verdict de vérification) : la source ne doit pas les
                 // écraser. Une correction se fait par une nouvelle
-                // contribution (qui remplacera l'ancienne valeur validée).
+                // contribution ou un nouveau verdict.
                 unset($data['annee_debut']);
             }
             $projet->fill($data);
@@ -165,18 +167,26 @@ class ProjetRepository
     }
 
     /**
-     * Une contribution de dates (type date_debut) validée écrit directement
-     * dans projets.annee_debut / annee_fin : ces valeurs humaines doivent
-     * survivre aux collects suivants. Le retrait de la contribution
-     * (statut retiree) retire la protection et rend la main à la source.
+     * Des dates ont été confirmées par un humain : soit une contribution de
+     * dates (type date_debut) validée, soit un verdict de vérification
+     * (« confirme_date » ou ligne « Dates confirmées : … » dans la note).
+     * Ces valeurs humaines doivent survivre aux collects suivants. Le
+     * retrait de la contribution (statut retiree) retire la protection
+     * correspondante et rend la main à la source.
      */
-    protected function hasValidatedDateContribution(string $projetId): bool
+    protected function hasConfirmedDates(string $projetId): bool
     {
         return Contribution::query()
             ->where('projet_id', $projetId)
             ->where('type', 'date_debut')
             ->where('statut', 'validee')
-            ->exists();
+            ->exists()
+            || Verification::query()
+                ->where('projet_id', $projetId)
+                ->where(fn ($q) => $q
+                    ->where('etat', 'confirme_date')
+                    ->orWhere('note', 'LIKE', '%Dates confirmées%'))
+                ->exists();
     }
 
     public function recordSnapshot(string $snapshotDate, string $projetId, string $avancement, string $source): void
