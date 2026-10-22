@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Commune;
 use App\Models\Contribution;
 use App\Models\Enrichissement;
+use App\Models\Financement;
 use App\Models\ProjectAlias;
 use App\Models\Projet;
 use App\Models\Snapshot;
@@ -20,8 +21,8 @@ use Illuminate\Support\Facades\Storage;
  * - le doublon devient un alias du projet canonique (table project_aliases) ;
  * - communes et snapshots sont unis (dédupliqués sur le code INSEE / la
  *   date) ; en cas de conflit la valeur du canonique est conservée ;
- * - vérifications, contributions et enrichissement migrent vers le
- *   canonique sans perte (notes concaténées si les deux en ont) ;
+ * - vérifications, contributions, financements et enrichissement migrent
+ *   vers le canonique sans perte (notes concaténées si les deux en ont) ;
  * - le slug du doublon est conservé dans l'alias : /abc/{slug du doublon}
  *   redirige en 301 vers le canonique ;
  * - tout est journalisé dans audit_log, et un snapshot JSON pré-fusion
@@ -87,6 +88,7 @@ class MergeProjectsCommand extends Command
                 'verification' => $this->mergeVerification($doublon, $canonique),
                 'contributions_deplacees' => Contribution::where('projet_id', $doublon->id)->update(['projet_id' => $canonique->id]),
                 'enrichissement' => $this->mergeEnrichissement($doublon, $canonique),
+                'financements_deplaces' => Financement::where('project_id', $doublon->id)->update(['project_id' => $canonique->id]),
             ];
 
             ProjectAlias::create([
@@ -124,6 +126,7 @@ class MergeProjectsCommand extends Command
         $this->line("  communes unies : +{$stats['communes_deplacees']}");
         $this->line("  snapshots unis : +{$stats['snapshots_deplaces']}");
         $this->line("  contributions migrées : {$stats['contributions_deplacees']}");
+        $this->line("  financements migrés : {$stats['financements_deplaces']}");
         $this->line("  vérification : {$stats['verification']}");
         $this->line("  enrichissement : {$stats['enrichissement']}");
         $this->line("  rollback possible : {$stats['snapshot_rollback']}");
@@ -227,6 +230,7 @@ class MergeProjectsCommand extends Command
             'snapshots' => Snapshot::where('projet_id', $doublon->id)->get()->map(fn ($s) => $s->getAttributes())->all(),
             'verification' => Verification::find($doublon->id)?->getAttributes(),
             'contributions_ids' => Contribution::where('projet_id', $doublon->id)->pluck('id')->all(),
+            'financements' => Financement::where('project_id', $doublon->id)->get()->map(fn ($f) => $f->getAttributes())->all(),
             'enrichissement' => Enrichissement::where('projet_id', $doublon->id)->first()?->getAttributes(),
         ];
 

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AuditLog;
 use App\Models\Commune;
 use App\Models\Contribution;
+use App\Models\Financement;
 use App\Models\Projet;
 use App\Models\Snapshot;
 use App\Models\Verification;
@@ -141,6 +142,41 @@ class MergeProjectsCommandTest extends TestCase
         $snapshot = json_decode(Storage::disk('abc')->get($files[0]), true);
         $this->assertSame($doublon->id, $snapshot['projet']['id']);
         $this->assertSame(2, count($snapshot['communes']));
+    }
+
+    public function test_les_financements_du_doublon_migrent_vers_le_canonique(): void
+    {
+        $canonique = $this->canonique();
+        $doublon = $this->doublon();
+
+        Financement::create([
+            'project_id' => $doublon->id,
+            'source' => 'fondsvert-p113-2024',
+            'ligne_id' => '19848031',
+            'beneficiaire' => 'CC DE TEST',
+            'annee_financement' => 2024,
+            'montant' => 111188.00,
+            'ligne_brute' => ['nom_du_projet' => 'ABC de Test-Doublon'],
+        ]);
+
+        $this->artisan('abc:merge-projects', ['doublon' => $doublon->id, 'canonique' => $canonique->id])->assertExitCode(0);
+
+        // Le financement a migré : la cascade de suppression du doublon ne
+        // doit jamais effacer une ligne Fonds vert déjà rattachée.
+        $this->assertDatabaseMissing('financements', ['project_id' => $doublon->id]);
+        $this->assertSame(1, Financement::where('project_id', $canonique->id)->count());
+        $this->assertDatabaseHas('financements', [
+            'project_id' => $canonique->id,
+            'source' => 'fondsvert-p113-2024',
+            'ligne_id' => '19848031',
+        ]);
+
+        // Snapshot de rollback : l'état complet du financement est conservé.
+        $files = Storage::disk('abc')->files('merges');
+        $this->assertCount(1, $files);
+        $snapshot = json_decode(Storage::disk('abc')->get($files[0]), true);
+        $this->assertCount(1, $snapshot['financements']);
+        $this->assertSame('19848031', $snapshot['financements'][0]['ligne_id']);
     }
 
     public function test_ancien_slug_redirige_en_301_vers_le_canonique(): void
