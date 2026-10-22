@@ -58,6 +58,13 @@ class BackupService
         if ($rc !== 0) {
             $error = trim($out);
 
+            // Hébergement mutualisé (ex. Plesk) : le PATH du cron ne
+            // contient pas pg_dump. Plutôt que de perdre la sauvegarde
+            // quotidienne, on retombe sur le dump SQL en pur PHP.
+            if ($rc === 127 || str_contains(strtolower($error), 'not found')) {
+                return $this->backupSqlDump($dir);
+            }
+
             // Dev local sous Windows : pg_dump est absent, on retente via le
             // conteneur Docker. Ailleurs (production, conteneur app), ce
             // fallback n'existe pas et masquerait la vraie erreur pg_dump.

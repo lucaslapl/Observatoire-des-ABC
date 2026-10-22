@@ -15,6 +15,9 @@ class BackupCommand extends Command
     {
         $r = $service->backupDb();
         $this->line("Sauvegarde : {$r['path']} ({$r['kept']} gardées)");
+        if (($r['format'] ?? null) === 'sql') {
+            $this->line('Format SQL : pg_dump indisponible (voir BACKUP_PG_DUMP_BIN).');
+        }
 
         [$rc, $out] = $service->upload($r['path']);
         if ($rc !== 0) {
