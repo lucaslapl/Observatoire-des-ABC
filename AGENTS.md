@@ -164,9 +164,17 @@ dans le commit/le push.
 ## Tests
 
 ```bash
-php artisan test            # ou : vendor/bin/phpunit
-vendor/bin/pint --test      # style sans écriture
+php artisan test                                    # ou : vendor/bin/phpunit
+vendor/bin/pint --test                               # style sans écriture
+vendor/bin/phpstan analyse --no-progress --memory-limit=1G   # niveau 5
+docker compose --profile build run --rm --no-deps assets npm run build   # compile le front (client + SSR)
 ```
+
+**Avant de déclarer qu'une tâche est terminée, les quatre contrôles de la CI
+doivent avoir été exécutés et passés localement** (PHPUnit, Pint, PHPStan,
+build Vite + `npm run test:js` si le front est touché). Un changement est « bon »
+seulement quand ils sont verts : ne pas se limiter aux tests PHPUnit ni annoncer
+que tout est OK sans avoir lancé l'analyse statique.
 
 Suites : `tests/Unit` (AnomalyService, StatusService, ProjectIdService,
 CsvReaderService, DataGouvResolver, GeocodeService, BackupService,

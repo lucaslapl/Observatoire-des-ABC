@@ -26,6 +26,7 @@ class Contribution extends Model
         return $this->belongsTo(Projet::class, 'projet_id', 'id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -138,7 +138,7 @@ class ChangelogService
             ->keyBy('id');
 
         // Commune principale de chaque projet (+ le nombre d'autres communes).
-        $communes = $avecCommunes ? $this->communesOf($projetIds) : null;
+        $communes = $avecCommunes ? $this->communesOf($projetIds->all()) : null;
 
         return $rows
             ->map(fn (AuditLog $row) => $this->entry($row, $contributions, $projets, $communes))
@@ -149,10 +149,10 @@ class ChangelogService
     /**
      * Libellé de la commune principale par projet, ex. « Vannes + 2 autres ».
      *
-     * @param  Collection<int, string>  $projetIds
-     * @return Collection<string, ?string>
+     * @param  array<int, string>  $projetIds
+     * @return array<string, ?string>
      */
-    private function communesOf(Collection $projetIds): Collection
+    private function communesOf(array $projetIds): array
     {
         return Commune::query()
             ->whereIn('projet_id', $projetIds)
@@ -163,7 +163,8 @@ class ChangelogService
                 $libelle = $groupe->first()?->libelle_geographique;
 
                 return $groupe->count() > 1 ? "{$libelle} + ".($groupe->count() - 1).' autres' : $libelle;
-            });
+            })
+            ->all();
     }
 
     /**
@@ -182,10 +183,10 @@ class ChangelogService
     /**
      * @param  Collection<int, Contribution>  $contributions
      * @param  Collection<string, Projet>|Collection<int, Projet>  $projets
-     * @param  Collection<string, ?string>|null  $communes
+     * @param  array<string, ?string>|null  $communes
      * @return array<string, mixed>
      */
-    private function entry(AuditLog $row, Collection $contributions, Collection $projets, ?Collection $communes = null): array
+    private function entry(AuditLog $row, Collection $contributions, Collection $projets, ?array $communes = null): array
     {
         $avant = json_decode($row->avant ?? 'null', true) ?: [];
         $apres = json_decode($row->apres ?? 'null', true) ?: [];
@@ -196,17 +197,15 @@ class ChangelogService
 
         // Nom du projet : la fiche si elle existe encore, sinon le nom
         // figé dans le journal (fiche supprimée, ou fusion vers un canonique).
-        $nom = $projet?->nom
-            ?? $apres['nom']
-            ?? $avant['nom']
-            ?? $apres['canonique']['nom'] ?? null;
+        $nom = $projet !== null ? $projet->nom : null;
+        $nom ??= $apres['nom'] ?? $avant['nom'] ?? $apres['canonique']['nom'] ?? null;
 
         return [
             'date' => $row->created_at?->toDateTimeString(),
             'label' => $this->label($row->action, $apres, $contribution?->type),
             'detail' => $this->detail($row->action, $apres),
             'auteur' => $this->auteur($row, $contribution),
-            'commune' => $communes?->get($projetId),
+            'commune' => $communes[$projetId] ?? null,
             'projet_nom' => $nom,
             'projet_slug' => $projet?->slug,
         ];
@@ -216,8 +215,6 @@ class ChangelogService
      * Auteur de la modification : le contributeur pour une suggestion
      * publique, l'opérateur sinon. Les emails et commandes artisan ne sont
      * jamais exposés publiquement.
-     *
-     * @param  Collection<int, Contribution>  $contributions
      */
     private function auteur(AuditLog $row, ?Contribution $contribution): ?string
     {
