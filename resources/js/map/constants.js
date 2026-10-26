@@ -3,20 +3,24 @@
  * (couleurs, libellés, badges, filtrage des features GeoJSON).
  */
 
-export const COLOR = { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' };
+export const COLOR = { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#8d6e63', inconnu: '#a8a29e' };
 
 /**
- * Palettes de statut pour la carte — exploration visuelle
- * (branche test/design-marqueurs-carte). « defaut » = palette historique.
- * Les autres suivent la métaphore de pousse : bourgeon clair (va débuter) →
- * vert développé (en cours) → teinte posée (terminé).
- * S'appliquent via applyPalette(), activables en local avec ?palettes=1.
+ * Palette de la carte : métaphore de pousse (bourgeon clair = va débuter,
+ * vert profond = en cours, brun séché = terminé, gris pierre = inconnu).
+ * La variante « herbier_cv » renforce la distinction en cours / terminé
+ * pour les daltoniens (brun kraft clair — simulation Machado : dE 27 en
+ * deutéranoplie, 24 en protanoplie) ; elle est activable par l'utilisateur
+ * via le commutateur de la légende, préférence persistée en localStorage.
+ * « ancienne » (Material) reste disponible pour comparaison locale via
+ * ?palettes=1. S'appliquent via applyPalette().
  */
+export const DEFAULT_PALETTE_KEY = 'herbier';
+
 export const PALETTES = {
-    defaut: { label: 'Défaut (actuelle)', statuts: { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' } },
-    pousse: { label: 'Pousse (bourgeon → développé)', statuts: { en_cours: '#3a7d44', a_venir: '#7cb342', termine: '#4f6d9e', inconnu: '#a09a92' } },
-    herbier: { label: 'Herbier (profond, séché)', statuts: { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#c19a7b', inconnu: '#a8a29e' } },
-    canopee: { label: 'Canopée (frais, lumière)', statuts: { en_cours: '#3a7d44', a_venir: '#b7d768', termine: '#227c9d', inconnu: '#b8b2a6' } },
+    herbier: { label: 'Herbier (par défaut)', statuts: { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#8d6e63', inconnu: '#a8a29e' } },
+    herbier_cv: { label: 'Herbier — mode daltonien', statuts: { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#c19a7b', inconnu: '#a8a29e' } },
+    ancienne: { label: 'Ancienne (avant refonte)', statuts: { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' } },
 };
 
 const PALETTE_CSS_VAR = { en_cours: '--ok', a_venir: '--debut', termine: '--fini', inconnu: '--inconnu' };
@@ -27,14 +31,14 @@ const PALETTE_CSS_VAR = { en_cours: '--ok', a_venir: '--debut', termine: '--fini
  * de la légende. Clé inconnue = palette par défaut.
  */
 export function applyPalette(key) {
-    const p = PALETTES[key] || PALETTES.defaut;
+    const p = PALETTES[key] || PALETTES[DEFAULT_PALETTE_KEY];
     Object.assign(COLOR, p.statuts);
     if (typeof document !== 'undefined') {
         for (const [statut, variable] of Object.entries(PALETTE_CSS_VAR)) {
             document.documentElement.style.setProperty(variable, p.statuts[statut]);
         }
     }
-    return PALETTES[key] ? key : 'defaut';
+    return PALETTES[key] ? key : DEFAULT_PALETTE_KEY;
 }
 
 export const METRO = [[41.0, -5.6], [51.5, 10.0]];

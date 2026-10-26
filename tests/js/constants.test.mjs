@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
     visible, dStatut, fmtCount, srcChip, delBtn, srcLabel,
-    COLOR, PALETTES, applyPalette,
+    COLOR, PALETTES, DEFAULT_PALETTE_KEY, applyPalette,
 } from '../../resources/js/map/constants.js';
 
 const feature = (props) => ({ properties: props, geometry: { coordinates: [2.35, 48.85] } });
@@ -66,15 +66,24 @@ test('PALETTES : chaque palette couvre les 4 statuts en hex valide', () => {
     }
 });
 
-test('applyPalette : mute COLOR en place, revient au defaut sur cle inconnue', () => {
-    const avant = { ...COLOR };
+test('COLOR initial = palette par défaut (herbier)', () => {
+    assert.deepEqual({ ...COLOR }, PALETTES[DEFAULT_PALETTE_KEY].statuts);
+});
+
+test('herbier_cv : identique à herbier sauf terminé renforcé', () => {
+    for (const s of ['en_cours', 'a_venir', 'inconnu']) {
+        assert.equal(PALETTES.herbier_cv.statuts[s], PALETTES.herbier.statuts[s], s);
+    }
+    assert.notEqual(PALETTES.herbier_cv.statuts.termine, PALETTES.herbier.statuts.termine);
+});
+
+test('applyPalette : mute COLOR en place, revient au défaut sur clé inconnue', () => {
     const referenceCOLOR = COLOR;
-    assert.equal(applyPalette('herbier'), 'herbier');
-    assert.equal(COLOR.en_cours, PALETTES.herbier.statuts.en_cours);
-    assert.equal(applyPalette('nimporte'), 'defaut');
-    assert.deepEqual({ ...COLOR }, PALETTES.defaut.statuts);
+    assert.equal(applyPalette('ancienne'), 'ancienne');
+    assert.equal(COLOR.termine, PALETTES.ancienne.statuts.termine);
+    assert.equal(applyPalette('nimporte'), DEFAULT_PALETTE_KEY);
+    assert.deepEqual({ ...COLOR }, PALETTES[DEFAULT_PALETTE_KEY].statuts);
     // COLOR mute en place : les importeurs gardent la même référence
     assert.equal(COLOR, referenceCOLOR);
-    assert.equal(applyPalette('defaut'), 'defaut');
-    assert.deepEqual({ ...COLOR }, avant);
+    assert.equal(applyPalette(DEFAULT_PALETTE_KEY), DEFAULT_PALETTE_KEY);
 });

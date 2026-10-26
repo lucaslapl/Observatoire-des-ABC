@@ -2,7 +2,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import { router } from '@inertiajs/vue3';
-import { COLOR, METRO, PALETTES, applyPalette, dStatut, fmtCount, visible } from '../map/constants.js';
+import { COLOR, METRO, PALETTES, DEFAULT_PALETTE_KEY, applyPalette, dStatut, fmtCount, visible } from '../map/constants.js';
 import { buildPopup as buildPopupHtml, buildMultiRow, buildMultiHeader } from '../map/popupBuilders.js';
 import { exportMap as exportMapImage } from '../map/exportImage.js';
 
@@ -43,8 +43,9 @@ const tileOpen = ref(false);
 const exportOpen = ref(false);
 const tileIndex = ref(0);
 const exporting = ref(false);
-const paletteKey = ref('defaut');
+const paletteKey = ref(DEFAULT_PALETTE_KEY);
 const paletteSwitcher = ref(false);
+const cvdMode = ref(false);
 
 const tiles = [
     { name: 'Plan', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap' },
@@ -451,9 +452,23 @@ function onStatutChange() {
 /** Bascule de palette (test visuel) : COLOR mute en place, on redessine tout. */
 function onPaletteChange() {
     paletteKey.value = applyPalette(paletteKey.value);
+    cvdMode.value = paletteKey.value === 'herbier_cv';
     const url = new URL(window.location.href);
     url.searchParams.set('palette', paletteKey.value);
     window.history.replaceState(null, '', url);
+    clearExpanded();
+    apply();
+    updateCounts();
+}
+
+/** Mode daltonien : palette renforcée, préférence persistée sur l'appareil. */
+function onCvdToggle() {
+    try {
+        window.localStorage.setItem('abc.cvd', cvdMode.value ? '1' : '0');
+    } catch (e) {
+        // stockage indisponible (navigation privée) : la bascule reste valable pour la session
+    }
+    paletteKey.value = applyPalette(cvdMode.value ? 'herbier_cv' : DEFAULT_PALETTE_KEY);
     clearExpanded();
     apply();
     updateCounts();
@@ -528,11 +543,22 @@ function exportMap(format) {
 }
 
 onMounted(async () => {
-    // Palette de test : activée par ?palette=<clé> ou ?palettes=1 (sélecteur seul).
+    // Palette : le paramètre d'exploration locale (?palette= / ?palettes=1)
+    // prime sur la préférence « mode daltonien » persistée.
+    let cvdStored = null;
+    try {
+        cvdStored = window.localStorage.getItem('abc.cvd');
+    } catch (e) {
+        cvdStored = null;
+    }
     const paletteParams = new URLSearchParams(window.location.search);
     if (paletteParams.has('palette') || paletteParams.has('palettes')) {
         paletteSwitcher.value = true;
         paletteKey.value = applyPalette(paletteParams.get('palette'));
+        cvdMode.value = paletteKey.value === 'herbier_cv';
+    } else if (cvdStored === '1') {
+        cvdMode.value = true;
+        paletteKey.value = applyPalette('herbier_cv');
     }
 
     const [{ default: leaf }] = await Promise.all([import('leaflet')]);
@@ -646,6 +672,12 @@ onBeforeUnmount(() => {
                     <div class="legend-item"><span class="chip chip-dash" style="border-color:var(--debut)"></span>Va débuter<span class="cnt">{{ counts.a_venir }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--fini)"></span>Terminé<span class="cnt">{{ counts.termine }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu<span class="cnt">{{ counts.inconnu }}</span></div>
+                    <div class="legend-item cvd-row">
+                        <label class="cvd-toggle" title="Renforce la distinction « En cours » / « Terminé » pour les personnes daltoniennes (brun séché plus clair). Préférence mémorisée sur cet appareil.">
+                            <input type="checkbox" v-model="cvdMode" @change="onCvdToggle">
+                            <span>Couleurs renforcées (daltonisme)</span>
+                        </label>
+                    </div>
                     <template v-if="paletteSwitcher">
                         <div class="legend-section">Palette (test)</div>
                         <select v-model="paletteKey" class="palette-select" title="Exploration visuelle — palette des statuts" @change="onPaletteChange">
@@ -793,6 +825,8 @@ onBeforeUnmount(() => {
 .meta-note .v { color: #374151; text-align: right; font-variant-numeric: tabular-nums; }
 .chip { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
 .chip-dash { background: transparent; border: 1.5px dashed var(--debut); box-sizing: border-box; }
+.cvd-toggle { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #4b5563; cursor: pointer; }
+.cvd-toggle input { accent-color: #2d6a4f; flex: none; }
 .leaflet-control-scale { margin-left: 300px !important; }
 @media (max-width:720px) {
     .legend { left: 6px; right: 6px; width: auto; max-width: none; }
@@ -890,7 +924,7 @@ onBeforeUnmount(() => {
 
 <style>
 html, body { margin: 0; }
-:root { --ok: #2e7d32; --debut: #ef6c00; --fini: #1565c0; --inconnu: #9e9e9e; }
+:root { --ok: #2d6a4f; --debut: #9ccc65; --fini: #8d6e63; --inconnu: #a8a29e; }
 .leaflet-popup-content { max-height: 300px; overflow-y: auto; }
 .map-tooltip { background: #1f2937; color: #fff; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 500; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .map-tooltip::before { border-top-color: #1f2937; }
