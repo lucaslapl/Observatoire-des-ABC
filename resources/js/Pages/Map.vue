@@ -4,8 +4,8 @@ import { Link, usePage } from '@inertiajs/vue3';
 import Seo from '../Components/Seo.vue';
 import MapExplorer from '../Components/MapExplorer.vue';
 import ConsentBanner from '../Components/ConsentBanner.vue';
+import Footer from '../Components/Footer.vue';
 import InfoBanner from '../Components/InfoBanner.vue';
-import { reopenConsentChoice } from '../utils/consent';
 
 const props = defineProps({
     meta: {
@@ -226,26 +226,7 @@ const seoJsonLd = computed(() => {
             </div>
         </section>
 
-        <footer class="home-footer py-3">
-            <div class="container small text-center">
-                <div>Observatoire des ABC — données réutilisées en lisant <a href="https://data.gouv.fr" rel="noopener">data.gouv.fr</a>. Projet ouvert.</div>
-                <div class="my-1">
-                    Développé par <a href="https://lucaslaplanche.fr" target="_blank" rel="noopener">Lucas LAPLANCHE</a> ·
-                    Code source sur <a href="https://github.com/lucaslapl/Observatoire-des-ABC" target="_blank" rel="noopener">GitHub</a>
-                </div>
-                <div>
-                    <Link href="/carte">Carte</Link>&nbsp;·
-                    <Link href="/a-propos">À propos</Link>&nbsp;·
-                    <Link href="/methodologie">Méthodologie des données</Link>&nbsp;·
-                    <Link href="/actualites">Actualités</Link>&nbsp;·
-                    <Link href="/api">API &amp; réutilisation</Link>&nbsp;·
-                    <Link href="/contact">Contact</Link>&nbsp;·
-                    <Link href="/mentions-legales">Mentions légales</Link>&nbsp;·
-                    <Link href="/confidentialite">Confidentialité</Link>&nbsp;·
-                    <a href="#" @click.prevent="reopenConsentChoice">Cookies</a>
-                </div>
-            </div>
-        </footer>
+        <Footer />
 
         <ConsentBanner />
     </div>
@@ -290,6 +271,4 @@ const seoJsonLd = computed(() => {
 .changelog-list .detail { color: #64748b; margin-left: .25rem; }
 .changelog-list .auteur { color: #94a3b8; margin-left: .25rem; }
 .changelog-list .projet { color: #14532d; font-weight: 600; }
-.home-footer { background: #14532d; color: #e8f5e9; }
-.home-footer a { color: #fff; }
 </style>

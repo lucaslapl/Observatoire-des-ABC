@@ -3,8 +3,8 @@ import { ref, watch } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import BrandMark from './BrandMark.vue';
 import ConsentBanner from './ConsentBanner.vue';
+import Footer from './Footer.vue';
 import InfoBanner from './InfoBanner.vue';
-import { reopenConsentChoice } from '../utils/consent';
 
 defineProps({
     title: String,
@@ -79,29 +79,7 @@ watch(() => page.component, () => {
             <slot />
         </main>
 
-        <footer class="site-footer py-3">
-            <div class="container small text-center">
-                <div class="mb-1">
-                    Observatoire des ABC — données réutilisées en lisant
-                    <a href="https://data.gouv.fr" rel="noopener">data.gouv.fr</a>.
-                </div>
-                <div class="mb-1">
-                    Développé par <a href="https://lucaslaplanche.fr" target="_blank" rel="noopener">Lucas LAPLANCHE</a>
-                    · Code source sur <a href="https://github.com/lucaslapl/Observatoire-des-ABC" target="_blank" rel="noopener">GitHub</a>
-                </div>
-                <div>
-                    <Link href="/carte">Carte</Link>&nbsp;·
-                    <Link href="/a-propos">À propos</Link>&nbsp;·
-                    <Link href="/methodologie">Méthodologie des données</Link>&nbsp;·
-                    <Link href="/actualites">Actualités</Link>&nbsp;·
-                    <Link href="/api">API &amp; réutilisation</Link>&nbsp;·
-                    <Link href="/contact">Contact</Link>&nbsp;·
-                    <Link href="/mentions-legales">Mentions légales</Link>&nbsp;·
-                    <Link href="/confidentialite">Confidentialité</Link>&nbsp;·
-                    <a href="#" @click.prevent="reopenConsentChoice">Cookies</a>
-                </div>
-            </div>
-        </footer>
+        <Footer />
 
         <ConsentBanner />
     </div>
@@ -109,7 +87,4 @@ watch(() => page.component, () => {
 
 <style>
 .navbar-abc { background: #14532d; }
-.site-footer { background: #14532d; color: #e8f5e9; }
-.site-footer a { color: #fff; }
-.site-footer a:hover { color: #f0fdf4; }
 </style>
