@@ -16,7 +16,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
             title="Comment les données sont construites"
             description="La méthodologie de l'Observatoire des ABC : collecte des registres publics (OFB, data.gouv.fr, Fonds vert, archives 2022), détection des anomalies, traitement des doublons par fusion sans perte, vérification humaine et journal d'audit."
         />
-        <div class="container py-4" style="max-width: 760px;">
+        <div class="container py-4 doc-content" style="max-width: 760px;">
             <h1 class="h3 mb-4">Comment les données sont construites</h1>
 
             <p class="lead">
@@ -41,7 +41,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 </div>
             </div>
 
-            <h2 class="h6">1. Trois sources publiques, collectées automatiquement</h2>
+            <h2>1. Trois sources publiques, collectées automatiquement</h2>
             <p>
                 Les projets proviennent exclusivement de <strong>registres publics</strong> :
             </p>
@@ -74,7 +74,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 n'est jamais appliquée en silence.
             </p>
 
-            <h2 class="h6">2. Localisation et détection d'anomalies</h2>
+            <h2>2. Localisation et détection d'anomalies</h2>
             <p>
                 Chaque commune rattachée à un projet est localisée grâce à l'
                 <a href="https://geo.api.gouv.fr" rel="noopener" target="_blank">API géographique officielle</a>
@@ -85,7 +85,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 <Link href="/verify">liste de vérification</Link> examinée à la main, projet par projet.
             </p>
 
-            <h2 class="h6">3. Le travail humain passe avant la machine</h2>
+            <h2>3. Le travail humain passe avant la machine</h2>
             <p>
                 Deux mécanismes complètent la collecte automatique :
             </p>
@@ -108,7 +108,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 <strong>journal d'audit</strong> qui conserve l'état avant et après modification.
             </p>
 
-            <h2 class="h6">4. Les doublons : détecter, comprendre, fusionner sans perte</h2>
+            <h2>4. Les doublons : détecter, comprendre, fusionner sans perte</h2>
             <p>
                 Un même ABC peut apparaître dans plusieurs sources sous des formes différentes :
                 l'ancien site l'écrivait avec une orthographe différente du registre actuel,
@@ -132,7 +132,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 est mise en file pour examen humain — jamais fusionnée à l'aveugle.
             </p>
 
-            <h2 class="h6">5. Corriger une erreur</h2>
+            <h2>5. Corriger une erreur</h2>
             <p>
                 Le circuit d'une correction est toujours le même : une anomalie est détectée
                 (automatiquement ou signalée par un visiteur), elle est examinée, puis corrigée
@@ -143,7 +143,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 du projet concerné.
             </p>
 
-            <h2 class="h6">6. Tout est consultable</h2>
+            <h2>6. Tout est consultable</h2>
             <p>
                 L'intégralité des données est exportable librement en
                 <a href="/api/abc.geojson">GeoJSON</a>

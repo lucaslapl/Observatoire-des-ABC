@@ -16,10 +16,10 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
             title="À propos"
             description="Pourquoi et comment l'Observatoire des ABC a été créé : sources publiques (OFB, Fonds vert, data.gouv.fr), vérification manuelle, projet indépendant né de l'indisponibilité d'abc.naturefrance.fr."
         />
-        <div class="container py-4" style="max-width: 760px;">
+        <div class="container py-4 doc-content" style="max-width: 760px;">
             <h1 class="h3 mb-4">À propos</h1>
 
-            <h2 class="h6">Pourquoi ce site existe</h2>
+            <h2>Pourquoi ce site existe</h2>
             <p>
                 L'Observatoire des ABC est né d'un constat simple : le site de référence
                 <a href="https://abc.naturefrance.fr" rel="noopener" target="_blank">abc.naturefrance.fr</a>,
@@ -52,7 +52,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 </div>
             </div>
 
-            <h2 class="h6">D'où viennent les données</h2>
+            <h2>D'où viennent les données</h2>
             <p>
                 Les données proviennent exclusivement de registres publics :
                 <a href="https://data.gouv.fr" rel="noopener" target="_blank">data.gouv.fr</a>
@@ -76,7 +76,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 est décrit sur la page <Link href="/methodologie">« Comment les données sont construites »</Link>.
             </p>
 
-            <h2 class="h6">Comment le site a été développé</h2>
+            <h2>Comment le site a été développé</h2>
             <p>
                 Le code du site a été développé avec l'assistance d'un outil IA
                 (<a href="https://mistral.ai" rel="noopener" target="_blank">Mistral Code</a>),
@@ -85,7 +85,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 <a href="https://github.com/lucaslapl/Observatoire-des-ABC" rel="noopener" target="_blank">GitHub</a>.
             </p>
 
-            <h2 class="h6">Un projet indépendant</h2>
+            <h2>Un projet indépendant</h2>
             <p>
                 L'Observatoire des ABC est un projet citoyen indépendant : il n'est ni édité, ni animé par
                 le MNHN, l'OFB ou tout autre organisme public. Pour toute question ou suggestion,

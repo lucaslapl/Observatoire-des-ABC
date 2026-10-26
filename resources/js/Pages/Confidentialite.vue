@@ -14,10 +14,10 @@ const site = computed(() => page.props.site || {});
             title="Politique de confidentialité"
             description="Politique de confidentialité de l'Observatoire des ABC : cookies, mesure d'audience, contributions et données."
         />
-        <div class="container py-4" style="max-width: 760px;">
+        <div class="container py-4 doc-content" style="max-width: 760px;">
             <h1 class="h3 mb-4">Politique de confidentialité</h1>
 
-            <h2 class="h6">Ce que nous collectons</h2>
+            <h2>Ce que nous collectons</h2>
             <p>
                 La consultation de la carte ne nécessite aucune donnée personnelle. Les propositions de correction
                 (contribution) exigent un compte dont l'adresse email est vérifiée ; vous pouvez y ajouter un
@@ -36,7 +36,7 @@ const site = computed(() => page.props.site || {});
                 associées à celui-ci pour en faciliter la modération et le suivi.
             </p>
 
-            <h2 class="h6">Comptes et suppression</h2>
+            <h2>Comptes et suppression</h2>
             <p>
                 Vous pouvez supprimer votre compte à tout moment depuis votre espace membre
                 (après confirmation de votre mot de passe). La suppression efface le compte ;
@@ -51,7 +51,7 @@ const site = computed(() => page.props.site || {});
                 et modérateurs conservent l'accès à l'identité des contributions pour la modération.
             </p>
 
-            <h2 class="h6">Cookies & mesure d'audience</h2>
+            <h2>Cookies & mesure d'audience</h2>
             <p>
                 Ce site utilise une mesure d'audience anonyme (Matomo, auto-hébergé) : statistiques
                 de fréquentation agrégées, sans revente ni recoupement de données. Au titre de
@@ -82,7 +82,7 @@ const site = computed(() => page.props.site || {});
                 Ces cookies ne servent à aucune mesure d'audience ni à aucun partage avec des tiers.
             </p>
 
-            <h2 class="h6">Conservation des données</h2>
+            <h2>Conservation des données</h2>
             <p>
                 Les contributions et leurs métadonnées de modération (adresse IP, user-agent) sont conservées
                 pendant toute la durée nécessaire à la modération des propositions. Les comptes sont conservés
@@ -90,7 +90,7 @@ const site = computed(() => page.props.site || {});
                 leur traitement, dans la boîte mail du destinataire.
             </p>
 
-            <h2 class="h6">Vos droits</h2>
+            <h2>Vos droits</h2>
             <p>
                 Vous disposez d'un droit d'accès, de rectification et de suppression des données vous concernant.
                 Pour l'exercer, écrivez-nous via le <a href="/contact">formulaire de contact</a> ; pour vos

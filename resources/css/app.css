@@ -1,3 +1,32 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 @import 'leaflet/dist/leaflet.css';
+
+/* Pages documentaires : à propos, méthodologie, mentions légales, confidentialité */
+.doc-content h2 {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--bs-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin: 2rem 0 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.doc-content h2:first-of-type {
+    margin-top: 0;
+}
+
+.doc-content ul {
+    padding-left: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.doc-content li {
+    margin-bottom: 0.5rem;
+}
+
+.doc-content li::marker {
+    color: var(--bs-primary);
+}
