@@ -5,7 +5,7 @@ info:
   version: 1.0.0
 servers:
   -
-    url: 'http://localhost:8000'
+    url: 'https://observatoire-abc.fr'
 tags:
   -
     name: Communes
@@ -131,7 +131,7 @@ paths:
                     per_page: 1
                     next_cursor: eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0
                     prev_cursor: null
-                    next_page_url: 'http://localhost:8000/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0'
+                    next_page_url: 'https://observatoire-abc.fr/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0'
                     licence: Etalab-2.0
                 properties:
                   data:
@@ -188,7 +188,7 @@ paths:
                         nullable: true
                       next_page_url:
                         type: string
-                        example: 'http://localhost:8000/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0'
+                        example: 'https://observatoire-abc.fr/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0'
                       licence:
                         type: string
                         example: Etalab-2.0
@@ -273,7 +273,7 @@ paths:
                 statut:
                   type: string
                   description: ''
-                  example: en_cours
+                  example: inconnu
                   enum:
                     - a_venir
                     - en_cours

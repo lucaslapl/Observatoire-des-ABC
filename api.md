@@ -94,12 +94,24 @@ Les docs sont **générées et committées** (`public/docs/`) : la production
 sert des fichiers statiques et n'a pas besoin de Scribe.
 
 ```bash
-# Regénérer localement avec Docker (après avoir touché les contrôleurs) :
+# Regénérer pour la production (URL de base des exemples = le site public,
+# collectivités et réutilisateurs copient-collent des requêtes qui marchent) :
+docker compose exec -e SCRIBE_BASE_URL=https://observatoire-abc.fr \
+    -e APP_URL=https://observatoire-abc.fr \
+    app php artisan scribe:generate
+
+# Regénérer pour le développement local (URL http://localhost:8000) :
 docker compose exec app php artisan scribe:generate
 
 # La doc est alors visible sur http://localhost:8000/api/doc
 # et la spécification sur http://localhost:8000/api/doc/openapi.yaml
 ```
+
+`SCRIBE_BASE_URL` prime sur `APP_URL` pour l'URL affichée (`scribe.base_url`) ;
+`APP_URL` doit aussi être surchargée à la génération : les réponses-exemples
+sont capturées depuis l'application, et les `next_page_url` qu'elles
+contiennent sont construits avec l'URL de la requête. Sans cette double
+surcharge, des exemples pointeraient encore vers localhost.
 
 Scribe est une dépendance de développement (`knuckleswtf/scribe` en
 `require-dev`), configuré dans `config/scribe.php` (type `static`, sortie

@@ -5,12 +5,12 @@
             "key": "baseUrl",
             "type": "string",
             "name": "string",
-            "value": "http:\/\/localhost:8000"
+            "value": "https:\/\/observatoire-abc.fr"
         }
     ],
     "info": {
         "name": "API publique v1 \u2014 Observatoire des ABC",
-        "_postman_id": "d8fbc72b-a71f-4d5b-98e8-c5c411a850fb",
+        "_postman_id": "54ecd98e-cd7f-4408-9272-af568eb5af20",
         "description": "API publique en lecture seule de l'Observatoire des ABC : projets ABC, communes, d\u00e9partements, r\u00e9gions, journal d'audit et statistiques. Donn\u00e9es sous Licence Ouverte 2.0 (Etalab). Acc\u00e8s ouvert sans cl\u00e9, 60 requ\u00eates\/min par IP.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -228,7 +228,7 @@
                                 }
                             ],
                             "code": 200,
-                            "body": "{\"data\":[{\"date\":\"2026-10-22 14:32:01\",\"label\":\"Dates resynchronis\\u00e9es\",\"detail\":\"depuis 2026\",\"auteur\":\"Synchronisation automatique\",\"commune\":\"Vitr\\u00e9\",\"projet_nom\":\"Atlas de la Biodiversit\\u00e9 Communale\",\"projet_slug\":\"atlas-de-la-biodiversite-communale\",\"projet_id\":\"atlas-de-la-biodiversite-communale-commune-de-vitre-2025\"}],\"meta\":{\"per_page\":1,\"next_cursor\":\"eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"prev_cursor\":null,\"next_page_url\":\"http:\\\/\\\/localhost:8000\\\/api\\\/v1\\\/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"licence\":\"Etalab-2.0\"}}",
+                            "body": "{\"data\":[{\"date\":\"2026-10-22 14:32:01\",\"label\":\"Dates resynchronis\\u00e9es\",\"detail\":\"depuis 2026\",\"auteur\":\"Synchronisation automatique\",\"commune\":\"Vitr\\u00e9\",\"projet_nom\":\"Atlas de la Biodiversit\\u00e9 Communale\",\"projet_slug\":\"atlas-de-la-biodiversite-communale\",\"projet_id\":\"atlas-de-la-biodiversite-communale-commune-de-vitre-2025\"}],\"meta\":{\"per_page\":1,\"next_cursor\":\"eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"prev_cursor\":null,\"next_page_url\":\"https:\\\/\\\/observatoire-abc.fr\\\/api\\\/v1\\\/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"licence\":\"Etalab-2.0\"}}",
                             "name": ""
                         }
                     ]
@@ -261,7 +261,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"statut\":\"en_cours\",\"annee\":1,\"code_insee\":\"T8GOX$\\\/i\",\"departement\":\"b\",\"region\":\"m\",\"porteur\":\"i\",\"bbox\":\"8,sssssss-20:.492,ssssss-1,ssss9\",\"per_page\":3,\"format\":\"json\"}"
+                            "raw": "{\"statut\":\"inconnu\",\"annee\":1,\"code_insee\":\"T8GOX$\\\/i\",\"departement\":\"b\",\"region\":\"m\",\"porteur\":\"i\",\"bbox\":\"8,sssssss-20:.492,ssssss-1,ssss9\",\"per_page\":3,\"format\":\"json\"}"
                         },
                         "description": "Pagin\u00e9e par curseur (`meta.next_cursor` \/ `meta.next_page_url`).\nFiltres : `statut` (a_venir, en_cours, termine, inconnu \u2014 statut\naffich\u00e9, le verdict de v\u00e9rification prime), `annee` (ann\u00e9e de\nd\u00e9but), `code_insee`, `departement` (ex. 56, 2a, 972), `region`\n(slug, code INSEE ou libell\u00e9), `porteur` (recherche partielle),\n`bbox` (`lon_min,lat_min,lon_max,lat_max`, WGS84).\nFormat GeoJSON avec `format=geojson` ou `Accept: application\/geo+json`.",
                         "auth": {
@@ -480,12 +480,12 @@
                         {
                             "header": [
                                 {
-                                    "key": "cache-control",
-                                    "value": "max-age=3600, public"
-                                },
-                                {
                                     "key": "content-type",
                                     "value": "application\/json"
+                                },
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
                                 },
                                 {
                                     "key": "x-ratelimit-limit",

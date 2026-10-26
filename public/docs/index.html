@@ -26,7 +26,7 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "http://localhost:8000";
+        var tryItOutBaseUrl = "https://observatoire-abc.fr";
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
@@ -156,7 +156,7 @@ projets vérifiés, anomalies, contributions en attente.</a>
         <h1 id="introduction">Introduction</h1>
 <p>API publique en lecture seule de l'Observatoire des ABC : projets ABC, communes, départements, régions, journal d'audit et statistiques. Données sous Licence Ouverte 2.0 (Etalab). Accès ouvert sans clé, 60 requêtes/min par IP.</p>
 <aside>
-    <strong>Base URL</strong>: <code>http://localhost:8000</code>
+    <strong>Base URL</strong>: <code>https://observatoire-abc.fr</code>
 </aside>
 <pre><code>## Réutilisation et crédit
 
@@ -204,7 +204,7 @@ ou `Accept: application/geo+json` (une feature par projet lié).</h2>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/communes/architecto" \
+    --get "https://observatoire-abc.fr/api/v1/communes/architecto" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -215,7 +215,7 @@ ou `Accept: application/geo+json` (une feature par projet lié).</h2>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/communes/architecto"
+    "https://observatoire-abc.fr/api/v1/communes/architecto"
 );
 
 const headers = {
@@ -375,14 +375,14 @@ provenance de chaque projet.</h2>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/departements/architecto" \
+    --get "https://observatoire-abc.fr/api/v1/departements/architecto" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/departements/architecto"
+    "https://observatoire-abc.fr/api/v1/departements/architecto"
 );
 
 const headers = {
@@ -525,7 +525,7 @@ contributions sont créditées collectivement, jamais nominativement.</h2>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/journal" \
+    --get "https://observatoire-abc.fr/api/v1/journal" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -537,7 +537,7 @@ contributions sont créditées collectivement, jamais nominativement.</h2>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/journal"
+    "https://observatoire-abc.fr/api/v1/journal"
 );
 
 const headers = {
@@ -591,7 +591,7 @@ access-control-expose-headers: ETag, Cache-Control
         &quot;per_page&quot;: 1,
         &quot;next_cursor&quot;: &quot;eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0&quot;,
         &quot;prev_cursor&quot;: null,
-        &quot;next_page_url&quot;: &quot;http://localhost:8000/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0&quot;,
+        &quot;next_page_url&quot;: &quot;https://observatoire-abc.fr/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0&quot;,
         &quot;licence&quot;: &quot;Etalab-2.0&quot;
     }
 }</code>
@@ -720,11 +720,11 @@ Format GeoJSON avec <code>format=geojson</code> ou <code>Accept: application/geo
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/projets" \
+    --get "https://observatoire-abc.fr/api/v1/projets" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"statut\": \"en_cours\",
+    \"statut\": \"inconnu\",
     \"annee\": 1,
     \"code_insee\": \"T8GOX$\\/i\",
     \"departement\": \"b\",
@@ -739,7 +739,7 @@ Format GeoJSON avec <code>format=geojson</code> ou <code>Accept: application/geo
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/projets"
+    "https://observatoire-abc.fr/api/v1/projets"
 );
 
 const headers = {
@@ -748,7 +748,7 @@ const headers = {
 };
 
 let body = {
-    "statut": "en_cours",
+    "statut": "inconnu",
     "annee": 1,
     "code_insee": "T8GOX$\/i",
     "departement": "b",
@@ -878,10 +878,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="statut"                data-endpoint="GETapi-v1-projets"
-               value="en_cours"
+               value="inconnu"
                data-component="body">
     <br>
-<p>Example: <code>en_cours</code></p>
+<p>Example: <code>inconnu</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>a_venir</code></li> <li><code>en_cours</code></li> <li><code>termine</code></li> <li><code>inconnu</code></li></ul>
         </div>
@@ -999,14 +999,14 @@ historique complet (auteurs crédités collectivement), provenance.</h2>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/projets/architecto" \
+    --get "https://observatoire-abc.fr/api/v1/projets/architecto" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/projets/architecto"
+    "https://observatoire-abc.fr/api/v1/projets/architecto"
 );
 
 const headers = {
@@ -1146,14 +1146,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/regions/architecto" \
+    --get "https://observatoire-abc.fr/api/v1/regions/architecto" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/regions/architecto"
+    "https://observatoire-abc.fr/api/v1/regions/architecto"
 );
 
 const headers = {
@@ -1294,14 +1294,14 @@ projets vérifiés, anomalies, contributions en attente.</h2>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/stats" \
+    --get "https://observatoire-abc.fr/api/v1/stats" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/stats"
+    "https://observatoire-abc.fr/api/v1/stats"
 );
 
 const headers = {
@@ -1325,8 +1325,8 @@ fetch(url, {
             <summary style="cursor: pointer;">
                 <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
             </summary>
-            <pre><code class="language-http">cache-control: max-age=3600, public
-content-type: application/json
+            <pre><code class="language-http">content-type: application/json
+cache-control: max-age=3600, public
 x-ratelimit-limit: 60
 x-ratelimit-remaining: 59
 access-control-allow-origin: *

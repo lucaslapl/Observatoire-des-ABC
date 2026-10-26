@@ -53,7 +53,9 @@ return [
 
     // The base URL displayed in the docs.
     // If you're using `laravel` type, you can set this to a dynamic string, like '{{ config("app.tenant_url") }}' to get a dynamic base URL.
-    'base_url' => config('app.url'),
+    // SCRIBE_BASE_URL prime sur tout : c'est elle qu'il faut définir quand
+    // on génère la documentation pour la production (voir api.md).
+    'base_url' => env('SCRIBE_BASE_URL', config('app.url')),
 
     // Routes to include in the docs
     'routes' => [
