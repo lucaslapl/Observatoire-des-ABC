@@ -139,6 +139,11 @@ ayant bloqué l'IP du poste de travail). Règles :
 - Pas de division CRLF (`eol=lf` global dans `.gitattributes`).
 - Messages de commit : préfixes `feat:`, `fix:`, docs en français accepté.
 - Utiliser le français dans l'UI et les textes visibles (site public français).
+- **Nouvelle page publique = lien dans les DEUX footers** : l'accueil
+  (`resources/js/Pages/Map.vue`, `home-footer`) n'utilise pas `Layout`, qui a
+  son propre `site-footer` (`resources/js/Components/Layout.vue`). Ajouter le
+  lien dans les deux, sinon il manque toujours quelque part. La page doit
+  aussi rejoindre le sitemap (`SitemapController`).
 
 ## Déploiement — information obligatoire à chaque push
 

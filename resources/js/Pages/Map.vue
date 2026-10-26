@@ -238,6 +238,8 @@ const seoJsonLd = computed(() => {
                     <Link href="/a-propos">À propos</Link>&nbsp;·
                     <Link href="/methodologie">Méthodologie des données</Link>&nbsp;·
                     <Link href="/actualites">Actualités</Link>&nbsp;·
+                    <Link href="/api">API &amp; réutilisation</Link>&nbsp;·
+                    <Link href="/contact">Contact</Link>&nbsp;·
                     <Link href="/mentions-legales">Mentions légales</Link>&nbsp;·
                     <Link href="/confidentialite">Confidentialité</Link>&nbsp;·
                     <a href="#" @click.prevent="reopenConsentChoice">Cookies</a>
