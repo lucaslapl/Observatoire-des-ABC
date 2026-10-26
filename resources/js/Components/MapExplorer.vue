@@ -74,16 +74,20 @@ function popupHtml(p) {
 function renderFeature(f, onLayer) {
     const p = f.properties;
     const [lon, lat] = f.geometry.coordinates;
+    const st = dStatut(p);
+    const dashes = st === 'a_venir' && !p.anomalie && !p.verifie;
+    const baseWeight = p.anomalie || p.verifie ? 2 : (dashes ? 1.5 : 1);
     const m = L.circleMarker([lat, lon], {
         radius: 6,
         color: p.anomalie ? '#b91c1c' : p.verifie ? '#14532d' : '#fff',
-        weight: p.anomalie || p.verifie ? 2 : 1,
-        fillColor: COLOR[dStatut(p)] || COLOR.inconnu,
+        weight: baseWeight,
+        dashArray: dashes ? '2.5,2' : undefined,
+        fillColor: COLOR[st] || COLOR.inconnu,
         fillOpacity: 0.9,
     }).bindPopup(popupHtml(f.properties)).addTo(onLayer || layer);
     m.bindTooltip(`<b>${p.commune}</b>`, { direction: 'top', offset: [0, -8], className: 'map-tooltip' });
     m.on('mouseover', function () { this.setStyle({ radius: 8, weight: 3 }); });
-    m.on('mouseout', function () { this.setStyle({ radius: 6, weight: p.anomalie || p.verifie ? 2 : 1 }); });
+    m.on('mouseout', function () { this.setStyle({ radius: 6, weight: baseWeight, dashArray: dashes ? '2.5,2' : undefined }); });
 }
 
 function animateProp(obj, prop, from, to, duration, done) {
@@ -185,6 +189,7 @@ function toggleAggregate(key) {
             }).addTo(grp);
             const pt = L.circleMarker([c[1], c[0]], {
                 radius: 6, color: '#fff', weight: 1.5,
+                dashArray: dStatut(live ? live.properties : p) === 'a_venir' ? '2.5,2' : undefined,
                 fillColor: color, fillOpacity: 0.9,
             }).addTo(grp);
             pt.bindTooltip(`<b>${p.commune}</b>`, { direction: 'top', offset: [0, -8], className: 'map-tooltip' });
@@ -324,6 +329,7 @@ function apply() {
 
                 const centroid = L.circleMarker([e.lat, e.lon], {
                     radius: 10, color: '#fff', weight: 2.5,
+                    dashArray: st === 'a_venir' ? '4,3' : undefined,
                     fillColor: COLOR[st] || COLOR.inconnu, fillOpacity: 0.9,
                 }).addTo(layer);
                 centroid.bindTooltip(
@@ -637,7 +643,7 @@ onBeforeUnmount(() => {
                 <div class="legend-body" v-show="!legendRetracted">
                     <div class="legend-section">Statuts</div>
                     <div class="legend-item"><span class="chip" style="background:var(--ok)"></span>En cours<span class="cnt">{{ counts.en_cours }}</span></div>
-                    <div class="legend-item"><span class="chip" style="background:var(--debut)"></span>Va débuter<span class="cnt">{{ counts.a_venir }}</span></div>
+                    <div class="legend-item"><span class="chip chip-dash" style="border-color:var(--debut)"></span>Va débuter<span class="cnt">{{ counts.a_venir }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--fini)"></span>Terminé<span class="cnt">{{ counts.termine }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu<span class="cnt">{{ counts.inconnu }}</span></div>
                     <template v-if="paletteSwitcher">
@@ -786,6 +792,7 @@ onBeforeUnmount(() => {
 .meta-note .k { color: #6b7280; }
 .meta-note .v { color: #374151; text-align: right; font-variant-numeric: tabular-nums; }
 .chip { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.chip-dash { background: transparent; border: 1.5px dashed var(--debut); box-sizing: border-box; }
 .leaflet-control-scale { margin-left: 300px !important; }
 @media (max-width:720px) {
     .legend { left: 6px; right: 6px; width: auto; max-width: none; }

@@ -8,17 +8,15 @@ export const COLOR = { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c
 /**
  * Palettes de statut pour la carte — exploration visuelle
  * (branche test/design-marqueurs-carte). « defaut » = palette historique.
+ * Les autres suivent la métaphore de pousse : bourgeon clair (va débuter) →
+ * vert développé (en cours) → teinte posée (terminé).
  * S'appliquent via applyPalette(), activables en local avec ?palettes=1.
  */
 export const PALETTES = {
     defaut: { label: 'Défaut (actuelle)', statuts: { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' } },
-    herbier: { label: 'Herbier', statuts: { en_cours: '#5a7d2a', a_venir: '#c98a2d', termine: '#2f6690', inconnu: '#9a8f7f' } },
-    carte: { label: 'Carte ancienne', statuts: { en_cours: '#6b8e23', a_venir: '#b8860b', termine: '#4a6fa5', inconnu: '#8d8378' } },
-    sobre: { label: 'Contemporain sobre', statuts: { en_cours: '#3a7d44', a_venir: '#d98324', termine: '#4f6d9e', inconnu: '#a09a92' } },
-    sobre_affine: { label: 'Sobre affiné (ambre du site)', statuts: { en_cours: '#3a7d44', a_venir: '#b45309', termine: '#4f6d9e', inconnu: '#a09a92' } },
     pousse: { label: 'Pousse (bourgeon → développé)', statuts: { en_cours: '#3a7d44', a_venir: '#7cb342', termine: '#4f6d9e', inconnu: '#a09a92' } },
-    contrastee: { label: 'Contrastée (teintes neuves)', statuts: { en_cours: '#0e7490', a_venir: '#db2777', termine: '#6d28d9', inconnu: '#78716c' } },
-    monochrome: { label: 'Monochrome forêt', statuts: { en_cours: '#1b4332', a_venir: '#74c69d', termine: '#40916c', inconnu: '#adb5bd' } },
+    herbier: { label: 'Herbier (profond, séché)', statuts: { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#8d6e63', inconnu: '#a8a29e' } },
+    canopee: { label: 'Canopée (frais, lumière)', statuts: { en_cours: '#3a7d44', a_venir: '#b7d768', termine: '#227c9d', inconnu: '#b8b2a6' } },
 };
 
 const PALETTE_CSS_VAR = { en_cours: '--ok', a_venir: '--debut', termine: '--fini', inconnu: '--inconnu' };
