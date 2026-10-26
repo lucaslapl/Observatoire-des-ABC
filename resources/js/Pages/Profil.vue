@@ -33,6 +33,14 @@ const passwordForm = useForm({
     password_confirmation: '',
 });
 
+const anonymatForm = useForm({
+    contributions_anonymes: Boolean(props.user.contributions_anonymes),
+});
+
+const updateAnonymat = () => {
+    anonymatForm.put('/profil/anonymat');
+};
+
 const updatePassword = () => {
     passwordForm.put('/profil/password', {
         onSuccess: () => passwordForm.reset(),
@@ -109,6 +117,30 @@ const formatDate = (iso) => new Date(iso).toLocaleDateString('fr-FR', {
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">Anonymat de mes contributions</h2>
+                    <form @submit.prevent="updateAnonymat">
+                        <div class="form-check">
+                            <input id="contributions_anonymes" v-model="anonymatForm.contributions_anonymes"
+                                type="checkbox" class="form-check-input" />
+                            <label class="form-check-label" for="contributions_anonymes">
+                                Rendre mes contributions anonymes
+                            </label>
+                        </div>
+                        <p class="form-text small">
+                            Sur le site public (journal des mises à jour de l'accueil, historique des projets),
+                            vos contributions apparaîtront comme « par un contributeur anonyme » au lieu de votre nom.
+                            Les administrateurs et modérateurs conservent l'accès à l'identité des contributions,
+                            y compris anonymes, pour la modération.
+                        </p>
+                        <button class="btn btn-outline-success btn-sm" :disabled="anonymatForm.processing">
+                            Enregistrer
+                        </button>
+                    </form>
                 </div>
             </div>
 

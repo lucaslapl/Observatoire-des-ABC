@@ -62,6 +62,21 @@ class ProfilTest extends TestCase
         $this->get('/profil')->assertRedirect('/login');
     }
 
+    public function test_le_contributeur_peut_demander_l_anonymat(): void
+    {
+        $this->actingAs($this->user)
+            ->put('/profil/anonymat', ['contributions_anonymes' => true])
+            ->assertRedirect();
+
+        $this->assertTrue($this->user->fresh()->contributions_anonymes);
+
+        $this->actingAs($this->user)
+            ->put('/profil/anonymat', ['contributions_anonymes' => false])
+            ->assertRedirect();
+
+        $this->assertFalse($this->user->fresh()->contributions_anonymes);
+    }
+
     public function test_password_update_requires_current_password(): void
     {
         $this->actingAs($this->user)

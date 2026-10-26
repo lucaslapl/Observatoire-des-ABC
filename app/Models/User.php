@@ -15,7 +15,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'email_verified_at'];
+    protected $fillable = ['name', 'email', 'password', 'email_verified_at', 'contributions_anonymes'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -35,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'contributions_anonymes' => 'boolean',
         ];
     }
 }

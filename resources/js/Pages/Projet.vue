@@ -58,6 +58,12 @@ const jsonLd = computed(() => {
 });
 
 const annee = (p) => (p.annee_debut ? `${p.annee_debut}${p.annee_fin ? '–' + p.annee_fin : ''}` : '—');
+
+const fmtHistoriqueDate = (d) => {
+    if (!d) return '—';
+    const dt = new Date(d.replace(' ', 'T'));
+    return `${dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })} à ${dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+};
 </script>
 
 <template>
@@ -141,9 +147,29 @@ const annee = (p) => (p.annee_debut ? `${p.annee_debut}${p.annee_fin ? '–' + p
                 </Link>
             </div>
 
+            <section v-if="projet.historique?.length" class="mb-4" aria-label="Historique des modifications">
+                <h2 class="h5"><i class="bi bi-clock-history me-1" aria-hidden="true"></i> Historique des modifications</h2>
+                <div class="card shadow-sm">
+                    <ul class="list-group list-group-flush historique-list">
+                        <li v-for="(h, i) in projet.historique" :key="`${h.date}-${i}`" class="list-group-item small">
+                            <span class="date">{{ fmtHistoriqueDate(h.date) }}</span>
+                            <span class="label">{{ h.label }}</span>
+                            <span v-if="h.detail" class="detail">({{ h.detail }})</span>
+                            <span v-if="h.auteur" class="detail">· par {{ h.auteur }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
             <p>
                 <Link class="btn btn-outline-success btn-sm" href="/">← Revenir à la carte</Link>
             </p>
         </div>
     </Layout>
 </template>
+
+<style scoped>
+.historique-list .date { color: #94a3b8; font-variant-numeric: tabular-nums; margin-right: .5rem; }
+.historique-list .label { color: #334155; }
+.historique-list .detail { color: #64748b; }
+</style>

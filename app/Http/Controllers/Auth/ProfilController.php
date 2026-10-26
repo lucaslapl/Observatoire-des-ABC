@@ -34,10 +34,28 @@ class ProfilController extends Controller
             ]);
 
         return Inertia::render('Profil', [
-            'user' => $user->only('id', 'name', 'email'),
+            'user' => $user->only('id', 'name', 'email', 'contributions_anonymes'),
             'roles' => $user->getRoleNames(),
             'contributions' => $contributions,
         ]);
+    }
+
+    /**
+     * Préférence d'anonymat des contributions : masque le nom du contributeur
+     * dans les espaces publics (accueil, historique des fiches). Les admins
+     * et modérateurs conservent l'identité pour la modération.
+     */
+    public function updateAnonymat(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'contributions_anonymes' => ['required', 'boolean'],
+        ]);
+
+        $request->user()->update(['contributions_anonymes' => $validated['contributions_anonymes']]);
+
+        return back()->with('success', $validated['contributions_anonymes']
+            ? 'Vos contributions apparaîtront désormais anonymement sur le site.'
+            : 'Vos contributions apparaîtront désormais avec votre nom sur le site.');
     }
 
     public function updatePassword(Request $request): RedirectResponse

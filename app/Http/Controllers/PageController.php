@@ -11,6 +11,7 @@ use App\Models\ProjectExclusion;
 use App\Models\Projet;
 use App\Models\User;
 use App\Models\Verification;
+use App\Services\ChangelogService;
 use App\Services\LandingService;
 use App\Services\StatsService;
 use App\Services\VerificationService;
@@ -24,6 +25,7 @@ class PageController extends Controller
         private StatsService $stats,
         private VerificationService $verifications,
         private LandingService $landing,
+        private ChangelogService $changelog,
     ) {}
 
     public function index(): Response
@@ -31,6 +33,7 @@ class PageController extends Controller
         return Inertia::render('Map', [
             'meta' => $this->stats->meta(),
             'index' => $this->stats->index(),
+            'journal' => $this->changelog->paginate(),
             'isAdmin' => auth()->check() && auth()->user()->hasRole('admin'),
         ]);
     }

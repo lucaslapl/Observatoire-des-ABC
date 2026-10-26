@@ -13,6 +13,7 @@ class LandingService
     public function __construct(
         private RegionService $regions,
         private StatusService $status,
+        private ChangelogService $changelog,
     ) {}
 
     public const STATUTS =
@@ -101,6 +102,10 @@ class LandingService
             'communes_anomalies' => $projet->communes->where('anomalie', true)->count(),
             'region_label' => $regionLabel,
             'region_slug' => $regionLabel ? $this->regions->slug($regionLabel) : null,
+            // Historique public des modifications apportées à cette fiche
+            // (vérifications, contributions validées, fusions…), le plus
+            // récent en premier.
+            'historique' => $this->changelog->pourProjet($projet->id),
         ];
     }
 

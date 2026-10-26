@@ -44,6 +44,12 @@ const site = computed(() => page.props.site || {});
                 car elles constituent un travail de vérification utile à la qualité des données.
                 Les comptes administrateur et modérateur restent réservés aux personnes habilitées.
             </p>
+            <p>
+                Vous pouvez également choisir, depuis votre espace membre, de rendre vos
+                contributions anonymes : votre nom n'apparaît alors plus dans les espaces
+                publics (journal des mises à jour, historique des projets). Les administrateurs
+                et modérateurs conservent l'accès à l'identité des contributions pour la modération.
+            </p>
 
             <h2 class="h6">Cookies & mesure d'audience</h2>
             <p>

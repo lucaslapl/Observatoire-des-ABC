@@ -95,6 +95,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profil', [ProfilController::class, 'index'])->name('profil');
     Route::put('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.password');
+    Route::put('/profil/anonymat', [ProfilController::class, 'updateAnonymat'])->name('profil.anonymat');
     Route::delete('/profil', [ProfilController::class, 'destroy'])->name('profil.destroy');
 
     // Panneau /admin : la modération des contributions est ouverte aux

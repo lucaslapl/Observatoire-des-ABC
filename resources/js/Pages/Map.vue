@@ -20,6 +20,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    journal: {
+        type: Object,
+        default: () => ({ items: [], page: 1, last_page: 1, total: 0, has_prev: false, has_next: false }),
+    },
 });
 
 const page = usePage();
@@ -27,6 +31,11 @@ const site = computed(() => page.props.site || {});
 const authUser = computed(() => page.props.auth?.user || null);
 const fmtSourceDate = (d) =>
     d ? new Date(`${d}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const fmtJournalDate = (d) => {
+    if (!d) return '—';
+    const dt = new Date(d.replace(' ', 'T'));
+    return `${dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })} à ${dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+};
 
 const seoJsonLd = computed(() => {
     const meta = props.meta || {};
@@ -120,6 +129,56 @@ const seoJsonLd = computed(() => {
                             <Link href="/register?raison=contribution">Créez un compte</Link>
                             pour proposer vos corrections et suivre leurs validations.
                         </p>
+
+                        <section class="home-changelog mt-4" aria-label="Dernières mises à jour de la carte">
+                            <h2 class="h5"><i class="bi bi-clock-history me-1" aria-hidden="true"></i> Dernières mises à jour de la carte</h2>
+                            <p class="small text-muted">
+                                Corrections et vérifications appliquées aux données publiées : dates validées,
+                                statuts corrigés, doublons fusionnés…
+                            </p>
+                            <ul v-if="journal.items.length" class="list-unstyled changelog-list mb-0">
+                                <li v-for="(e, i) in journal.items" :key="`${e.date}-${i}`">
+                                    <span class="date">{{ fmtJournalDate(e.date) }}</span>
+                                    <span class="label">{{ e.label }}</span>
+                                    <span v-if="e.detail" class="detail">({{ e.detail }})</span>
+                                    <template v-if="e.projet_nom">
+                                        —
+                                        <Link v-if="e.projet_slug" class="projet" :href="`/abc/${e.projet_slug}`">{{ e.projet_nom }}</Link>
+                                        <span v-else class="projet">{{ e.projet_nom }}</span>
+                                    </template>
+                                    <span v-if="e.commune" class="detail">({{ e.commune }})</span>
+                                    <span v-if="e.auteur" class="auteur">· par {{ e.auteur }}</span>
+                                </li>
+                            </ul>
+                            <p v-else class="small text-muted mb-0">Aucune correction enregistrée pour le moment.</p>
+                            <nav v-if="journal.last_page > 1" class="mt-2" aria-label="Pagination des mises à jour">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item" :class="{ disabled: !journal.has_prev }">
+                                        <Link
+                                            v-if="journal.has_prev"
+                                            class="page-link"
+                                            :href="`/?journal_page=${journal.page - 1}`"
+                                            :only="['journal']"
+                                            preserve-scroll
+                                        >Précédent</Link>
+                                        <span v-else class="page-link">Précédent</span>
+                                    </li>
+                                    <li class="page-item disabled" aria-current="page">
+                                        <span class="page-link">{{ journal.page }} / {{ journal.last_page }}</span>
+                                    </li>
+                                    <li class="page-item" :class="{ disabled: !journal.has_next }">
+                                        <Link
+                                            v-if="journal.has_next"
+                                            class="page-link"
+                                            :href="`/?journal_page=${journal.page + 1}`"
+                                            :only="['journal']"
+                                            preserve-scroll
+                                        >Suivant</Link>
+                                        <span v-else class="page-link">Suivant</span>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </section>
                     </div>
                     <div class="col-lg-4">
                         <div class="contribute-card mb-4">
@@ -217,6 +276,18 @@ const seoJsonLd = computed(() => {
 .contribute-card a.alt:hover { text-decoration: underline; }
 .contribute-hint { font-size: .85rem; color: #64748b; margin-top: 1rem; margin-bottom: 0; }
 .contribute-hint a { color: #14532d; font-weight: 600; }
+.home-changelog {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 1rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.home-changelog h2 { color: #14532d; }
+.home-changelog > p { margin-bottom: .75rem; }
+.changelog-list li { font-size: .9rem; color: #334155; padding: .35rem 0; border-bottom: 1px dashed #e2e8f0; }
+.changelog-list li:last-child { border-bottom: none; }
+.changelog-list .date { color: #94a3b8; font-variant-numeric: tabular-nums; margin-right: .5rem; }
+.changelog-list .detail { color: #64748b; margin-left: .25rem; }
+.changelog-list .auteur { color: #94a3b8; margin-left: .25rem; }
+.changelog-list .projet { color: #14532d; font-weight: 600; }
 .home-footer { background: #14532d; color: #e8f5e9; }
 .home-footer a { color: #fff; }
 </style>
