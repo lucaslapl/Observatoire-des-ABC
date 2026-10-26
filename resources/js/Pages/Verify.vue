@@ -81,7 +81,7 @@ const form = (p) => forms[p.id] || (forms[p.id] = { etat: p.etat, statut: '', no
 const suggs = reactive({});
 const sugg = (p) => suggs[p.id] || (suggs[p.id] = {
     type: 'statut', statut: 'termine', statut_date: '', annee_debut: '', annee_fin: '', source: '',
-    note: '', lien: '', texte: '', commentaire: '', sending: false, message: '', ok: false,
+    note: '', lien: '', texte: '', commentaire: '', accepte: false, sending: false, message: '', ok: false,
 });
 
 // Modal de suggestion : un seul projet à la fois, l'utilisateur se concentre
@@ -327,7 +327,11 @@ const sendSuggestion = async (p) => {
     const s = sugg(p);
     s.message = '';
     s.ok = false;
-    const body = { projet_id: p.id, type: s.type };
+    if (!s.accepte) {
+        s.message = "Acceptez la publication de votre contribution sous Licence Ouverte 2.0 pour l'envoyer.";
+        return;
+    }
+    const body = { projet_id: p.id, type: s.type, accepte_licence: true };
     if (s.commentaire) body.commentaire = s.commentaire;
     if (s.type === 'statut') body.statut_suggere = s.statut;
     if (s.type === 'date_debut') {
@@ -836,6 +840,17 @@ const sendSuggestion = async (p) => {
                     <div class="mb-3">
                         <label class="form-label small mb-1">Commentaire pour la modération <span class="text-muted">(optionnel)</span></label>
                         <input type="text" class="form-control" placeholder="Contexte utile à l'administrateur qui examinera la suggestion" v-model="suggActif.commentaire" />
+                    </div>
+
+                    <div class="form-check small mb-3">
+                        <input class="form-check-input" type="checkbox" id="sugg-licence" v-model="suggActif.accepte" />
+                        <label class="form-check-label" for="sugg-licence">
+                            J'accepte que ma contribution soit publiée et réutilisée librement (y compris
+                            via l'API publique) sous
+                            <a href="https://www.etalab.gouv.fr/wp-content/uploads/2017/04/ETALAB-Licence-Ouverte-v2.0.pdf" target="_blank" rel="noopener">Licence Ouverte 2.0 (Etalab)</a>,
+                            créditée collectivement (« les contributeurs de l'Observatoire des ABC »),
+                            sans mention nominative.
+                        </label>
                     </div>
 
                     <div v-if="suggActif.message" class="small mb-2" :class="suggActif.ok ? 'text-success' : 'text-danger'">{{ suggActif.message }}</div>

@@ -15,13 +15,14 @@ class Contribution extends Model
 {
     protected $fillable = [
         'projet_id', 'user_id', 'type', 'payload_json', 'commentaire', 'ip',
-        'user_agent', 'statut', 'traite_par', 'traite_le', 'note_admin',
+        'user_agent', 'statut', 'licence_acceptee', 'traite_par', 'traite_le', 'note_admin',
     ];
 
     protected function casts(): array
     {
         return [
             'payload_json' => 'array',
+            'licence_acceptee' => 'boolean',
             'traite_le' => 'datetime',
         ];
     }

@@ -93,6 +93,11 @@ function copyCredit() {
                 Cette mention ne doit ni conférer un caractère officiel à votre réutilisation,
                 ni suggérer un cautionnement par l'Observatoire des ABC, l'OFB ou le Fonds vert.
             </p>
+            <p class="small text-muted">
+                Les corrections des contributeurs sont intégrées aux données publiées sous cette même
+                licence : chaque proposition l'accepte explicitement (case du formulaire de correction,
+                acceptation enregistrée), avec un crédit collectif — jamais nominatif.
+            </p>
 
             <h2>Absence de garantie</h2>
             <p>

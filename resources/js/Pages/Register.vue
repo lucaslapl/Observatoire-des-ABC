@@ -42,6 +42,9 @@ const submit = () => {
                     <div v-if="raison === 'contribution'" class="alert alert-info small py-2 mb-3">
                         La suggestion de corrections depuis la carte nécessite un compte.
                         Créez-le ci-dessous, vérifiez votre adresse email, puis revenez sur la carte.
+                        Les corrections validées sont publiées sous
+                        <a href="https://www.etalab.gouv.fr/wp-content/uploads/2017/04/ETALAB-Licence-Ouverte-v2.0.pdf" target="_blank" rel="noopener">Licence Ouverte 2.0 (Etalab)</a>,
+                        créditées collectivement.
                     </div>
                     <h2 class="h5 mb-1">Créer un compte</h2>
                     <p class="text-muted small mb-3">

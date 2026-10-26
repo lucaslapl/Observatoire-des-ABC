@@ -39,6 +39,10 @@ class ContributionController extends Controller
             'texte' => ['sometimes', 'string', 'max:2000'],
             'source' => ['sometimes', 'string', 'max:500'],
             'commentaire' => ['sometimes', 'string', 'max:1000'],
+            // Acceptation explicite de la publication sous Licence Ouverte
+            // 2.0 (case à cocher du formulaire). Optionnelle pour ne pas
+            // casser les clients existants, tracée sur la contribution.
+            'accepte_licence' => ['sometimes', 'boolean'],
         ]);
 
         if (! Projet::whereKey($validated['projet_id'])->exists()) {
@@ -53,6 +57,11 @@ class ContributionController extends Controller
             'type' => $validated['type'],
             'payload_json' => $payload,
             'commentaire' => $validated['commentaire'] ?? null,
+            // Base légale de la rediffusion des corrections validées
+            // (API publique, exports) : null = client ancien sans la case.
+            'licence_acceptee' => array_key_exists('accepte_licence', $validated)
+                ? (bool) $validated['accepte_licence']
+                : null,
             'ip' => $request->ip(),
             'user_agent' => mb_substr($request->userAgent() ?? '', 0, 200),
         ]);

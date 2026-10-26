@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
 
@@ -50,6 +50,15 @@ const site = computed(() => page.props.site || {});
                 (Registre OFB, Fonds vert) et des archives publiques de ces mêmes sources
                 (Wayback Machine, millésime 2022). Elles sont réutilisées telles que publiées par leurs producteurs.
                 L'Observatoire n'est pas l'auteur de ces données et n'en modifie pas la licence d'origine.
+            </p>
+            <p>
+                Les corrections proposées par les contributeurs, une fois validées, sont intégrées aux
+                données publiées de l'Observatoire et rediffusées avec elles — site, exports et
+                <Link href="/api">API publique</Link> — sous
+                <a href="https://www.etalab.gouv.fr/wp-content/uploads/2017/04/ETALAB-Licence-Ouverte-v2.0.pdf" rel="noopener" target="_blank">Licence Ouverte 2.0 (Etalab)</a>,
+                avec un crédit collectif (« les contributeurs de l'Observatoire des ABC »), jamais nominatif.
+                En proposant une correction, chaque contributeur l'accepte explicitement :
+                une case à cocher du formulaire le rappelle et l'acceptation est enregistrée avec la contribution.
             </p>
             <h2>Code source</h2>
             <p>
