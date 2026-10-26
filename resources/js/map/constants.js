@@ -15,6 +15,8 @@ export const PALETTES = {
     herbier: { label: 'Herbier', statuts: { en_cours: '#5a7d2a', a_venir: '#c98a2d', termine: '#2f6690', inconnu: '#9a8f7f' } },
     carte: { label: 'Carte ancienne', statuts: { en_cours: '#6b8e23', a_venir: '#b8860b', termine: '#4a6fa5', inconnu: '#8d8378' } },
     sobre: { label: 'Contemporain sobre', statuts: { en_cours: '#3a7d44', a_venir: '#d98324', termine: '#4f6d9e', inconnu: '#a09a92' } },
+    contrastee: { label: 'Contrastée (teintes neuves)', statuts: { en_cours: '#0e7490', a_venir: '#db2777', termine: '#6d28d9', inconnu: '#78716c' } },
+    monochrome: { label: 'Monochrome forêt', statuts: { en_cours: '#1b4332', a_venir: '#74c69d', termine: '#40916c', inconnu: '#adb5bd' } },
 };
 
 const PALETTE_CSS_VAR = { en_cours: '--ok', a_venir: '--debut', termine: '--fini', inconnu: '--inconnu' };
