@@ -81,13 +81,13 @@ function renderFeature(f, onLayer) {
         radius: 6,
         color: p.anomalie ? '#b91c1c' : p.verifie ? '#14532d' : '#fff',
         weight: baseWeight,
-        dashArray: dashes ? '2.5,2' : undefined,
+        dashArray: dashes ? '1.5,3' : undefined,
         fillColor: COLOR[st] || COLOR.inconnu,
         fillOpacity: 0.9,
     }).bindPopup(popupHtml(f.properties)).addTo(onLayer || layer);
     m.bindTooltip(`<b>${p.commune}</b>`, { direction: 'top', offset: [0, -8], className: 'map-tooltip' });
     m.on('mouseover', function () { this.setStyle({ radius: 8, weight: 3 }); });
-    m.on('mouseout', function () { this.setStyle({ radius: 6, weight: baseWeight, dashArray: dashes ? '2.5,2' : undefined }); });
+    m.on('mouseout', function () { this.setStyle({ radius: 6, weight: baseWeight, dashArray: dashes ? '1.5,3' : undefined }); });
 }
 
 function animateProp(obj, prop, from, to, duration, done) {
@@ -189,7 +189,7 @@ function toggleAggregate(key) {
             }).addTo(grp);
             const pt = L.circleMarker([c[1], c[0]], {
                 radius: 6, color: '#fff', weight: 1.5,
-                dashArray: dStatut(live ? live.properties : p) === 'a_venir' ? '2.5,2' : undefined,
+                dashArray: dStatut(live ? live.properties : p) === 'a_venir' ? '1.5,3' : undefined,
                 fillColor: color, fillOpacity: 0.9,
             }).addTo(grp);
             pt.bindTooltip(`<b>${p.commune}</b>`, { direction: 'top', offset: [0, -8], className: 'map-tooltip' });
@@ -329,7 +329,7 @@ function apply() {
 
                 const centroid = L.circleMarker([e.lat, e.lon], {
                     radius: 10, color: '#fff', weight: 2.5,
-                    dashArray: st === 'a_venir' ? '4,3' : undefined,
+                    dashArray: st === 'a_venir' ? '3,5' : undefined,
                     fillColor: COLOR[st] || COLOR.inconnu, fillOpacity: 0.9,
                 }).addTo(layer);
                 centroid.bindTooltip(
