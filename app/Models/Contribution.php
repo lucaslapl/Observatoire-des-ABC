@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Agrégats selectRaw (ApiV1Service) : documentés pour l'analyse statique.
+ *
+ * @property int|null $n
+ * @property string|null $derniere
+ */
 class Contribution extends Model
 {
     protected $fillable = [

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Commune;
 use App\Models\GeoCache;
+use App\Support\ApiCache;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -42,6 +43,10 @@ class GeocodeService
                 $updated++;
             }
         }
+
+        // Géocodage écrit en masse (sans observateurs) : invalidation
+        // explicite du cache applicatif de l'API v1.
+        ApiCache::invalidate();
 
         return [
             'distinct' => $rows->count(),

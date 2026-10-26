@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Projet;
 use App\Models\Snapshot;
+use App\Support\ApiCache;
 
 /**
  * Recalcul des statuts agrégés et des flags (port exact de
@@ -80,6 +81,10 @@ class StatusRecomputeService
                 $changed++;
             }
         }
+
+        // Recalcul terminé : le cache applicatif de l'API v1 est invalide
+        // (les écritures massives ne déclenchent pas les observateurs).
+        ApiCache::invalidate();
 
         return [
             'changed' => $changed,

@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Commune;
 use App\Models\Contribution;
 use App\Models\Projet;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -88,9 +89,11 @@ class ChangelogService
      * Historique complet d'un projet, le plus récent en premier : ce que
      * un visiteur peut reconstituer de l'évolution de la fiche.
      *
+     * @param  bool  $anonymiser  true (API publique v1) : aucun nom de
+     *                            contributeur ni d'opérateur, crédit collectif.
      * @return array<int, array<string, mixed>>
      */
-    public function pourProjet(string $projetId): array
+    public function pourProjet(string $projetId, bool $anonymiser = false): array
     {
         $rows = AuditLog::query()
             ->where(function ($q) {
@@ -114,16 +117,58 @@ class ChangelogService
 
         return $rows
             ->filter(fn (AuditLog $row) => $this->projetIdOf($row, $contributions) === $projetId)
-            ->map(fn (AuditLog $row) => $this->entry($row, $contributions, collect()))
+            ->map(fn (AuditLog $row) => $this->entry($row, $contributions, collect(), null, $anonymiser))
             ->values()
             ->all();
     }
 
     /**
+     * Journal public intégral pour l'API v1 : les mêmes entrées que
+     * l'historique des fiches (ACTIONS_FICHE), dans le même ordre (le plus
+     * récent d'abord), paginé par curseur. Les auteurs sont anonymisés :
+     * crédit collectif, jamais nominatif.
+     *
+     * @return array{items: array<int, array<string, mixed>>, meta: array<string, mixed>}
+     */
+    public function paginateApi(int $perPage): array
+    {
+        /** @var CursorPaginator<AuditLog> $paginator */
+        $paginator = AuditLog::query()
+            ->whereIn('action', self::ACTIONS_FICHE)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->cursorPaginate($perPage);
+
+        /** @var Collection<int, AuditLog> $rows */
+        $rows = $paginator->getCollection();
+        $contributions = $this->contributionsOf($rows);
+
+        $projetIds = $rows
+            ->map(fn (AuditLog $row) => $this->projetIdOf($row, $contributions))
+            ->values();
+
+        $items = $this->mapRows($rows, avecCommunes: true, anonymiser: true);
+        foreach ($items as $i => $item) {
+            $items[$i]['projet_id'] = $projetIds[$i] ?? null;
+        }
+
+        return [
+            'items' => $items,
+            'meta' => [
+                'per_page' => $perPage,
+                'next_cursor' => $paginator->nextCursor()?->encode(),
+                'prev_cursor' => $paginator->previousCursor()?->encode(),
+                'next_page_url' => $paginator->nextPageUrl(),
+            ],
+        ];
+    }
+
+    /**
      * @param  Collection<int, AuditLog>  $rows
+     * @param  bool  $anonymiser  true (API v1) : crédit collectif des auteurs
      * @return array<int, array<string, mixed>>
      */
-    private function mapRows(Collection $rows, bool $avecCommunes = false): array
+    private function mapRows(Collection $rows, bool $avecCommunes = false, bool $anonymiser = false): array
     {
         $contributions = $this->contributionsOf($rows);
 
@@ -141,7 +186,7 @@ class ChangelogService
         $communes = $avecCommunes ? $this->communesOf($projetIds->all()) : null;
 
         return $rows
-            ->map(fn (AuditLog $row) => $this->entry($row, $contributions, $projets, $communes))
+            ->map(fn (AuditLog $row) => $this->entry($row, $contributions, $projets, $communes, $anonymiser))
             ->values()
             ->all();
     }
@@ -186,7 +231,7 @@ class ChangelogService
      * @param  array<string, ?string>|null  $communes
      * @return array<string, mixed>
      */
-    private function entry(AuditLog $row, Collection $contributions, Collection $projets, ?array $communes = null): array
+    private function entry(AuditLog $row, Collection $contributions, Collection $projets, ?array $communes = null, bool $anonymiser = false): array
     {
         $avant = json_decode($row->avant ?? 'null', true) ?: [];
         $apres = json_decode($row->apres ?? 'null', true) ?: [];
@@ -204,7 +249,7 @@ class ChangelogService
             'date' => $row->created_at?->toDateTimeString(),
             'label' => $this->label($row->action, $apres, $contribution?->type),
             'detail' => $this->detail($row->action, $apres),
-            'auteur' => $this->auteur($row, $contribution),
+            'auteur' => $this->auteur($row, $contribution, $anonymiser),
             'commune' => $communes[$projetId] ?? null,
             'projet_nom' => $nom,
             'projet_slug' => $projet?->slug,
@@ -215,10 +260,19 @@ class ChangelogService
      * Auteur de la modification : le contributeur pour une suggestion
      * publique, l'opérateur sinon. Les emails et commandes artisan ne sont
      * jamais exposés publiquement.
+     *
+     * En mode anonymiser (API publique v1), aucun nom n'est exposé : les
+     * contributeurs sont crédités collectivement, les opérateurs humains
+     * regroupés sous « l'équipe de l'Observatoire des ABC » ; seuls les
+     * libellés des traitements automatiques (abc:…) restent lisibles.
      */
-    private function auteur(AuditLog $row, ?Contribution $contribution): ?string
+    private function auteur(AuditLog $row, ?Contribution $contribution, bool $anonymiser = false): ?string
     {
         if ($row->action === 'validee') {
+            if ($anonymiser) {
+                return "les contributeurs de l'Observatoire des ABC";
+            }
+
             // Les contributions antérieures à l'espace membre n'ont pas de
             // compte lié : le nom du contributeur n'existe pas dans les
             // données, on n'affiche jamais celui du valideur à la place.
@@ -237,6 +291,11 @@ class ChangelogService
         // Les emails ne sont jamais exposés publiquement.
         if (str_contains($par, '@')) {
             return 'un administrateur';
+        }
+
+        // API v1 : le nom d'un opérateur humain n'est jamais exposé.
+        if ($anonymiser && ! str_starts_with($par, 'abc:')) {
+            return "l'équipe de l'Observatoire des ABC";
         }
 
         return self::COMMANDES[$par] ?? (str_starts_with($par, 'abc:') ? 'Traitement automatique' : $par);

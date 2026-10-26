@@ -3,10 +3,16 @@
 namespace App\Providers;
 
 use App\Models\Actualite;
+use App\Models\AuditLog;
+use App\Models\Commune;
 use App\Models\Contribution;
+use App\Models\Projet;
+use App\Models\Verification;
+use App\Observers\ApiCacheObserver;
 use App\Policies\ActualitePolicy;
 use App\Policies\ContributionPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -52,5 +58,16 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour(3)->by($request->input('email').'|'.$request->ip()),
             Limit::perHour(6)->by($request->ip()),
         ]);
+
+        // API publique v1 : accès ouvert sans clé, 60 requêtes/min par IP.
+        RateLimiter::for('api-v1', fn (Request $request) => [
+            Limit::perMinute((int) config('api.throttle_per_minute'))->by($request->ip()),
+        ]);
+
+        // Le cache applicatif de l'API v1 suit toute écriture sur les
+        // données publiées (les traitements massifs invalident eux-mêmes).
+        foreach ([Projet::class, Commune::class, Verification::class, Contribution::class, AuditLog::class] as $model) {
+            $model::observe(ApiCacheObserver::class);
+        }
     }
 }

@@ -10,6 +10,7 @@ use App\Models\GeoCache;
 use App\Models\Projet;
 use App\Models\Snapshot;
 use App\Models\Verification;
+use App\Support\ApiCache;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -71,6 +72,10 @@ class ImportLegacyCommand extends Command
                 ->update(['geom' => DB::raw('ST_SetSRID(ST_MakePoint(lon, lat), 4326)')]);
             $this->line("geometry : {$updated} communes");
         }
+
+        // L'import écrit en masse (sans observateurs) : le cache
+        // applicatif de l'API v1 est invalidé explicitement.
+        ApiCache::invalidate();
 
         $this->info('Import terminé.');
 

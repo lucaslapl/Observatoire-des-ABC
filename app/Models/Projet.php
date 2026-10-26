@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
  * @property int|null $nb_communes
  * @property string|null $departement
  * @property string|null $region
+ * @property string|null $verif_etat alias du join verifications (ApiV1Service)
  */
 class Projet extends Model
 {

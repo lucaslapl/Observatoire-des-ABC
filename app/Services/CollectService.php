@@ -11,6 +11,7 @@ use App\Models\Contribution;
 use App\Models\Financement;
 use App\Models\Projet;
 use App\Models\Verification;
+use App\Support\ApiCache;
 use RuntimeException;
 
 /**
@@ -61,6 +62,11 @@ class CollectService
         $this->recompute->recomputeStatuses();
         $geocoding = $this->geocode->enrichGeocoding();
         $anomalies = $this->anomalies->computeAnomalies();
+
+        // Le collect écrit beaucoup en masse (upserts) : le cache
+        // applicatif de l'API v1 est invalidé explicitement, une seule
+        // fois après le pipeline complet.
+        ApiCache::invalidate();
 
         $total = Projet::count();
         $communes = Commune::count();
