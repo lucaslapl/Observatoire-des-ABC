@@ -24,6 +24,9 @@ class SitemapController extends Controller
             $urls[] = $this->entry($base.'/methodologie', null, '0.5', 'yearly');
             $urls[] = $this->entry($base.'/mentions-legales', null, '0.3', 'yearly');
             $urls[] = $this->entry($base.'/confidentialite', null, '0.3', 'yearly');
+            // Page « API & réutilisation » et documentation publique.
+            $urls[] = $this->entry($base.'/api', null, '0.5', 'yearly');
+            $urls[] = $this->entry($base.'/api/doc', null, '0.5', 'yearly');
 
             // Actualités publiées.
             foreach (DB::table('actualites')

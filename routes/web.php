@@ -25,6 +25,9 @@ Route::get('/carte', [PageController::class, 'carte'])->name('carte');
 Route::get('/robots.txt', fn () => response(
     implode("\n", [
         'User-agent: *',
+        // La documentation de l'API publique reste indexée malgré le
+        // Disallow des endpoints (données volumineuses, pas du SEO).
+        'Allow: /api/doc',
         'Disallow: /api/',
         'Disallow: /admin',
         'Disallow: /login',
@@ -59,6 +62,10 @@ Route::get('/methodologie', [PageController::class, 'methodologie'])->name('meth
 Route::get('/a-propos', [PageController::class, 'aPropos'])->name('a-propos');
 Route::get('/mentions-legales', [PageController::class, 'mentionsLegales'])->name('mentions-legales');
 Route::get('/confidentialite', [PageController::class, 'confidentialite'])->name('confidentialite');
+
+// Page « API & réutilisation » : le chemin /api n'est pas utilisé par les
+// routes API (elles vivent sous /api/v1 et /api/{ancien}).
+Route::get('/api', [PageController::class, 'api'])->name('api-publique');
 
 Route::get('/contact', [ContactController::class, 'create'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])

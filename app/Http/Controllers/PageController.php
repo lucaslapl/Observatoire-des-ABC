@@ -148,6 +148,15 @@ class PageController extends Controller
         return Inertia::render('Confidentialite');
     }
 
+    /**
+     * Page publique « API & conditions d'utilisation » : endpoints v1,
+     * licence LO 2.0, crédit attendu, limites d'usage et versionnement.
+     */
+    public function api(): Response
+    {
+        return Inertia::render('Api');
+    }
+
     public function actualites(): Response
     {
         $actualites = Actualite::query()
