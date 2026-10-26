@@ -7,8 +7,8 @@ import { Link } from '@inertiajs/vue3';
         <div class="container-fluid d-flex flex-wrap align-items-center gap-2 justify-content-center text-center">
             <i class="bi bi-info-circle" aria-hidden="true"></i>
             <span>
-                Projet indépendant en évolution continue —
-                <Link href="/contact">signalez toute erreur</Link>.
+                Une erreur, un bug, un problème d'affichage ou d'accessibilité ?
+                <Link href="/contact">Merci de nous le signaler !</Link>
             </span>
         </div>
     </div>
