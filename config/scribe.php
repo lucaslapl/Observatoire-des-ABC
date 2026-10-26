@@ -7,6 +7,14 @@ use Knuckles\Scribe\Extracting\Strategies;
 use function Knuckles\Scribe\Config\configureStrategy;
 use function Knuckles\Scribe\Config\removeStrategies;
 
+// Scribe est une dépendance de développement (require-dev) : en production
+// (composer install --no-dev), ce fichier de config est quand même chargé
+// par artisan, mais les classes du paquet n'existent pas. Sans cette
+// garde, toute commande artisan échouerait (Class "AuthIn" not found).
+if (! class_exists(AuthIn::class)) {
+    return [];
+}
+
 // Only the most common configs are shown. See the https://scribe.knuckles.wtf/laravel/reference/config for all.
 
 return [
