@@ -112,6 +112,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware('role:admin')->group(function () {
+        Route::post('/actualites/preview', [ActualiteController::class, 'preview'])->name('actualites.preview');
         Route::post('/actualites', [ActualiteController::class, 'store'])->name('actualites.store');
         Route::put('/actualites/{actualite}', [ActualiteController::class, 'update'])->name('actualites.update');
         Route::delete('/actualites/{actualite}', [ActualiteController::class, 'destroy'])->name('actualites.destroy');

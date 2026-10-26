@@ -22,14 +22,9 @@ const crumbs = computed(() => [
     { label: a.value.titre },
 ]);
 
-// Meta description : 160 caractères max, coupée à la frontière de mot.
-const pageDescription = computed(() => {
-    const contenu = (a.value.contenu || '').replace(/\s+/g, ' ').trim();
-    if (contenu.length <= 160) return contenu;
-    const coupe = contenu.slice(0, 160);
-    const dernierEspace = coupe.lastIndexOf(' ');
-    return (dernierEspace > 100 ? coupe.slice(0, dernierEspace) : coupe).trim() + '…';
-});
+// Meta description : extrait en texte brut, déjà limité à 160 caractères
+// côté serveur (MarkdownService::toText).
+const pageDescription = computed(() => a.value.extrait || '');
 
 const jsonLd = computed(() => {
     const base = site.value.url || '';
@@ -72,9 +67,24 @@ const jsonLd = computed(() => {
                     {{ formatDate(a.date_publication) }}
                     <template v-if="a.auteur"> · {{ a.auteur }}</template>
                 </p>
-                <div class="fs-6" style="white-space: pre-wrap;">{{ a.contenu }}</div>
+                <div class="actualite-contenu fs-6" v-html="a.contenu_html"></div>
                 <p class="mt-4"><Link class="btn btn-outline-success btn-sm" href="/actualites">← Toutes les actualités</Link></p>
             </article>
         </div>
     </Layout>
 </template>
+
+<style scoped>
+/* Images et citations du Markdown rendu : fluides et discrètes. */
+.actualite-contenu :deep(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+}
+
+.actualite-contenu :deep(blockquote) {
+    border-left: 3px solid var(--bs-success-border-subtle, #198754);
+    padding-left: 1rem;
+    color: var(--bs-secondary-color, #6c757d);
+}
+</style>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, nextTick, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import Layout from '../Components/Layout.vue';
@@ -64,6 +64,78 @@ const actualiteForm = reactive({
 const actualiteMsg = ref('');
 const actualiteOk = ref(true);
 
+// --- Éditeur Markdown ---
+// Barre d'outils insérant la syntaxe autour de la sélection, et aperçu
+// rendu par le serveur (POST /actualites/preview) : même rendu que la
+// page publique, sans bibliothèque Markdown côté client.
+const contenuTextarea = ref(null);
+const showPreview = ref(false);
+const previewHtml = ref('');
+const previewBusy = ref(false);
+let previewTimer = null;
+let previewSeq = 0;
+
+function focusContenu() {
+    nextTick(() => contenuTextarea.value?.focus());
+}
+
+/** Entoure la sélection de balises Markdown (`**gras**`, `[lien](url)`…). */
+function wrapSelection(before, after = before, placeholder = 'texte') {
+    const el = contenuTextarea.value;
+    const value = actualiteForm.contenu;
+    const start = el?.selectionStart ?? value.length;
+    const end = el?.selectionEnd ?? start;
+    const selected = value.slice(start, end) || placeholder;
+    actualiteForm.contenu = value.slice(0, start) + before + selected + after + value.slice(end);
+    const caret = start + before.length;
+    nextTick(() => {
+        if (!el) return;
+        el.focus();
+        el.selectionStart = caret;
+        el.selectionEnd = caret + selected.length;
+    });
+}
+
+/** Préfixe chaque ligne de la sélection (`## Titre`, `- item`, `> citation`…). */
+function prefixLines(prefix) {
+    const el = contenuTextarea.value;
+    const value = actualiteForm.contenu;
+    const start = el?.selectionStart ?? value.length;
+    const end = el?.selectionEnd ?? start;
+    const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+    const lineEnd = end + (value.slice(end).indexOf('\n') === -1 ? 0 : value.slice(end).indexOf('\n'));
+    const block = value.slice(lineStart, lineEnd);
+    const prefixed = block
+        .split('\n')
+        .map((l) => (l.startsWith(prefix) ? l : prefix + l))
+        .join('\n');
+    actualiteForm.contenu = value.slice(0, lineStart) + prefixed + value.slice(lineEnd);
+    focusContenu();
+}
+
+async function refreshPreview() {
+    const contenu = actualiteForm.contenu;
+    const seq = ++previewSeq;
+    previewBusy.value = true;
+    try {
+        const r = await axios.post('/actualites/preview', { contenu });
+        if (seq === previewSeq) previewHtml.value = r.data.html;
+    } catch {
+        // Silencieux : l'aperçu reprendra au prochain arrêt de frappe.
+    } finally {
+        if (seq === previewSeq) previewBusy.value = false;
+    }
+}
+
+watch(
+    () => [showPreview.value, actualiteForm.contenu],
+    () => {
+        if (!showPreview.value) return;
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(refreshPreview, 300);
+    },
+);
+
 const formatDateFr = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '');
 const formatDateTimeFr = (d) => (d ? new Date(d).toLocaleString('fr-FR') : '');
 
@@ -73,6 +145,8 @@ function openActualite(a) {
     actualiteForm.contenu = a ? a.contenu : '';
     actualiteForm.statut = a ? a.statut : 'publie';
     actualiteForm.date_publication = a && a.date_publication ? a.date_publication.slice(0, 10) : '';
+    showPreview.value = false;
+    previewHtml.value = '';
 }
 
 async function saveActualite() {
@@ -340,7 +414,26 @@ async function collect() {
                                 {{ actualiteForm.id ? 'Mettre à jour' : 'Publier' }}
                             </button>
                         </div>
-                        <textarea v-model="actualiteForm.contenu" rows="3" class="form-control form-control-sm mt-2" placeholder="Contenu de l'actualité…"></textarea>
+                        <div class="d-flex flex-wrap gap-1 mt-2 mb-1" role="toolbar" aria-label="Mise en forme du contenu (Markdown)">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Titre de section" @click="prefixLines('## ')">Titre</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Sous-titre" @click="prefixLines('### ')">Sous-titre</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Gras" @click="wrapSelection('**')"><i class="bi bi-type-bold" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Italique" @click="wrapSelection('*')"><i class="bi bi-type-italic" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Liste à puces" @click="prefixLines('- ')"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Citation" @click="prefixLines('> ')"><i class="bi bi-quote" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Lien" @click="wrapSelection('[', '](https://)', 'libellé du lien')"><i class="bi bi-link-45deg" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Image" @click="wrapSelection('![', '](https://)', 'texte alternatif')"><i class="bi bi-image" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-sm" :class="showPreview ? 'btn-success' : 'btn-outline-success'" @click="showPreview = !showPreview">
+                                <i class="bi bi-eye me-1" aria-hidden="true"></i>Aperçu
+                            </button>
+                        </div>
+                        <textarea v-show="!showPreview" ref="contenuTextarea" v-model="actualiteForm.contenu" rows="10" class="form-control form-control-sm mt-2" placeholder="Contenu de l'actualité (Markdown)…"></textarea>
+                        <div v-if="showPreview" class="border rounded-3 p-3 mt-2 bg-white actualite-contenu">
+                            <div v-if="previewBusy" class="text-muted small mb-2">Rendu en cours…</div>
+                            <div v-if="!previewHtml && !previewBusy" class="text-muted">Aperçu vide.</div>
+                            <div v-html="previewHtml"></div>
+                        </div>
+                        <div class="form-text">Markdown : **gras**, *italique*, ## Titre, listes « - », [libellé](url), ![alt](url). Le HTML brut est affiché comme du texte.</div>
                     </form>
                     <div v-if="actualiteMsg" class="small mb-2" :class="actualiteOk ? 'text-success' : 'text-danger'">{{ actualiteMsg }}</div>
 
@@ -354,7 +447,7 @@ async function collect() {
                                     &nbsp;{{ a.titre }}
                                 </div>
                                 <div class="small text-muted">
-                                    {{ formatDateFr(a.date_publication) }} · {{ (a.contenu || '').slice(0, 80) }}{{ (a.contenu || '').length > 80 ? '…' : '' }}
+                                    {{ formatDateFr(a.date_publication) }} · {{ a.extrait }}{{ (a.contenu || '').length > 80 ? '…' : '' }}
                                 </div>
                             </div>
                             <button class="btn btn-sm btn-outline-secondary" :disabled="busy" @click="openActualite(a)"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Modifier</button>
@@ -610,5 +703,17 @@ async function collect() {
     font-size: 12px;
     color: #64748b;
     line-height: 1.6;
+}
+/* Aperçu Markdown : images fluides, citations discrètes (comme en public). */
+.actualite-contenu :deep(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+}
+.actualite-contenu :deep(blockquote) {
+    border-left: 3px solid #198754;
+    padding-left: 1rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
 }
 </style>

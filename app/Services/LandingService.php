@@ -14,6 +14,7 @@ class LandingService
         private RegionService $regions,
         private StatusService $status,
         private ChangelogService $changelog,
+        private MarkdownService $markdown,
     ) {}
 
     public const STATUTS =
@@ -325,7 +326,11 @@ class LandingService
             'id' => $actualite->id,
             'titre' => $actualite->titre,
             'slug' => $actualite->slug,
-            'contenu' => $actualite->contenu,
+            // Le contenu est stocké en Markdown : le HTML rendu côté serveur
+            // (HTML brut échappé par MarkdownService) est le seul exposé à
+            // la page publique.
+            'contenu_html' => $this->markdown->toHtml($actualite->contenu),
+            'extrait' => $this->markdown->toText($actualite->contenu, 160),
             'date_publication' => $actualite->date_publication?->toDateString(),
             'auteur' => $actualite->auteur?->name,
         ];

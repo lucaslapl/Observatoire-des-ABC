@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\Verification;
 use App\Services\ChangelogService;
 use App\Services\LandingService;
+use App\Services\MarkdownService;
 use App\Services\StatsService;
 use App\Services\VerificationService;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ class PageController extends Controller
         private VerificationService $verifications,
         private LandingService $landing,
         private ChangelogService $changelog,
+        private MarkdownService $markdown,
     ) {}
 
     public function index(): Response
@@ -163,7 +165,17 @@ class PageController extends Controller
             ->where('statut', 'publie')
             ->where(fn ($q) => $q->whereNull('date_publication')->orWhere('date_publication', '<=', now()))
             ->orderByDesc('date_publication')
-            ->get(['id', 'titre', 'slug', 'contenu', 'date_publication']);
+            ->get(['id', 'titre', 'slug', 'contenu', 'date_publication'])
+            // La liste publique n'affiche qu'un extrait en texte brut : le
+            // Markdown brut ne doit jamais fuiter dans les pages index.
+            ->map(fn (Actualite $a) => [
+                'id' => $a->id,
+                'titre' => $a->titre,
+                'slug' => $a->slug,
+                'extrait' => $this->markdown->toText($a->contenu, 300),
+                'date_publication' => $a->date_publication?->toDateString(),
+            ])
+            ->values();
 
         return Inertia::render('Actualites', ['actualites' => $actualites]);
     }
@@ -276,7 +288,18 @@ class PageController extends Controller
 
             $props['actualites'] = Actualite::query()
                 ->orderByDesc('created_at')
-                ->get(['id', 'titre', 'slug', 'contenu', 'statut', 'date_publication']);
+                ->get(['id', 'titre', 'slug', 'contenu', 'statut', 'date_publication'])
+                ->map(fn (Actualite $a) => [
+                    'id' => $a->id,
+                    'titre' => $a->titre,
+                    'slug' => $a->slug,
+                    // Contenu Markdown brut pour le formulaire d'édition…
+                    'contenu' => $a->contenu,
+                    // …et extrait nettoyé pour la liste.
+                    'extrait' => $this->markdown->toText($a->contenu, 80),
+                    'statut' => $a->statut,
+                    'date_publication' => $a->date_publication?->toISOString(),
+                ]);
         }
 
         return Inertia::render('Admin', $props);

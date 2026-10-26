@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Actualite;
+use App\Services\MarkdownService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class FeedController extends Controller
 {
+    public function __construct(private MarkdownService $markdown) {}
+
     public function __invoke(): Response
     {
         $xml = Cache::remember('abc:feed', now()->addHours(1), function () {
@@ -32,7 +35,7 @@ class FeedController extends Controller
             $entries = $actualites->map(function (Actualite $a) use ($base, $esc) {
                 $date = ($a->date_publication ?? $a->updated_at ?? now())->toAtomString();
                 $url = $base.'/actualites/'.$a->slug;
-                $summary = mb_substr(preg_replace('/\s+/u', ' ', (string) $a->contenu) ?? '', 0, 300);
+                $summary = $this->markdown->toText($a->contenu, 300);
 
                 return "    <entry>\n"
                     ."      <title>{$esc($a->titre)}</title>\n"

@@ -4,12 +4,32 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Actualite;
+use App\Services\MarkdownService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class ActualiteController extends Controller
 {
+    public function __construct(private MarkdownService $markdown) {}
+
+    /**
+     * Aperçu du rendu Markdown, utilisé par l'éditeur de l'admin.
+     * Même service que la page publique : l'aperçu est fidèle au rendu final.
+     */
+    public function preview(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'contenu' => ['nullable', 'string'],
+        ]);
+
+        return response()->json([
+            'html' => $this->markdown->toHtml($validated['contenu'] ?? ''),
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -27,6 +47,8 @@ class ActualiteController extends Controller
             'statut' => $validated['statut'],
             'date_publication' => $validated['date_publication'] ?? now(),
         ]);
+
+        $this->forgetCachedPages();
 
         return back();
     }
@@ -48,6 +70,8 @@ class ActualiteController extends Controller
             'date_publication' => $validated['date_publication'] ?? now(),
         ]);
 
+        $this->forgetCachedPages();
+
         return back();
     }
 
@@ -55,6 +79,19 @@ class ActualiteController extends Controller
     {
         $actualite->delete();
 
+        $this->forgetCachedPages();
+
         return back();
+    }
+
+    /**
+     * Le sitemap et le flux Atom listent les actualités mais sont servis
+     * depuis un cache : sans invalidation, une publication ne serait
+     * visible qu'à l'expiration (12 h / 1 h).
+     */
+    private function forgetCachedPages(): void
+    {
+        Cache::forget('abc:sitemap');
+        Cache::forget('abc:feed');
     }
 }

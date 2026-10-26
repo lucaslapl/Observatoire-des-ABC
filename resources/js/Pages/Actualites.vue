@@ -31,7 +31,7 @@ const formatDate = (d) =>
                         </h2>
                         <small class="text-muted text-nowrap">{{ formatDate(a.date_publication) }}</small>
                     </div>
-                    <div class="text-muted" style="white-space: pre-wrap;">{{ a.contenu }}</div>
+                    <div class="text-muted">{{ a.extrait }}</div>
                 </div>
             </div>
         </div>
