@@ -1,0 +1,519 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "http:\/\/localhost:8000"
+        }
+    ],
+    "info": {
+        "name": "API publique v1 \u2014 Observatoire des ABC",
+        "_postman_id": "d8fbc72b-a71f-4d5b-98e8-c5c411a850fb",
+        "description": "API publique en lecture seule de l'Observatoire des ABC : projets ABC, communes, d\u00e9partements, r\u00e9gions, journal d'audit et statistiques. Donn\u00e9es sous Licence Ouverte 2.0 (Etalab). Acc\u00e8s ouvert sans cl\u00e9, 60 requ\u00eates\/min par IP.",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "Communes",
+            "description": "",
+            "item": [
+                {
+                    "name": "Fiche d'une commune : localisation, EPCI, projets li\u00e9s (avec\nprovenance de chaque projet). Format GeoJSON avec `format=geojson`\nou `Accept: application\/geo+json` (une feature par projet li\u00e9).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/communes\/:code",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/communes\/:code",
+                            "variable": [
+                                {
+                                    "id": "code",
+                                    "key": "code",
+                                    "value": "architecto",
+                                    "description": "Code INSEE de la commune (ex. 56003)."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"format\":\"geojson\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"\"\n}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "D\u00e9partements",
+            "description": "",
+            "item": [
+                {
+                    "name": "Synth\u00e8se d'un d\u00e9partement : communes et projets couverts,\nprovenance de chaque projet.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/departements\/:code",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/departements\/:code",
+                            "variable": [
+                                {
+                                    "id": "code",
+                                    "key": "code",
+                                    "value": "architecto",
+                                    "description": "Code du d\u00e9partement (ex. 56, 2a, 972)."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"\"\n}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Journal",
+            "description": "",
+            "item": [
+                {
+                    "name": "Journal public d'audit : v\u00e9rifications, contributions valid\u00e9es,\nfusions\u2026 dans le m\u00eame ordre que sur le site (le plus r\u00e9cent\nd'abord), pagin\u00e9 par curseur. Les auteurs sont anonymis\u00e9s : les\ncontributions sont cr\u00e9dit\u00e9es collectivement, jamais nominativement.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/journal",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/journal"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"per_page\":1,\"format\":\"json\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 200,
+                            "body": "{\"data\":[{\"date\":\"2026-10-22 14:32:01\",\"label\":\"Dates resynchronis\\u00e9es\",\"detail\":\"depuis 2026\",\"auteur\":\"Synchronisation automatique\",\"commune\":\"Vitr\\u00e9\",\"projet_nom\":\"Atlas de la Biodiversit\\u00e9 Communale\",\"projet_slug\":\"atlas-de-la-biodiversite-communale\",\"projet_id\":\"atlas-de-la-biodiversite-communale-commune-de-vitre-2025\"}],\"meta\":{\"per_page\":1,\"next_cursor\":\"eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"prev_cursor\":null,\"next_page_url\":\"http:\\\/\\\/localhost:8000\\\/api\\\/v1\\\/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"licence\":\"Etalab-2.0\"}}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Projets",
+            "description": "",
+            "item": [
+                {
+                    "name": "Liste des projets ABC.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/projets",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/projets"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"statut\":\"en_cours\",\"annee\":1,\"code_insee\":\"T8GOX$\\\/i\",\"departement\":\"b\",\"region\":\"m\",\"porteur\":\"i\",\"bbox\":\"8,sssssss-20:.492,ssssss-1,ssss9\",\"per_page\":3,\"format\":\"json\"}"
+                        },
+                        "description": "Pagin\u00e9e par curseur (`meta.next_cursor` \/ `meta.next_page_url`).\nFiltres : `statut` (a_venir, en_cours, termine, inconnu \u2014 statut\naffich\u00e9, le verdict de v\u00e9rification prime), `annee` (ann\u00e9e de\nd\u00e9but), `code_insee`, `departement` (ex. 56, 2a, 972), `region`\n(slug, code INSEE ou libell\u00e9), `porteur` (recherche partielle),\n`bbox` (`lon_min,lat_min,lon_max,lat_max`, WGS84).\nFormat GeoJSON avec `format=geojson` ou `Accept: application\/geo+json`.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 422,
+                            "body": "{\"message\":\"The annee field must be at least 1990. (and 2 more errors)\",\"errors\":{\"annee\":[\"The annee field must be at least 1990.\"],\"code_insee\":[\"Le filtre code_insee doit \\u00eatre un code INSEE \\u00e0 5 caract\\u00e8res.\"],\"bbox\":[\"Le filtre bbox doit \\u00eatre \\u00ab lon_min,lat_min,lon_max,lat_max \\u00bb (4 nombres d\\u00e9cimaux).\"]}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Fiche d\u00e9taill\u00e9e d'un projet : communes, v\u00e9rification, enrichissements,\nhistorique complet (auteurs cr\u00e9dit\u00e9s collectivement), provenance.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/projets\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/projets\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "architecto",
+                                    "description": "Identifiant du projet (ex. abc-albi-albi-2017)."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\"message\":\"Projet introuvable.\"}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "R\u00e9gions",
+            "description": "",
+            "item": [
+                {
+                    "name": "Synth\u00e8se d'une r\u00e9gion : d\u00e9partements, communes et projets couverts.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/regions\/:code",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/regions\/:code",
+                            "variable": [
+                                {
+                                    "id": "code",
+                                    "key": "code",
+                                    "value": "architecto",
+                                    "description": "Slug (ex. bretagne), code INSEE (ex. 53) ou libell\u00e9 (ex. Bretagne)."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"\"\n}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Statistiques",
+            "description": "",
+            "item": [
+                {
+                    "name": "Compteurs globaux : projets par statut, communes couvertes,\nprojets v\u00e9rifi\u00e9s, anomalies, contributions en attente.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/stats",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/stats"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 200,
+                            "body": "{\"data\":{\"sources\":{\"data.gouv\":\"2026-07-09\",\"wayback\":\"2022-12-06\",\"fondsvert-p113-2024\":\"2025-07-31\",\"fondsvert-p113-2025\":\"2026-06-22\"},\"stats\":[{\"statut\":\"a_venir\",\"n\":161},{\"statut\":\"en_cours\",\"n\":329},{\"statut\":\"inconnu\",\"n\":1},{\"statut\":\"termine\",\"n\":718}],\"countProjets\":1209,\"countCommunes\":4924,\"countPotentiellementTermines\":237,\"countPotentiellementEnCours\":81,\"countDonnees2022\":38,\"countEstimes\":246,\"countVerifies\":7,\"countAnomalies\":2,\"countNonLocalises\":0,\"countContributionsEnAttente\":0,\"licence\":\"Etalab-2.0\",\"derniere_mise_a_jour\":\"2026-10-26T15:03:34.000000Z\"}}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "noauth"
+    }
+}

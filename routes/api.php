@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProjetController as AdminProjetController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\DiagController;
+use App\Http\Controllers\Api\DocController;
 use App\Http\Controllers\Api\GeoJsonController;
 use App\Http\Controllers\Api\MetaController;
 use App\Http\Controllers\Api\StatsController;
@@ -47,6 +48,11 @@ Route::prefix('v1')
         Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
         Route::get('/stats', [StatsV1Controller::class, 'index'])->name('stats.index');
     });
+
+// Documentation OpenAPI (HTML généré + spécification), hors throttling :
+// pages statiques servies par DocController depuis public/docs.
+Route::get('/doc', [DocController::class, 'show'])->name('api.doc');
+Route::get('/doc/openapi.yaml', [DocController::class, 'spec'])->name('api.doc.openapi');
 
 /*
 |--------------------------------------------------------------------------

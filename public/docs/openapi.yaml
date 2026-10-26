@@ -1,0 +1,515 @@
+openapi: 3.0.3
+info:
+  title: 'API publique v1 — Observatoire des ABC'
+  description: "API publique en lecture seule de l'Observatoire des ABC : projets ABC, communes, départements, régions, journal d'audit et statistiques. Données sous Licence Ouverte 2.0 (Etalab). Accès ouvert sans clé, 60 requêtes/min par IP."
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8000'
+tags:
+  -
+    name: Communes
+    description: ''
+  -
+    name: Départements
+    description: ''
+  -
+    name: Journal
+    description: ''
+  -
+    name: Projets
+    description: ''
+  -
+    name: Régions
+    description: ''
+  -
+    name: Statistiques
+    description: ''
+paths:
+  '/api/v1/communes/{code}':
+    get:
+      summary: "Fiche d'une commune : localisation, EPCI, projets liés (avec\nprovenance de chaque projet). Format GeoJSON avec `format=geojson`\nou `Accept: application/geo+json` (une feature par projet lié)."
+      operationId: ficheDuneCommuneLocalisationEPCIProjetsLisavecProvenanceDeChaqueProjetFormatGeoJSONAvecformatgeojsonOuAcceptApplicationgeo+jsonuneFeatureParProjetLi
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: ''
+                properties:
+                  message:
+                    type: string
+                    example: ''
+      tags:
+        - Communes
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  description: ''
+                  example: geojson
+                  enum:
+                    - json
+                    - geojson
+                  nullable: true
+      security: []
+    parameters:
+      -
+        in: path
+        name: code
+        description: 'Code INSEE de la commune (ex. 56003).'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/departements/{code}':
+    get:
+      summary: "Synthèse d'un département : communes et projets couverts,\nprovenance de chaque projet."
+      operationId: synthseDunDpartementCommunesEtProjetsCouvertsProvenanceDeChaqueProjet
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: ''
+                properties:
+                  message:
+                    type: string
+                    example: ''
+      tags:
+        - Départements
+      security: []
+    parameters:
+      -
+        in: path
+        name: code
+        description: 'Code du département (ex. 56, 2a, 972).'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  /api/v1/journal:
+    get:
+      summary: "Journal public d'audit : vérifications, contributions validées,\nfusions… dans le même ordre que sur le site (le plus récent\nd'abord), paginé par curseur. Les auteurs sont anonymisés : les\ncontributions sont créditées collectivement, jamais nominativement."
+      operationId: journalPublicDauditVrificationsContributionsValidesFusionsDansLeMmeOrdreQueSurLeSitelePlusRcentDabordPaginParCurseurLesAuteursSontAnonymissLesContributionsSontCrditesCollectivementJamaisNominativement
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      date: '2026-10-22 14:32:01'
+                      label: 'Dates resynchronisées'
+                      detail: 'depuis 2026'
+                      auteur: 'Synchronisation automatique'
+                      commune: Vitré
+                      projet_nom: 'Atlas de la Biodiversité Communale'
+                      projet_slug: atlas-de-la-biodiversite-communale
+                      projet_id: atlas-de-la-biodiversite-communale-commune-de-vitre-2025
+                  meta:
+                    per_page: 1
+                    next_cursor: eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0
+                    prev_cursor: null
+                    next_page_url: 'http://localhost:8000/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0'
+                    licence: Etalab-2.0
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        date: '2026-10-22 14:32:01'
+                        label: 'Dates resynchronisées'
+                        detail: 'depuis 2026'
+                        auteur: 'Synchronisation automatique'
+                        commune: Vitré
+                        projet_nom: 'Atlas de la Biodiversité Communale'
+                        projet_slug: atlas-de-la-biodiversite-communale
+                        projet_id: atlas-de-la-biodiversite-communale-commune-de-vitre-2025
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          example: '2026-10-22 14:32:01'
+                        label:
+                          type: string
+                          example: 'Dates resynchronisées'
+                        detail:
+                          type: string
+                          example: 'depuis 2026'
+                        auteur:
+                          type: string
+                          example: 'Synchronisation automatique'
+                        commune:
+                          type: string
+                          example: Vitré
+                        projet_nom:
+                          type: string
+                          example: 'Atlas de la Biodiversité Communale'
+                        projet_slug:
+                          type: string
+                          example: atlas-de-la-biodiversite-communale
+                        projet_id:
+                          type: string
+                          example: atlas-de-la-biodiversite-communale-commune-de-vitre-2025
+                  meta:
+                    type: object
+                    properties:
+                      per_page:
+                        type: integer
+                        example: 1
+                      next_cursor:
+                        type: string
+                        example: eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0
+                      prev_cursor:
+                        type: string
+                        example: null
+                        nullable: true
+                      next_page_url:
+                        type: string
+                        example: 'http://localhost:8000/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0'
+                      licence:
+                        type: string
+                        example: Etalab-2.0
+      tags:
+        - Journal
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 1
+                  nullable: true
+                format:
+                  type: string
+                  description: ''
+                  example: json
+                  enum:
+                    - json
+                  nullable: true
+      security: []
+  /api/v1/projets:
+    get:
+      summary: 'Liste des projets ABC.'
+      operationId: listeDesProjetsABC
+      description: "Paginée par curseur (`meta.next_cursor` / `meta.next_page_url`).\nFiltres : `statut` (a_venir, en_cours, termine, inconnu — statut\naffiché, le verdict de vérification prime), `annee` (année de\ndébut), `code_insee`, `departement` (ex. 56, 2a, 972), `region`\n(slug, code INSEE ou libellé), `porteur` (recherche partielle),\n`bbox` (`lon_min,lat_min,lon_max,lat_max`, WGS84).\nFormat GeoJSON avec `format=geojson` ou `Accept: application/geo+json`."
+      parameters: []
+      responses:
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The annee field must be at least 1990. (and 2 more errors)'
+                  errors:
+                    annee:
+                      - 'The annee field must be at least 1990.'
+                    code_insee:
+                      - 'Le filtre code_insee doit être un code INSEE à 5 caractères.'
+                    bbox:
+                      - 'Le filtre bbox doit être « lon_min,lat_min,lon_max,lat_max » (4 nombres décimaux).'
+                properties:
+                  message:
+                    type: string
+                    example: 'The annee field must be at least 1990. (and 2 more errors)'
+                  errors:
+                    type: object
+                    properties:
+                      annee:
+                        type: array
+                        example:
+                          - 'The annee field must be at least 1990.'
+                        items:
+                          type: string
+                      code_insee:
+                        type: array
+                        example:
+                          - 'Le filtre code_insee doit être un code INSEE à 5 caractères.'
+                        items:
+                          type: string
+                      bbox:
+                        type: array
+                        example:
+                          - 'Le filtre bbox doit être « lon_min,lat_min,lon_max,lat_max » (4 nombres décimaux).'
+                        items:
+                          type: string
+      tags:
+        - Projets
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statut:
+                  type: string
+                  description: ''
+                  example: en_cours
+                  enum:
+                    - a_venir
+                    - en_cours
+                    - termine
+                    - inconnu
+                  nullable: true
+                annee:
+                  type: integer
+                  description: 'Must be at least 1990. Must not be greater than 2100.'
+                  example: 1
+                  nullable: true
+                code_insee:
+                  type: string
+                  description: 'Must match the regex /^[0-9A-Z]{5}$/i.'
+                  example: T8GOX$/i
+                  nullable: true
+                departement:
+                  type: string
+                  description: 'Must match the regex /^[0-9a-zA-Z]{1,3}$/.'
+                  example: b
+                  nullable: true
+                region:
+                  type: string
+                  description: 'Must not be greater than 60 characters.'
+                  example: m
+                  nullable: true
+                porteur:
+                  type: string
+                  description: 'Must not be greater than 200 characters.'
+                  example: i
+                  nullable: true
+                bbox:
+                  type: string
+                  description: 'Must match the regex /^-?\d{1,3}(?:\.\d+)?,\s*-?\d{1,2}(?:\.\d+)?,\s*-?\d{1,3}(?:\.\d+)?,\s*-?\d{1,2}(?:\.\d+)?$/.'
+                  example: '8,sssssss-20:.492,ssssss-1,ssss9'
+                  nullable: true
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 3
+                  nullable: true
+                format:
+                  type: string
+                  description: ''
+                  example: json
+                  enum:
+                    - json
+                    - geojson
+                  nullable: true
+      security: []
+  '/api/v1/projets/{id}':
+    get:
+      summary: "Fiche détaillée d'un projet : communes, vérification, enrichissements,\nhistorique complet (auteurs crédités collectivement), provenance."
+      operationId: ficheDtailleDunProjetCommunesVrificationEnrichissementsHistoriqueCompletauteursCrditsCollectivementProvenance
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Projet introuvable.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Projet introuvable.'
+      tags:
+        - Projets
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'Identifiant du projet (ex. abc-albi-albi-2017).'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/regions/{code}':
+    get:
+      summary: "Synthèse d'une région : départements, communes et projets couverts."
+      operationId: synthseDuneRgionDpartementsCommunesEtProjetsCouverts
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: ''
+                properties:
+                  message:
+                    type: string
+                    example: ''
+      tags:
+        - Régions
+      security: []
+    parameters:
+      -
+        in: path
+        name: code
+        description: 'Slug (ex. bretagne), code INSEE (ex. 53) ou libellé (ex. Bretagne).'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  /api/v1/stats:
+    get:
+      summary: "Compteurs globaux : projets par statut, communes couvertes,\nprojets vérifiés, anomalies, contributions en attente."
+      operationId: compteursGlobauxProjetsParStatutCommunesCouvertesProjetsVrifisAnomaliesContributionsEnAttente
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    sources:
+                      data.gouv: '2026-07-09'
+                      wayback: '2022-12-06'
+                      fondsvert-p113-2024: '2025-07-31'
+                      fondsvert-p113-2025: '2026-06-22'
+                    stats:
+                      -
+                        statut: a_venir
+                        'n': 161
+                      -
+                        statut: en_cours
+                        'n': 329
+                      -
+                        statut: inconnu
+                        'n': 1
+                      -
+                        statut: termine
+                        'n': 718
+                    countProjets: 1209
+                    countCommunes: 4924
+                    countPotentiellementTermines: 237
+                    countPotentiellementEnCours: 81
+                    countDonnees2022: 38
+                    countEstimes: 246
+                    countVerifies: 7
+                    countAnomalies: 2
+                    countNonLocalises: 0
+                    countContributionsEnAttente: 0
+                    licence: Etalab-2.0
+                    derniere_mise_a_jour: '2026-10-26T15:03:34.000000Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      sources:
+                        type: object
+                        properties:
+                          data.gouv:
+                            type: string
+                            example: '2026-07-09'
+                          wayback:
+                            type: string
+                            example: '2022-12-06'
+                          fondsvert-p113-2024:
+                            type: string
+                            example: '2025-07-31'
+                          fondsvert-p113-2025:
+                            type: string
+                            example: '2026-06-22'
+                      stats:
+                        type: array
+                        example:
+                          -
+                            statut: a_venir
+                            'n': 161
+                          -
+                            statut: en_cours
+                            'n': 329
+                          -
+                            statut: inconnu
+                            'n': 1
+                          -
+                            statut: termine
+                            'n': 718
+                        items:
+                          type: object
+                          properties:
+                            statut:
+                              type: string
+                              example: a_venir
+                            'n':
+                              type: integer
+                              example: 161
+                      countProjets:
+                        type: integer
+                        example: 1209
+                      countCommunes:
+                        type: integer
+                        example: 4924
+                      countPotentiellementTermines:
+                        type: integer
+                        example: 237
+                      countPotentiellementEnCours:
+                        type: integer
+                        example: 81
+                      countDonnees2022:
+                        type: integer
+                        example: 38
+                      countEstimes:
+                        type: integer
+                        example: 246
+                      countVerifies:
+                        type: integer
+                        example: 7
+                      countAnomalies:
+                        type: integer
+                        example: 2
+                      countNonLocalises:
+                        type: integer
+                        example: 0
+                      countContributionsEnAttente:
+                        type: integer
+                        example: 0
+                      licence:
+                        type: string
+                        example: Etalab-2.0
+                      derniere_mise_a_jour:
+                        type: string
+                        example: '2026-10-26T15:03:34.000000Z'
+      tags:
+        - Statistiques
+      security: []
