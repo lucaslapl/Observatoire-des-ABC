@@ -8,18 +8,19 @@ export const COLOR = { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#8d6e6
 /**
  * Palette de la carte : métaphore de pousse (bourgeon clair = va débuter,
  * vert profond = en cours, brun séché = terminé, gris pierre = inconnu).
- * La variante « herbier_cv » renforce la distinction en cours / terminé
- * pour les daltoniens (brun kraft clair — simulation Machado : dE 27 en
- * deutéranoplie, 24 en protanoplie) ; elle est activable par l'utilisateur
- * via le commutateur de la légende, préférence persistée en localStorage.
- * « ancienne » (Material) reste disponible pour comparaison locale via
- * ?palettes=1. S'appliquent via applyPalette().
+ * La palette « cvd » (Okabe-Ito) est conçue pour les daltonismes : axe
+ * bleu/jaune + luminance, validée par simulation Machado (paires ≥ 29 en
+ * deutéranoplie, ≥ 30 en protanoplie, ≥ 45 en tritanoplie) ; le gris clair
+ * assume un rendu discret pour « inconnu » (données absentes). Elle est
+ * activable par l'utilisateur via le commutateur de la légende, préférence
+ * persistée en localStorage. « ancienne » (Material) reste disponible pour
+ * comparaison locale via ?palettes=1. S'appliquent via applyPalette().
  */
 export const DEFAULT_PALETTE_KEY = 'herbier';
 
 export const PALETTES = {
     herbier: { label: 'Herbier (par défaut)', statuts: { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#8d6e63', inconnu: '#a8a29e' } },
-    herbier_cv: { label: 'Herbier — mode daltonien', statuts: { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#c19a7b', inconnu: '#a8a29e' } },
+    cvd: { label: 'Daltonien (Okabe-Ito)', statuts: { en_cours: '#009e73', a_venir: '#e69f00', termine: '#0072b2', inconnu: '#d0d0d0' } },
     ancienne: { label: 'Ancienne (avant refonte)', statuts: { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' } },
 };
 

@@ -452,7 +452,7 @@ function onStatutChange() {
 /** Bascule de palette (test visuel) : COLOR mute en place, on redessine tout. */
 function onPaletteChange() {
     paletteKey.value = applyPalette(paletteKey.value);
-    cvdMode.value = paletteKey.value === 'herbier_cv';
+    cvdMode.value = paletteKey.value === 'cvd';
     const url = new URL(window.location.href);
     url.searchParams.set('palette', paletteKey.value);
     window.history.replaceState(null, '', url);
@@ -461,14 +461,14 @@ function onPaletteChange() {
     updateCounts();
 }
 
-/** Mode daltonien : palette renforcée, préférence persistée sur l'appareil. */
+/** Mode daltonien : palette Okabe-Ito, préférence persistée sur l'appareil. */
 function onCvdToggle() {
     try {
         window.localStorage.setItem('abc.cvd', cvdMode.value ? '1' : '0');
     } catch (e) {
         // stockage indisponible (navigation privée) : la bascule reste valable pour la session
     }
-    paletteKey.value = applyPalette(cvdMode.value ? 'herbier_cv' : DEFAULT_PALETTE_KEY);
+    paletteKey.value = applyPalette(cvdMode.value ? 'cvd' : DEFAULT_PALETTE_KEY);
     clearExpanded();
     apply();
     updateCounts();
@@ -673,7 +673,7 @@ onBeforeUnmount(() => {
                     <div class="legend-item"><span class="chip" style="background:var(--fini)"></span>Terminé<span class="cnt">{{ counts.termine }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu<span class="cnt">{{ counts.inconnu }}</span></div>
                     <div class="legend-item cvd-row">
-                        <label class="cvd-toggle" title="Renforce la distinction « En cours » / « Terminé » pour les personnes daltoniennes (brun séché plus clair). Préférence mémorisée sur cet appareil.">
+                        <label class="cvd-toggle" title="Bascule vers une palette validée pour les principaux daltonismes (Okabe-Ito). Préférence mémorisée sur cet appareil.">
                             <input type="checkbox" v-model="cvdMode" @change="onCvdToggle">
                             <span>Couleurs renforcées (daltonisme)</span>
                         </label>

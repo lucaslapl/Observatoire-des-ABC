@@ -70,11 +70,10 @@ test('COLOR initial = palette par défaut (herbier)', () => {
     assert.deepEqual({ ...COLOR }, PALETTES[DEFAULT_PALETTE_KEY].statuts);
 });
 
-test('herbier_cv : identique à herbier sauf terminé renforcé', () => {
-    for (const s of ['en_cours', 'a_venir', 'inconnu']) {
-        assert.equal(PALETTES.herbier_cv.statuts[s], PALETTES.herbier.statuts[s], s);
+test('cvd : palette distincte de herbier sur les 4 statuts', () => {
+    for (const s of ['en_cours', 'a_venir', 'termine', 'inconnu']) {
+        assert.notEqual(PALETTES.cvd.statuts[s], PALETTES.herbier.statuts[s], s);
     }
-    assert.notEqual(PALETTES.herbier_cv.statuts.termine, PALETTES.herbier.statuts.termine);
 });
 
 test('applyPalette : mute COLOR en place, revient au défaut sur clé inconnue', () => {
