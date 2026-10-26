@@ -2,7 +2,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import { router } from '@inertiajs/vue3';
-import { COLOR, METRO, dStatut, fmtCount, visible } from '../map/constants.js';
+import { COLOR, METRO, PALETTES, applyPalette, dStatut, fmtCount, visible } from '../map/constants.js';
 import { buildPopup as buildPopupHtml, buildMultiRow, buildMultiHeader } from '../map/popupBuilders.js';
 import { exportMap as exportMapImage } from '../map/exportImage.js';
 
@@ -43,6 +43,8 @@ const tileOpen = ref(false);
 const exportOpen = ref(false);
 const tileIndex = ref(0);
 const exporting = ref(false);
+const paletteKey = ref('defaut');
+const paletteSwitcher = ref(false);
 
 const tiles = [
     { name: 'Plan', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr: '© OpenStreetMap' },
@@ -440,6 +442,17 @@ function onStatutChange() {
     updateCounts();
 }
 
+/** Bascule de palette (test visuel) : COLOR mute en place, on redessine tout. */
+function onPaletteChange() {
+    paletteKey.value = applyPalette(paletteKey.value);
+    const url = new URL(window.location.href);
+    url.searchParams.set('palette', paletteKey.value);
+    window.history.replaceState(null, '', url);
+    clearExpanded();
+    apply();
+    updateCounts();
+}
+
 function onRegionChange() {
     apply();
     updateCounts();
@@ -509,6 +522,13 @@ function exportMap(format) {
 }
 
 onMounted(async () => {
+    // Palette de test : activée par ?palette=<clé> ou ?palettes=1 (sélecteur seul).
+    const paletteParams = new URLSearchParams(window.location.search);
+    if (paletteParams.has('palette') || paletteParams.has('palettes')) {
+        paletteSwitcher.value = true;
+        paletteKey.value = applyPalette(paletteParams.get('palette'));
+    }
+
     const [{ default: leaf }] = await Promise.all([import('leaflet')]);
     L = leaf;
 
@@ -620,6 +640,12 @@ onBeforeUnmount(() => {
                     <div class="legend-item"><span class="chip" style="background:var(--debut)"></span>Va débuter<span class="cnt">{{ counts.a_venir }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--fini)"></span>Terminé<span class="cnt">{{ counts.termine }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu<span class="cnt">{{ counts.inconnu }}</span></div>
+                    <template v-if="paletteSwitcher">
+                        <div class="legend-section">Palette (test)</div>
+                        <select v-model="paletteKey" class="palette-select" title="Exploration visuelle — palette des statuts" @change="onPaletteChange">
+                            <option v-for="(p, k) in PALETTES" :key="k" :value="k">{{ p.label }}</option>
+                        </select>
+                    </template>
                     <template v-if="!compactLegend">
                         <div class="legend-section">Données</div>
                         <div class="meta">
@@ -861,6 +887,7 @@ html, body { margin: 0; }
 .leaflet-popup-content { max-height: 300px; overflow-y: auto; }
 .map-tooltip { background: #1f2937; color: #fff; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 500; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .map-tooltip::before { border-top-color: #1f2937; }
+.palette-select { width: 100%; margin: 2px 0 8px; padding: 3px 6px; font-size: 12px; color: #1f2937; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; }
 .pop-contrib { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
 .pop-contrib .contrib-toggle {
     border: 1px solid #cbd5e1; background: #fff; color: #14532d;

@@ -5,6 +5,36 @@
 
 export const COLOR = { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' };
 
+/**
+ * Palettes de statut pour la carte — exploration visuelle
+ * (branche test/design-marqueurs-carte). « defaut » = palette historique.
+ * S'appliquent via applyPalette(), activables en local avec ?palettes=1.
+ */
+export const PALETTES = {
+    defaut: { label: 'Défaut (actuelle)', statuts: { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' } },
+    herbier: { label: 'Herbier', statuts: { en_cours: '#5a7d2a', a_venir: '#c98a2d', termine: '#2f6690', inconnu: '#9a8f7f' } },
+    carte: { label: 'Carte ancienne', statuts: { en_cours: '#6b8e23', a_venir: '#b8860b', termine: '#4a6fa5', inconnu: '#8d8378' } },
+    sobre: { label: 'Contemporain sobre', statuts: { en_cours: '#3a7d44', a_venir: '#d98324', termine: '#4f6d9e', inconnu: '#a09a92' } },
+};
+
+const PALETTE_CSS_VAR = { en_cours: '--ok', a_venir: '--debut', termine: '--fini', inconnu: '--inconnu' };
+
+/**
+ * Applique une palette : mute COLOR en place (tous les importeurs — carte,
+ * popups, légende — voient le changement) et synchronise les variables CSS
+ * de la légende. Clé inconnue = palette par défaut.
+ */
+export function applyPalette(key) {
+    const p = PALETTES[key] || PALETTES.defaut;
+    Object.assign(COLOR, p.statuts);
+    if (typeof document !== 'undefined') {
+        for (const [statut, variable] of Object.entries(PALETTE_CSS_VAR)) {
+            document.documentElement.style.setProperty(variable, p.statuts[statut]);
+        }
+    }
+    return PALETTES[key] ? key : 'defaut';
+}
+
 export const METRO = [[41.0, -5.6], [51.5, 10.0]];
 
 export const STATUT_LABEL = { en_cours: 'En cours', a_venir: 'Va débuter', termine: 'Terminé', inconnu: 'Statut inconnu' };
