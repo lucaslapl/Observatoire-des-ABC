@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Cache;
  * Cache applicatif des réponses de l'API publique v1.
  *
  * Chaque réponse GET est mise en cache en entier, sous une clé dérivée de
- * la route + la query string normalisée, préfixée par un « epoch ». Toute
- * mise à jour des données (collect, statuts, vérifications, contributions
- * validées, journal) incrémente l'epoch : les clés de l'epoch précédent
- * deviennent inaccessibles et expirent seules après le TTL (1 h). Cela
- * évite de dépendre des tags de cache, indisponibles sur file/database.
+ * la méthode + route + query string normalisée, préfixée par un « epoch ».
+ * Toute mise à jour des données (collect, statuts, vérifications,
+ * contributions validées, journal) incrémente l'epoch : les clés de l'epoch
+ * précédent deviennent inaccessibles et expirent seules après le TTL (1 h).
+ * Cela évite de dépendre des tags de cache, indisponibles sur file/database.
  */
 class ApiCache
 {
@@ -25,8 +25,10 @@ class ApiCache
     }
 
     /**
-     * Clé de cache d'une requête GET : epoch + chemin + query string
-     * triée (l'ordre des paramètres ne doit pas multiplier les clés).
+     * Clé de cache d'une requête GET : epoch + méthode + chemin + query
+     * string triée (l'ordre des paramètres ne doit pas multiplier les
+     * clés). La méthode fait partie de la clé : un HEAD ne doit jamais
+     * partager l'entrée d'un GET.
      */
     public static function key(Request $request): string
     {
@@ -34,7 +36,7 @@ class ApiCache
         ksort($params);
 
         return 'abc:apiv1:'.self::epoch().':'
-            .md5($request->getPathInfo().'?'.http_build_query($params));
+            .md5($request->getMethod().' '.$request->getPathInfo().'?'.http_build_query($params));
     }
 
     /**
