@@ -463,6 +463,7 @@ function onPaletteChange() {
 
 /** Mode daltonien : palette Okabe-Ito, préférence persistée sur l'appareil. */
 function onCvdToggle() {
+    cvdMode.value = !cvdMode.value;
     try {
         window.localStorage.setItem('abc.cvd', cvdMode.value ? '1' : '0');
     } catch (e) {
@@ -672,12 +673,6 @@ onBeforeUnmount(() => {
                     <div class="legend-item"><span class="chip chip-dash" style="border-color:var(--debut)"></span>Va débuter<span class="cnt">{{ counts.a_venir }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--fini)"></span>Terminé<span class="cnt">{{ counts.termine }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu<span class="cnt">{{ counts.inconnu }}</span></div>
-                    <div class="legend-item cvd-row">
-                        <label class="cvd-toggle" title="Bascule vers une palette validée pour les principaux daltonismes (Okabe-Ito). Préférence mémorisée sur cet appareil.">
-                            <input type="checkbox" v-model="cvdMode" @change="onCvdToggle">
-                            <span>Couleurs renforcées (daltonisme)</span>
-                        </label>
-                    </div>
                     <template v-if="paletteSwitcher">
                         <div class="legend-section">Palette (test)</div>
                         <select v-model="paletteKey" class="palette-select" title="Exploration visuelle — palette des statuts" @change="onPaletteChange">
@@ -733,6 +728,10 @@ onBeforeUnmount(() => {
                     <span class="tip">Vérifier</span>
                     <span v-if="suggBadge" class="map-sidebar-badge">{{ suggBadge }}</span>
                 </a>
+                <button class="map-sidebar-btn" :class="{ active: cvdMode }" :aria-pressed="cvdMode ? 'true' : 'false'" title="Couleurs renforcées pour les personnes daltoniennes (palette Okabe-Ito). Préférence mémorisée sur cet appareil." @click.stop="onCvdToggle">
+                    <i class="bi bi-universal-access" aria-hidden="true"></i>
+                    <span class="tip">Couleurs daltoniennes</span>
+                </button>
             </div>
 
             <div class="map-north">
@@ -825,8 +824,6 @@ onBeforeUnmount(() => {
 .meta-note .v { color: #374151; text-align: right; font-variant-numeric: tabular-nums; }
 .chip { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
 .chip-dash { background: transparent; border: 1.5px dashed var(--debut); box-sizing: border-box; }
-.cvd-toggle { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #4b5563; cursor: pointer; }
-.cvd-toggle input { accent-color: #2d6a4f; flex: none; }
 .leaflet-control-scale { margin-left: 300px !important; }
 @media (max-width:720px) {
     .legend { left: 6px; right: 6px; width: auto; max-width: none; }
@@ -849,6 +846,8 @@ onBeforeUnmount(() => {
     cursor: pointer; position: relative;
 }
 .map-sidebar-btn:hover { background: #fff; color: #111827; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+.map-sidebar-btn.active { background: #2d6a4f; color: #fff; }
+.map-sidebar-btn.active:hover { background: #2d6a4f; color: #fff; }
 .map-sidebar-badge {
     position: absolute; top: -4px; right: -4px;
     min-width: 16px; height: 16px; padding: 0 4px;
@@ -924,7 +923,7 @@ onBeforeUnmount(() => {
 
 <style>
 html, body { margin: 0; }
-:root { --ok: #2d6a4f; --debut: #9ccc65; --fini: #8d6e63; --inconnu: #a8a29e; }
+:root { --ok: #2d6a4f; --debut: #689f38; --fini: #8d6e63; --inconnu: #a8a29e; }
 .leaflet-popup-content { max-height: 300px; overflow-y: auto; }
 .map-tooltip { background: #1f2937; color: #fff; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 500; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .map-tooltip::before { border-top-color: #1f2937; }

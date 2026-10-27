@@ -3,11 +3,14 @@
  * (couleurs, libellés, badges, filtrage des features GeoJSON).
  */
 
-export const COLOR = { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#8d6e63', inconnu: '#a8a29e' };
+export const COLOR = { en_cours: '#2d6a4f', a_venir: '#689f38', termine: '#8d6e63', inconnu: '#a8a29e' };
 
 /**
- * Palette de la carte : métaphore de pousse (bourgeon clair = va débuter,
+ * Palette de la carte : métaphore de pousse (bourgeon = va débuter,
  * vert profond = en cours, brun séché = terminé, gris pierre = inconnu).
+ * Le bourgeon #689f38 est calibré pour ne pas se confondre avec le fond
+ * boisé d'OSM (contraste 2.2 sur bois, 2.5 sur papier, 3.3 sur satellite)
+ * tout en restant séparé du vert « en cours » (dE 43 en vision normale).
  * La palette « cvd » (Okabe-Ito) est conçue pour les daltonismes : axe
  * bleu/jaune + luminance, validée par simulation Machado (paires ≥ 29 en
  * deutéranoplie, ≥ 30 en protanoplie, ≥ 45 en tritanoplie) ; le gris clair
@@ -19,7 +22,7 @@ export const COLOR = { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#8d6e6
 export const DEFAULT_PALETTE_KEY = 'herbier';
 
 export const PALETTES = {
-    herbier: { label: 'Herbier (par défaut)', statuts: { en_cours: '#2d6a4f', a_venir: '#9ccc65', termine: '#8d6e63', inconnu: '#a8a29e' } },
+    herbier: { label: 'Herbier (par défaut)', statuts: { en_cours: '#2d6a4f', a_venir: '#689f38', termine: '#8d6e63', inconnu: '#a8a29e' } },
     cvd: { label: 'Daltonien (Okabe-Ito)', statuts: { en_cours: '#009e73', a_venir: '#e69f00', termine: '#0072b2', inconnu: '#d0d0d0' } },
     ancienne: { label: 'Ancienne (avant refonte)', statuts: { en_cours: '#2e7d32', a_venir: '#ef6c00', termine: '#1565c0', inconnu: '#9e9e9e' } },
 };
