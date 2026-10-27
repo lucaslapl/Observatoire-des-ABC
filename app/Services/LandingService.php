@@ -77,6 +77,13 @@ class LandingService
             ->values()
             ->all();
 
+        // Démographie du périmètre (recensement INSEE via geo.api.gouv.fr,
+        // dénormalisée sur les lignes communes par le géocodage). Les communes
+        // écartées (anomalie) ne comptent pas. Périmètre mono-commune :
+        // population, superficie et densité ; multi-communes : population
+        // totale approximative (somme), la densité n'ayant pas de sens.
+        $demographie = $this->demographiePerimetre($projet->communes);
+
         $verification = $projet->verification
             ? [
                 'etat' => $projet->verification->etat,
@@ -118,6 +125,7 @@ class LandingService
             'verification' => $verification,
             'communes' => $communes,
             'communes_anomalies' => $projet->communes->where('anomalie', true)->count(),
+            'demographie' => $demographie,
             // Projets ABC voisins (au moins une commune à moins de
             // abc.voisinage_km du périmètre). Null quand aucune commune du
             // périmètre n'est géocodée : la section n'a alors pas de sens.
@@ -197,6 +205,7 @@ class LandingService
             'departement' => ['code' => $departementCode ? mb_strtolower((string) $departementCode) : null, 'label' => $departementLabel],
             'region' => ['label' => $regionLabel, 'slug' => $regionLabel ? $this->regions->slug($regionLabel) : null],
             'epcis' => $epcis,
+            'demographie' => $this->demographieCommune($rows),
             'n_projets' => count($projets),
             'projets' => $projets,
         ];
@@ -495,6 +504,59 @@ class LandingService
             'introuvable' => '⚠ Vérifié : introuvable',
             'douteux' => '⚠ Vérifié : incertain',
         ][$etat] ?? 'À vérifier';
+    }
+
+    /**
+     * Démographie du périmètre d'un projet (population du recensement INSEE,
+     * dénormalisée sur les lignes communes par le géocodage). Null quand
+     * aucune commune du périmètre n'a de donnée (outre-mer, code inconnu).
+     */
+    private function demographiePerimetre(Collection $communes): ?array
+    {
+        $valables = $communes->filter(fn (Commune $c) => ! $c->anomalie);
+        $avecPopulation = $valables->filter(fn (Commune $c) => $c->population !== null);
+
+        if ($avecPopulation->isEmpty()) {
+            return null;
+        }
+
+        $mono = $valables->count() === 1;
+        /** @var Commune $unique */
+        $unique = $valables->first();
+        $surface = $mono ? $unique->surface_km2 : null;
+
+        return [
+            'population_totale' => (int) $avecPopulation->sum('population'),
+            'communes_avec_donnees' => $avecPopulation->count(),
+            'mono_commune' => $mono,
+            'superficie_km2' => $surface,
+            'densite' => ($surface !== null && $surface > 0)
+                ? round($unique->population / $surface, 1)
+                : null,
+        ];
+    }
+
+    /**
+     * Démographie d'une commune (recensement INSEE via geo.api.gouv.fr).
+     * Les lignes communes portent toutes la même valeur par code : on prend
+     * la première non nulle.
+     */
+    private function demographieCommune(Collection $rows): ?array
+    {
+        $population = $rows->pluck('population')->filter(fn ($v) => $v !== null)->first();
+        $surface = $rows->pluck('surface_km2')->filter(fn ($v) => $v !== null)->first();
+
+        if ($population === null) {
+            return null;
+        }
+
+        return [
+            'population' => (int) $population,
+            'surface_km2' => $surface,
+            'densite' => ($surface !== null && $surface > 0)
+                ? round($population / $surface, 1)
+                : null,
+        ];
     }
 
     private function communeListing(Commune $c, bool $includeProjet): array

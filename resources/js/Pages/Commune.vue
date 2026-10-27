@@ -14,6 +14,9 @@ const site = computed(() => page.props.site || {});
 
 const c = computed(() => props.commune);
 
+/* Nombre au format français (espace fine pour les milliers, virgule décimale). */
+const fmtNb = (v, decimales = 0) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: decimales });
+
 const crumbs = computed(() => {
     const list = [];
     if (c.value.region?.slug) {
@@ -77,6 +80,9 @@ const jsonLd = computed(() => {
                 Commune de {{ commune.libelle }}
                 <template v-if="commune.departement?.label">, département {{ commune.departement.label }}<template v-if="commune.departement.code"> ({{ commune.departement.code.toUpperCase() }})</template></template>
                 <template v-if="commune.region?.label">, région {{ commune.region.label }}</template>.
+            </p>
+            <p v-if="commune.demographie" class="small text-muted">
+                {{ fmtNb(commune.demographie.population) }} habitants<template v-if="commune.demographie.surface_km2"> · {{ fmtNb(commune.demographie.surface_km2, 2) }} km²</template><template v-if="commune.demographie.densite"> · {{ fmtNb(commune.demographie.densite, 1) }} hab./km²</template> — recensement INSEE.
             </p>
 
             <h2 class="h5 mt-4">Les ABC de {{ commune.libelle }}</h2>

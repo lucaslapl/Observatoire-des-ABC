@@ -14,13 +14,15 @@ class GeoCache extends Model
 
     protected $keyType = 'string';
 
-    protected $fillable = ['code_geographique', 'lon', 'lat', 'name'];
+    protected $fillable = ['code_geographique', 'lon', 'lat', 'name', 'population', 'surface_km2'];
 
     protected function casts(): array
     {
         return [
             'lon' => 'float',
             'lat' => 'float',
+            'population' => 'integer',
+            'surface_km2' => 'float',
         ];
     }
 }

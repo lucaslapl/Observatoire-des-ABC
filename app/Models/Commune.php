@@ -42,6 +42,7 @@ class Commune extends Model
         'projet_id', 'code_geographique', 'libelle_geographique', 'epci',
         'libelle_epci', 'departement', 'libelle_departement', 'region',
         'libelle_pnr', 'lon', 'lat', 'anomalie', 'distance_centre_km',
+        'population', 'surface_km2',
     ];
 
     protected function casts(): array
@@ -51,6 +52,8 @@ class Commune extends Model
             'lat' => 'float',
             'anomalie' => 'boolean',
             'distance_centre_km' => 'float',
+            'population' => 'integer',
+            'surface_km2' => 'float',
         ];
     }
 }

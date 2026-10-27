@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Http;
  * Géocodage via geo.api.gouv.fr avec cache (équivalent de src/geocode.ts).
  * Outre-mer non couvert → lon=0, lat=0 (conservé tel quel pour la parité du
  * filtre « géolocalisé »).
+ *
+ * La même requête apporte la démographie du code INSEE : population
+ * (recensement INSEE) et superficie (hectares côté API, stockée en km²).
+ * Les valeurs sont durables dans geo_cache puis dénormalisées sur communes,
+ * comme les coordonnées.
  */
 class GeocodeService
 {
@@ -27,7 +32,13 @@ class GeocodeService
 
         $toFetch = [];
         foreach ($rows as $r) {
-            if (! $cached->has($r->code_geographique)) {
+            $g = $cached->get($r->code_geographique);
+            // Codes jamais géocodés, ou géocodés avant l'ajout des colonnes
+            // démographiques (population absente du cache) : récupérés une
+            // fois pour obtenir population et superficie. Les codes inconnus
+            // de l'API (lon=0, lat=0) ne sont pas retentés.
+            if ($g === null
+                || ($g->population === null && ($g->lon != 0 || $g->lat != 0))) {
                 $toFetch[] = $r->code_geographique;
             }
         }
@@ -39,7 +50,12 @@ class GeocodeService
             $g = GeoCache::find($r->code_geographique);
             if ($g && ($g->lon || $g->lat)) {
                 Commune::where('code_geographique', $r->code_geographique)
-                    ->update(['lon' => $g->lon, 'lat' => $g->lat]);
+                    ->update([
+                        'lon' => $g->lon,
+                        'lat' => $g->lat,
+                        'population' => $g->population,
+                        'surface_km2' => $g->surface_km2,
+                    ]);
                 $updated++;
             }
         }
@@ -65,30 +81,39 @@ class GeocodeService
             $responses = Http::pool(fn ($pool) => array_map(
                 fn ($code) => $pool->acceptJson()
                     ->withHeaders(['User-Agent' => config('abc.user_agent')])
-                    ->get("https://geo.api.gouv.fr/communes/{$code}?fields=centre,name"),
+                    ->get("https://geo.api.gouv.fr/communes/{$code}?fields=centre,name,population,surface"),
                 $chunk,
             ));
 
             foreach ($chunk as $i => $code) {
                 $res = $responses[$i] ?? null;
+                // Erreur réseau transitoire : le pool renvoie l'exception à la
+                // place de la réponse. On n'écrit rien — un marquage lon=0/lat=0
+                // blacklisterait le code à tort, le prochain passage retentera.
+                if ($res instanceof \Throwable) {
+                    continue;
+                }
                 if ($res && $res->successful()) {
                     $j = $res->json();
+                    $updates = ['lon' => 0, 'lat' => 0];
                     if (isset($j['centre']['coordinates'])) {
-                        GeoCache::updateOrCreate(
-                            ['code_geographique' => $code],
-                            [
-                                'lon' => $j['centre']['coordinates'][0],
-                                'lat' => $j['centre']['coordinates'][1],
-                                'name' => $j['name'] ?? null,
-                            ],
-                        );
-                    } else {
-                        // Inconnu ou outre-mer non couvert : on laisse vide.
-                        GeoCache::updateOrCreate(
-                            ['code_geographique' => $code],
-                            ['lon' => 0, 'lat' => 0],
-                        );
+                        $updates['lon'] = $j['centre']['coordinates'][0];
+                        $updates['lat'] = $j['centre']['coordinates'][1];
                     }
+                    if (isset($j['name'])) {
+                        $updates['name'] = $j['name'];
+                    }
+                    if (isset($j['population'])) {
+                        $updates['population'] = (int) $j['population'];
+                    }
+                    // L'API exprime la surface en hectares.
+                    if (isset($j['surface'])) {
+                        $updates['surface_km2'] = round(((float) $j['surface']) / 100, 2);
+                    }
+                    GeoCache::updateOrCreate(
+                        ['code_geographique' => $code],
+                        $updates,
+                    );
                 } else {
                     GeoCache::updateOrCreate(
                         ['code_geographique' => $code],

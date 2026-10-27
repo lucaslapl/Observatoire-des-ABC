@@ -10,7 +10,7 @@ class GeocodeCommand extends Command
 {
     protected $signature = 'abc:geocode';
 
-    protected $description = 'Géocode les communes manquantes (geo.api.gouv.fr) puis recalcule les anomalies';
+    protected $description = 'Géocode les communes manquantes (geo.api.gouv.fr : coordonnées, population, superficie) puis recalcule les anomalies';
 
     public function handle(GeocodeService $geocode, AnomalyService $anomalies): int
     {

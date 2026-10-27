@@ -63,6 +63,9 @@ const jsonLd = computed(() => {
 
 const annee = (p) => (p.annee_debut ? `${p.annee_debut}${p.annee_fin ? '–' + p.annee_fin : ''}` : '—');
 
+/* Nombre au format français (espace fine pour les milliers, virgule décimale). */
+const fmtNb = (v, decimales = 0) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: decimales });
+
 const fmtHistoriqueDate = (d) => {
     if (!d) return '—';
     const dt = new Date(d.replace(' ', 'T'));
@@ -186,6 +189,23 @@ onBeforeUnmount(() => {
                                         <th scope="row" class="text-muted">Communes concernées</th>
                                         <td>{{ projet.communes.length }}<span v-if="projet.communes_anomalies"> (+ {{ projet.communes_anomalies }} écartée(s))</span></td>
                                     </tr>
+                                    <template v-if="projet.demographie">
+                                        <tr>
+                                            <th scope="row" class="text-muted">{{ projet.demographie.mono_commune ? 'Population' : 'Population concernée (approx.)' }}</th>
+                                            <td>
+                                                <template v-if="!projet.demographie.mono_commune">≈ </template>{{ fmtNb(projet.demographie.population_totale) }} habitants
+                                                <small class="text-muted">— recensement INSEE<template v-if="!projet.demographie.mono_commune && projet.demographie.communes_avec_donnees < projet.communes.length"> (somme sur {{ projet.demographie.communes_avec_donnees }} communes géocodées)</template></small>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="projet.demographie.mono_commune && projet.demographie.superficie_km2">
+                                            <th scope="row" class="text-muted">Superficie</th>
+                                            <td>{{ fmtNb(projet.demographie.superficie_km2, 2) }} km²</td>
+                                        </tr>
+                                        <tr v-if="projet.demographie.mono_commune && projet.demographie.densite">
+                                            <th scope="row" class="text-muted">Densité</th>
+                                            <td>{{ fmtNb(projet.demographie.densite, 1) }} hab./km²</td>
+                                        </tr>
+                                    </template>
                                     <tr v-if="projet.pnrs?.length">
                                         <th scope="row" class="text-muted">{{ projet.pnrs.length > 1 ? 'Parcs naturels régionaux' : 'Parc naturel régional' }}</th>
                                         <td>{{ projet.pnrs.join(', ') }}</td>
