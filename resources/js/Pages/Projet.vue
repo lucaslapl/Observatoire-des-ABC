@@ -12,6 +12,9 @@ const props = defineProps({
 
 const page = usePage();
 const site = computed(() => page.props.site || {});
+const user = computed(() => page.props.auth?.user || null);
+// Membre dont l'email est vérifié : peut envoyer une suggestion via /verify.
+const peutSuggerer = computed(() => !!user.value?.email_verifie);
 
 const crumbs = computed(() => {
     const list = [];
@@ -220,6 +223,28 @@ onBeforeUnmount(() => {
                             <div v-else-if="projet.potentiellement_en_cours" class="alert alert-light small mt-3 mb-0">
                                 Début annoncé {{ projet.annee_debut }}, toujours « va débuter » d'après la source originale : potentiellement en cours.
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <h2 class="h6 mb-1">
+                                    <i class="bi bi-lightbulb me-1" aria-hidden="true"></i>
+                                    Une erreur ou une information incomplète sur cette fiche ?
+                                </h2>
+                                <p class="small text-muted mb-0">
+                                    <template v-if="peutSuggerer">Votre suggestion sera examinée par un administrateur avant d'être appliquée.</template>
+                                    <template v-else-if="user">Vérifiez votre adresse email (lien reçu à l'inscription) pour pouvoir suggérer une correction.</template>
+                                    <template v-else>La création d'un compte est nécessaire pour suggérer une correction : <Link href="/register?raison=contribution">créez un compte</Link> ou <a href="/login">connectez-vous</a>.</template>
+                                </p>
+                            </div>
+                            <Link
+                                class="btn btn-outline-success btn-sm text-nowrap"
+                                :href="peutSuggerer ? `/verify?projet=${encodeURIComponent(projet.id)}` : '/register?raison=contribution'"
+                            >
+                                <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Suggérer une correction
+                            </Link>
                         </div>
                     </div>
 
