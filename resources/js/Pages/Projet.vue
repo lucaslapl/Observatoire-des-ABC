@@ -75,7 +75,7 @@ const fmtHistoriqueDate = (d) => {
         />
         <div class="container py-4">
             <Breadcrumbs :items="crumbs" />
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <div class="d-flex flex-wrap align-items-baseline gap-2 mb-3">
                 <h1 class="h3 mb-0">{{ projet.nom }}</h1>
                 <span class="badge" :class="statutClass(projet.statut)">{{ projet.statut_label }}</span>
                 <small v-if="!projet.statut_verifie" class="text-muted">d'après la source originale</small>
@@ -89,7 +89,7 @@ const fmtHistoriqueDate = (d) => {
                         <tbody>
                             <tr v-if="projet.structure_porteuse">
                                 <th scope="row" class="text-muted" style="width:200px">Structure porteuse</th>
-                                <td>{{ projet.structure_porteuse }}<template v-if="projet.type_de_structure_porteuse"> <small class="text-muted">({{ projet.type_de_structure_porteuse }})</small></template></td>
+                                <td>{{ projet.structure_porteuse }} <template v-if="projet.type_de_structure_porteuse"> <small class="text-muted">({{ projet.type_de_structure_porteuse }})</small></template></td>
                             </tr>
                             <tr>
                                 <th scope="row" class="text-muted">Années</th>
