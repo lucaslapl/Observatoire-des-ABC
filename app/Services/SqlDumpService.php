@@ -36,6 +36,57 @@ class SqlDumpService
     ];
 
     /**
+     * Tables INPN (abc:export-inpn) : parents avant enfants pour les
+     * INSERT, enfants avant parents pour les DELETE.
+     */
+    private array $inpnTables = [
+        'inpn_imports',
+        'inpn_znieff',
+        'inpn_znieff_communes',
+        'inpn_znieff_especes',
+        'inpn_natura_sites',
+        'inpn_natura_communes',
+        'inpn_natura_habitats',
+        'inpn_natura_especes',
+        'inpn_aires_protegees',
+        'inpn_aires_protegees_communes',
+    ];
+
+    /**
+     * Dump portable des tables INPN : contrairement à dump(), le fichier
+     * DESTINE À REMPLACER les données existantes en production — chaque
+     * table est vidée (ordre inverse des FK) avant les INSERT.
+     *
+     * @return array<string, int> lignes écrites par table
+     */
+    public function dumpInpn(string $out): array
+    {
+        if (! is_dir(dirname($out))) {
+            mkdir(dirname($out), 0777, true);
+        }
+
+        $handle = fopen($out, 'w');
+        fwrite($handle, '-- Export portable INPN (sans PostGIS) — '.now()->toDateTimeString()."\n");
+        fwrite($handle, "SET client_encoding = 'UTF8';\nSET statement_timeout = 0;\nBEGIN;\n\n");
+
+        foreach (array_reverse($this->inpnTables) as $table) {
+            fwrite($handle, "DELETE FROM \"{$table}\";\n");
+        }
+        fwrite($handle, "\n");
+
+        $counts = [];
+        foreach ($this->inpnTables as $table) {
+            $counts[$table] = $this->dumpTable($handle, $table);
+            fwrite($handle, "\n");
+        }
+
+        fwrite($handle, "COMMIT;\n");
+        fclose($handle);
+
+        return $counts;
+    }
+
+    /**
      * @param  array<string>|null  $tables  tables à dumper (défaut : toutes)
      * @return array<string, int> lignes écrites par table
      */
@@ -68,20 +119,19 @@ class SqlDumpService
             $columns = array_values(array_diff($columns, ['geom']));
         }
 
-        $rows = DB::table($table)->select($columns)->get();
-        if ($rows->isEmpty()) {
-            return 0;
-        }
-
         $cols = implode(', ', array_map(fn ($c) => "\"{$c}\"", $columns));
         $batch = [];
+        $count = 0;
 
-        foreach ($rows as $row) {
+        // Curseur (pas de ->get()) : les tables INPN atteignent plusieurs
+        // millions de lignes, qui ne tiennent pas en mémoire hydratée.
+        foreach (DB::table($table)->select($columns)->cursor() as $row) {
             $values = [];
             foreach ($columns as $c) {
                 $values[] = $this->sqlValue($row->{$c});
             }
             $batch[] = '('.implode(', ', $values).')';
+            $count++;
 
             if (count($batch) >= 500) {
                 $this->writeBatch($handle, $table, $cols, $batch);
@@ -92,7 +142,7 @@ class SqlDumpService
             $this->writeBatch($handle, $table, $cols, $batch);
         }
 
-        return $rows->count();
+        return $count;
     }
 
     private function writeBatch($handle, string $table, string $cols, array $batch): void
