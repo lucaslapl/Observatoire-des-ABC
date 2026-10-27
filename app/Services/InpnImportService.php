@@ -765,19 +765,45 @@ class InpnImportService
     /**
      * Fichier GeoJSON Admin Express (communes) dans le dossier de données.
      */
+    /**
+     * Fichier GeoJSON Admin Express (communes) dans le dossier de données.
+     * Les archives publiées contiennent aussi cantons, EPCI, arrondissements
+     * (a_can2025, a_epci2025…) et parfois des exports TopoJSON : on exclut
+     * les fichiers « topo », on privilégie « commune » ou le préfixe IGN
+     * des communes (a_com… / com2025…), puis l'extension .geojson.
+     */
     private function adminExpressFile(string $dir): ?string
     {
-        $adminDir = (string) config('abc.inpn.admin_express_dir');
-        if (is_dir($adminDir)) {
-            foreach (glob($adminDir.'/*.{geojson,json}', GLOB_BRACE) ?: [] as $f) {
+        $candidates = [];
+        foreach ([(string) config('abc.inpn.admin_express_dir'), $dir.'/admin-express'] as $folder) {
+            if (is_dir($folder)) {
+                foreach (glob($folder.'/*.{geojson,json}', GLOB_BRACE) ?: [] as $f) {
+                    if (! str_contains(mb_strtolower(basename($f)), 'topo')) {
+                        $candidates[] = $f;
+                    }
+                }
+            }
+        }
+        if ($candidates === []) {
+            return null;
+        }
+        foreach ($candidates as $f) {
+            if (str_contains(mb_strtolower(basename($f)), 'commune')) {
                 return $f;
             }
         }
-        foreach (glob($dir.'/admin-express/*.{geojson,json}', GLOB_BRACE) ?: [] as $f) {
-            return $f;
+        foreach ($candidates as $f) {
+            if (preg_match('/(^|[^a-z])com([0-9_.]|$)/i', basename($f))) {
+                return $f; // a_com2025.geojson, com2025.json…
+            }
+        }
+        foreach ($candidates as $f) {
+            if (str_ends_with(mb_strtolower($f), '.geojson')) {
+                return $f;
+            }
         }
 
-        return null;
+        return $candidates[0];
     }
 
     private function postgis(): bool
