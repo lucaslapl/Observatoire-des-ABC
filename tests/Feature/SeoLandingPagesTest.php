@@ -57,6 +57,40 @@ class SeoLandingPagesTest extends TestCase
                 ->where('projet.slug', $projet->slug)
                 ->where('projet.statut_label', 'En cours')
                 ->has('projet.communes', 1)
+                ->where('projet.pnrs', [])
+        );
+    }
+
+    public function test_projet_page_exposes_unique_pnrs(): void
+    {
+        $this->seedData();
+        $projet = Projet::firstOrFail();
+
+        Commune::create([
+            'projet_id' => $projet->id,
+            'code_geographique' => '56002',
+            'libelle_geographique' => 'Auray',
+            'libelle_pnr' => 'PNR du Golfe du Morbihan',
+            'anomalie' => false,
+        ]);
+        Commune::create([
+            'projet_id' => $projet->id,
+            'code_geographique' => '56003',
+            'libelle_geographique' => 'Locmariaquer',
+            'libelle_pnr' => ' PNR du Golfe du Morbihan ',
+            'anomalie' => false,
+        ]);
+        Commune::create([
+            'projet_id' => $projet->id,
+            'code_geographique' => '56004',
+            'libelle_geographique' => 'Sainte-Anne',
+            'libelle_pnr' => '   ',
+            'anomalie' => false,
+        ]);
+
+        $this->get('/abc/'.$projet->slug)->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Projet')
+                ->where('projet.pnrs', ['PNR du Golfe du Morbihan'])
         );
     }
 

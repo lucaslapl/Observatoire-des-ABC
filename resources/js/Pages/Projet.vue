@@ -183,6 +183,10 @@ onBeforeUnmount(() => {
                                         <th scope="row" class="text-muted">Communes concernées</th>
                                         <td>{{ projet.communes.length }}<span v-if="projet.communes_anomalies"> (+ {{ projet.communes_anomalies }} écartée(s))</span></td>
                                     </tr>
+                                    <tr v-if="projet.pnrs?.length">
+                                        <th scope="row" class="text-muted">{{ projet.pnrs.length > 1 ? 'Parcs naturels régionaux' : 'Parc naturel régional' }}</th>
+                                        <td>{{ projet.pnrs.join(', ') }}</td>
+                                    </tr>
                                     <tr>
                                         <th scope="row" class="text-muted">Source</th>
                                         <td>{{ projet.source_label }}</td>

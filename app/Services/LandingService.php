@@ -65,6 +65,18 @@ class LandingService
             ->keys()
             ->first();
 
+        // PNR couvrant au moins une commune du périmètre (colonne libelle_pnr
+        // de la source data.gouv, souvent vide). Le libellé est porté par
+        // chaque ligne commune : on déduplique pour la fiche.
+        $pnrs = $projet->communes
+            ->pluck('libelle_pnr')
+            ->filter(fn (?string $v) => $v !== null && trim($v) !== '')
+            ->map(fn (string $v) => trim($v))
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
         $verification = $projet->verification
             ? [
                 'etat' => $projet->verification->etat,
@@ -106,6 +118,7 @@ class LandingService
             'verification' => $verification,
             'communes' => $communes,
             'communes_anomalies' => $projet->communes->where('anomalie', true)->count(),
+            'pnrs' => $pnrs,
             'region_label' => $regionLabel,
             'region_slug' => $regionLabel ? $this->regions->slug($regionLabel) : null,
             // Historique public des modifications apportées à cette fiche
