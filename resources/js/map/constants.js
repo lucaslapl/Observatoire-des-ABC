@@ -50,8 +50,8 @@ export const METRO = [[41.0, -5.6], [51.5, 10.0]];
 export const STATUT_LABEL = { en_cours: 'En cours', a_venir: 'Va débuter', termine: 'Terminé', inconnu: 'Statut inconnu' };
 
 export const VERDICT = {
-    confirme_termine: { label: '✓ Vérifié : Terminé', color: '#1b5e20' },
-    confirme_en_cours: { label: '✓ Vérifié : En cours', color: '#2e7d32' },
+    confirme_termine: { label: '✓ Vérifié : Terminé', color: '#2d6a4f' },
+    confirme_en_cours: { label: '✓ Vérifié : En cours', color: '#2d6a4f' },
     toujours_a_venir: { label: '✓ Vérifié : Va débuter', color: '#b45309' },
     confirme_date: { label: '✓ Vérifié : Date confirmée', color: '#0d9488' },
     introuvable: { label: '⚠ Vérifié : introuvable', color: '#7f1d1d' },

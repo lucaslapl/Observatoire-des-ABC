@@ -27,7 +27,7 @@ const crumbs = computed(() => {
 });
 
 const statutClass = (s) =>
-    ({ en_cours: 'text-bg-success', a_venir: 'text-bg-warning', termine: 'text-bg-primary', inconnu: 'text-bg-secondary' })[s] || 'text-bg-secondary';
+    ({ en_cours: 'badge-st-en_cours', a_venir: 'badge-st-a_venir', termine: 'badge-st-termine', inconnu: 'badge-st-inconnu' })[s] || 'badge-st-inconnu';
 
 const pageTitle = computed(() => `ABC ${c.value.libelle} (${c.value.departement?.code?.toUpperCase() || ''})`);
 const pageDescription = computed(() =>

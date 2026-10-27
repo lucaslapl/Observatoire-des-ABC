@@ -2,7 +2,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import { router } from '@inertiajs/vue3';
-import { COLOR, METRO, PALETTES, DEFAULT_PALETTE_KEY, applyPalette, dStatut, fmtCount, visible } from '../map/constants.js';
+import { COLOR, METRO, DEFAULT_PALETTE_KEY, applyPalette, dStatut, fmtCount, visible } from '../map/constants.js';
 import { buildPopup as buildPopupHtml, buildMultiRow, buildMultiHeader } from '../map/popupBuilders.js';
 import { exportMap as exportMapImage } from '../map/exportImage.js';
 
@@ -43,8 +43,6 @@ const tileOpen = ref(false);
 const exportOpen = ref(false);
 const tileIndex = ref(0);
 const exporting = ref(false);
-const paletteKey = ref(DEFAULT_PALETTE_KEY);
-const paletteSwitcher = ref(false);
 const cvdMode = ref(false);
 
 const tiles = [
@@ -76,11 +74,11 @@ function renderFeature(f, onLayer) {
     const p = f.properties;
     const [lon, lat] = f.geometry.coordinates;
     const st = dStatut(p);
-    const dashes = st === 'a_venir' && !p.anomalie && !p.verifie;
-    const baseWeight = p.anomalie || p.verifie ? 2 : (dashes ? 1.5 : 1);
+    const dashes = st === 'a_venir' && !p.anomalie;
+    const baseWeight = p.anomalie ? 2 : (dashes ? 1.5 : 1);
     const m = L.circleMarker([lat, lon], {
         radius: 6,
-        color: p.anomalie ? '#b91c1c' : p.verifie ? '#14532d' : '#fff',
+        color: p.anomalie ? '#b91c1c' : '#fff',
         weight: baseWeight,
         dashArray: dashes ? '1.5,3' : undefined,
         fillColor: COLOR[st] || COLOR.inconnu,
@@ -449,18 +447,6 @@ function onStatutChange() {
     updateCounts();
 }
 
-/** Bascule de palette (test visuel) : COLOR mute en place, on redessine tout. */
-function onPaletteChange() {
-    paletteKey.value = applyPalette(paletteKey.value);
-    cvdMode.value = paletteKey.value === 'cvd';
-    const url = new URL(window.location.href);
-    url.searchParams.set('palette', paletteKey.value);
-    window.history.replaceState(null, '', url);
-    clearExpanded();
-    apply();
-    updateCounts();
-}
-
 /** Mode daltonien : palette Okabe-Ito, préférence persistée sur l'appareil. */
 function onCvdToggle() {
     cvdMode.value = !cvdMode.value;
@@ -469,7 +455,7 @@ function onCvdToggle() {
     } catch (e) {
         // stockage indisponible (navigation privée) : la bascule reste valable pour la session
     }
-    paletteKey.value = applyPalette(cvdMode.value ? 'cvd' : DEFAULT_PALETTE_KEY);
+    applyPalette(cvdMode.value ? 'cvd' : DEFAULT_PALETTE_KEY);
     clearExpanded();
     apply();
     updateCounts();
@@ -544,22 +530,16 @@ function exportMap(format) {
 }
 
 onMounted(async () => {
-    // Palette : le paramètre d'exploration locale (?palette= / ?palettes=1)
-    // prime sur la préférence « mode daltonien » persistée.
+    // Préférence « couleurs daltoniennes » persistée sur l'appareil.
     let cvdStored = null;
     try {
         cvdStored = window.localStorage.getItem('abc.cvd');
     } catch (e) {
         cvdStored = null;
     }
-    const paletteParams = new URLSearchParams(window.location.search);
-    if (paletteParams.has('palette') || paletteParams.has('palettes')) {
-        paletteSwitcher.value = true;
-        paletteKey.value = applyPalette(paletteParams.get('palette'));
-        cvdMode.value = paletteKey.value === 'herbier_cv';
-    } else if (cvdStored === '1') {
+    if (cvdStored === '1') {
         cvdMode.value = true;
-        paletteKey.value = applyPalette('herbier_cv');
+        applyPalette('cvd');
     }
 
     const [{ default: leaf }] = await Promise.all([import('leaflet')]);
@@ -673,12 +653,6 @@ onBeforeUnmount(() => {
                     <div class="legend-item"><span class="chip chip-dash" style="border-color:var(--debut)"></span>Va débuter<span class="cnt">{{ counts.a_venir }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--fini)"></span>Terminé<span class="cnt">{{ counts.termine }}</span></div>
                     <div class="legend-item"><span class="chip" style="background:var(--inconnu)"></span>Statut inconnu<span class="cnt">{{ counts.inconnu }}</span></div>
-                    <template v-if="paletteSwitcher">
-                        <div class="legend-section">Palette (test)</div>
-                        <select v-model="paletteKey" class="palette-select" title="Exploration visuelle — palette des statuts" @change="onPaletteChange">
-                            <option v-for="(p, k) in PALETTES" :key="k" :value="k">{{ p.label }}</option>
-                        </select>
-                    </template>
                     <template v-if="!compactLegend">
                         <div class="legend-section">Données</div>
                         <div class="meta">
@@ -927,7 +901,6 @@ html, body { margin: 0; }
 .leaflet-popup-content { max-height: 300px; overflow-y: auto; }
 .map-tooltip { background: #1f2937; color: #fff; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 500; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .map-tooltip::before { border-top-color: #1f2937; }
-.palette-select { width: 100%; margin: 2px 0 8px; padding: 3px 6px; font-size: 12px; color: #1f2937; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; }
 .pop-contrib { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
 .pop-contrib .contrib-toggle {
     border: 1px solid #cbd5e1; background: #fff; color: #14532d;

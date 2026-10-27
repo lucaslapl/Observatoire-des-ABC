@@ -438,9 +438,9 @@ const sendSuggestion = async (p) => {
                 <div class="d-flex gap-2 flex-wrap">
                     <span class="badge text-bg-secondary">{{ aVerifierCount }} à vérifier</span>
                     <span v-if="verifiesCount" class="badge text-bg-light" title="Projets déjà vérifiés — visibles via le filtre État"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ verifiesCount }} vérifiés</span>
-                    <span v-if="compteurs.confirme_termine" class="badge text-bg-success"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ compteurs.confirme_termine }} terminés</span>
-                    <span v-if="compteurs.confirme_en_cours" class="badge text-bg-warning">{{ compteurs.confirme_en_cours }} en cours</span>
-                    <span v-if="compteurs.toujours_a_venir" class="badge text-bg-warning">{{ compteurs.toujours_a_venir }} à venir</span>
+                    <span v-if="compteurs.confirme_termine" class="badge badge-st-termine"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ compteurs.confirme_termine }} terminés</span>
+                    <span v-if="compteurs.confirme_en_cours" class="badge badge-st-en_cours">{{ compteurs.confirme_en_cours }} en cours</span>
+                    <span v-if="compteurs.toujours_a_venir" class="badge badge-st-a_venir">{{ compteurs.toujours_a_venir }} à venir</span>
                     <span v-if="compteurs.confirme_date" class="badge text-bg-info">{{ compteurs.confirme_date }} dates vérifiées</span>
                     <span v-if="compteurs.introuvable" class="badge text-bg-secondary">{{ compteurs.introuvable }} introuvables</span>
                     <span v-if="compteurs.douteux" class="badge text-bg-danger">{{ compteurs.douteux }} incertains</span>
@@ -869,13 +869,13 @@ const sendSuggestion = async (p) => {
 
 <style>
 .badge-cell { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #e2e8f0; color: #334155; white-space: nowrap; }
-.badge-cell.termine { background: #e3f2fd; color: #1565c0; }
+.badge-cell.termine { background: #f0eae6; color: #7a5f57; }
 .badge-cell.en_cours { background: #fff3e0; color: #b45309; }
 .badge-cell.archives { background: #fde8e8; color: #7f1d1d; }
 .badge-cell.anomalie { background: #fde8e8; color: #b91c1c; }
-.badge-cell.confirme_termine { background: #e8f5e9; color: #1b5e20; }
-.badge-cell.confirme_en_cours { background: #fff3e0; color: #b45309; }
-.badge-cell.toujours_a_venir { background: #fef9c3; color: #854d0e; }
+.badge-cell.confirme_termine { background: #e9f2ec; color: #2d6a4f; }
+.badge-cell.confirme_en_cours { background: #e9f2ec; color: #2d6a4f; }
+.badge-cell.toujours_a_venir { background: #fff3e0; color: #b45309; }
 .badge-cell.introuvable { background: #e2e8f0; color: #475569; }
 .badge-cell.douteux { background: #fde8e8; color: #7f1d1d; }
 .nom { font-weight: 600; }
