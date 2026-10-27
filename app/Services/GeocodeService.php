@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Http;
  * filtre « géolocalisé »).
  *
  * La même requête apporte la démographie du code INSEE : population
- * (recensement INSEE) et superficie (hectares côté API, stockée en km²).
+ * (populations légales, recensement INSEE) et superficie (IGN Admin Express,
+ * hectares côté API, stockée en km²).
  * Les valeurs sont durables dans geo_cache puis dénormalisées sur communes,
  * comme les coordonnées.
  */

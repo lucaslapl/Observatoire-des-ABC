@@ -194,7 +194,7 @@ onBeforeUnmount(() => {
                                             <th scope="row" class="text-muted">{{ projet.demographie.mono_commune ? 'Population' : 'Population concernée (approx.)' }}</th>
                                             <td>
                                                 <template v-if="!projet.demographie.mono_commune">≈ </template>{{ fmtNb(projet.demographie.population_totale) }} habitants
-                                                <small class="text-muted">— recensement INSEE<template v-if="!projet.demographie.mono_commune && projet.demographie.communes_avec_donnees < projet.communes.length"> (somme sur {{ projet.demographie.communes_avec_donnees }} communes géocodées)</template></small>
+                                                <small v-if="!projet.demographie.mono_commune && projet.demographie.communes_avec_donnees < projet.communes.length" class="text-muted">(somme sur {{ projet.demographie.communes_avec_donnees }} communes géocodées)</small>
                                             </td>
                                         </tr>
                                         <tr v-if="projet.demographie.mono_commune && projet.demographie.superficie_km2">
@@ -220,6 +220,11 @@ onBeforeUnmount(() => {
                                     </tr>
                                 </tbody>
                             </table>
+                            <p v-if="projet.demographie" class="small text-muted mb-0 mt-2">
+                                Démographie : population légale (recensement <a href="https://www.insee.fr" target="_blank" rel="noopener">INSEE</a>),
+                                superficie (IGN, référentiel Admin Express), via l'API
+                                <a href="https://geo.api.gouv.fr" target="_blank" rel="noopener">geo.api.gouv.fr</a>.
+                            </p>
 
                             <div v-if="projet.description" class="mt-3">
                                 <h2 class="h6">Description</h2>

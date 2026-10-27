@@ -77,7 +77,8 @@ class LandingService
             ->values()
             ->all();
 
-        // Démographie du périmètre (recensement INSEE via geo.api.gouv.fr,
+        // Démographie du périmètre (populations légales INSEE et superficie
+        // IGN Admin Express via geo.api.gouv.fr,
         // dénormalisée sur les lignes communes par le géocodage). Les communes
         // écartées (anomalie) ne comptent pas. Périmètre mono-commune :
         // population, superficie et densité ; multi-communes : population
@@ -507,8 +508,9 @@ class LandingService
     }
 
     /**
-     * Démographie du périmètre d'un projet (population du recensement INSEE,
-     * dénormalisée sur les lignes communes par le géocodage). Null quand
+     * Démographie du périmètre d'un projet (populations légales INSEE,
+     * superficie IGN, dénormalisée sur les lignes communes par le géocodage).
+     * Null quand
      * aucune commune du périmètre n'a de donnée (outre-mer, code inconnu).
      */
     private function demographiePerimetre(Collection $communes): ?array
@@ -537,7 +539,8 @@ class LandingService
     }
 
     /**
-     * Démographie d'une commune (recensement INSEE via geo.api.gouv.fr).
+     * Démographie d'une commune (populations légales INSEE, superficie IGN,
+     * via geo.api.gouv.fr).
      * Les lignes communes portent toutes la même valeur par code : on prend
      * la première non nulle.
      */

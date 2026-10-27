@@ -83,7 +83,9 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 de saisie dans la source), une année de début aberrante, une fiche sans année ou sans
                 structure porteuse. Les projets repartis comme suspects alimentent une
                 <Link href="/verify">liste de vérification</Link> examinée à la main, projet par projet.
-                Cette même API fournit la population (recensement INSEE) et la superficie de chaque
+                Cette même API fournit la population (populations légales du recensement
+                <a href="https://www.insee.fr" rel="noopener" target="_blank">INSEE</a>) et la superficie
+                (IGN, référentiel Admin Express) de chaque
                 commune : les fiches affichent la population concernée par un ABC (somme approximative
                 pour un périmètre multi-communes, population, superficie et densité pour une commune
                 seule). Les communes écartées comme anomalies ne sont pas comptées.

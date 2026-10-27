@@ -82,7 +82,7 @@ const jsonLd = computed(() => {
                 <template v-if="commune.region?.label">, région {{ commune.region.label }}</template>.
             </p>
             <p v-if="commune.demographie" class="small text-muted">
-                {{ fmtNb(commune.demographie.population) }} habitants<template v-if="commune.demographie.surface_km2"> · {{ fmtNb(commune.demographie.surface_km2, 2) }} km²</template><template v-if="commune.demographie.densite"> · {{ fmtNb(commune.demographie.densite, 1) }} hab./km²</template> — recensement INSEE.
+                {{ fmtNb(commune.demographie.population) }} habitants<template v-if="commune.demographie.surface_km2"> · {{ fmtNb(commune.demographie.surface_km2, 2) }} km²</template><template v-if="commune.demographie.densite"> · {{ fmtNb(commune.demographie.densite, 1) }} hab./km²</template> — population légale (recensement <a href="https://www.insee.fr" target="_blank" rel="noopener">INSEE</a>), superficie (IGN), via <a href="https://geo.api.gouv.fr" target="_blank" rel="noopener">geo.api.gouv.fr</a>.
             </p>
 
             <h2 class="h5 mt-4">Les ABC de {{ commune.libelle }}</h2>
