@@ -106,6 +106,13 @@ return [
     'anomalie_km' => 100,
 
     /**
+     * Rayon (km) de voisinage sur la fiche projet : projets ABC dont au
+     * moins une commune géocodée se trouve à moins de cette distance
+     * d'une commune du périmètre.
+     */
+    'voisinage_km' => 15,
+
+    /**
      * Communes épargnées par la détection d'anomalie géographique, bien
      * qu'au-delà du seuil : grands territoires réels dont une partie des
      * communes est naturelment éloignée du centroïde. Clé = id de projet,

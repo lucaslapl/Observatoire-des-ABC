@@ -118,6 +118,11 @@ class LandingService
             'verification' => $verification,
             'communes' => $communes,
             'communes_anomalies' => $projet->communes->where('anomalie', true)->count(),
+            // Projets ABC voisins (au moins une commune à moins de
+            // abc.voisinage_km du périmètre). Null quand aucune commune du
+            // périmètre n'est géocodée : la section n'a alors pas de sens.
+            'voisinage_km' => (float) config('abc.voisinage_km'),
+            'voisins' => $this->projetsVoisins($projet, $projet->communes),
             'pnrs' => $pnrs,
             'region_label' => $regionLabel,
             'region_slug' => $regionLabel ? $this->regions->slug($regionLabel) : null,
@@ -363,6 +368,105 @@ class LandingService
         }
 
         return null;
+    }
+
+    /**
+     * Projets ABC voisins du périmètre : projets dont au moins une commune
+     * géocodée (hors anomalie) est à moins de `abc.voisinage_km` km d'une
+     * commune géocodée (hors anomalie) du projet courant, groupés par
+     * projet (distance de la commune la plus proche), triés par distance.
+     *
+     * Pré-filtre bounding box en SQL puis distance haversine en PHP :
+     * portable sur PostgreSQL sans PostGIS (hébergement mutualisé) comme
+     * sur le SQLite des tests — la table `communes` est assez petite pour
+     * qu'aucun index spatial ne soit nécessaire. Retourne null si aucune
+     * commune du périmètre n'est géocodée.
+     *
+     * @param  Collection<int, Commune>  $communes
+     * @return array<int, array{projet_id: string, nom: string|null, slug: string|null, commune: string, code: string, distance_km: float}>|null
+     */
+    private function projetsVoisins(Projet $projet, Collection $communes): ?array
+    {
+        $rayon = (float) config('abc.voisinage_km');
+
+        $refs = $communes
+            ->filter(fn (Commune $c) => ! $c->anomalie
+                && $c->lat !== null && $c->lon !== null
+                && ((float) $c->lat !== 0.0 || (float) $c->lon !== 0.0));
+
+        if ($refs->isEmpty()) {
+            return null;
+        }
+
+        // Degrés couverts par le rayon : ~111,32 km par degré de latitude ;
+        // un degré de longitude se raccourcit avec cos(latitude).
+        $latDelta = $rayon / 111.32;
+        $cosLat = max(0.01, cos(deg2rad((float) $refs->max(fn (Commune $c) => abs((float) $c->lat)))));
+        $lonDelta = $rayon / (111.32 * $cosLat);
+
+        $candidats = Commune::query()
+            ->where('projet_id', '!=', $projet->id)
+            ->where('anomalie', false)
+            ->whereNotNull('lat')
+            ->whereNotNull('lon')
+            ->whereBetween('lat', [(float) $refs->min('lat') - $latDelta, (float) $refs->max('lat') + $latDelta])
+            ->whereBetween('lon', [(float) $refs->min('lon') - $lonDelta, (float) $refs->max('lon') + $lonDelta])
+            ->get(['projet_id', 'code_geographique', 'libelle_geographique', 'lat', 'lon']);
+
+        $voisins = [];
+        foreach ($candidats as $c) {
+            $distance = INF;
+            foreach ($refs as $ref) {
+                $distance = min($distance, $this->distanceKm((float) $ref->lat, (float) $ref->lon, (float) $c->lat, (float) $c->lon));
+            }
+            if ($distance > $rayon) {
+                continue;
+            }
+            if (! isset($voisins[$c->projet_id]) || $distance < $voisins[$c->projet_id]['distance_km']) {
+                $voisins[$c->projet_id] = [
+                    'commune' => $c->libelle_geographique ?: $c->code_geographique,
+                    'code' => $c->code_geographique,
+                    'distance_km' => $distance,
+                ];
+            }
+        }
+
+        if ($voisins === []) {
+            return [];
+        }
+
+        $projets = Projet::query()
+            ->whereIn('id', array_keys($voisins))
+            ->get(['id', 'nom', 'slug'])
+            ->keyBy('id');
+
+        $result = [];
+        foreach ($voisins as $projetId => $voisin) {
+            $result[] = [
+                'projet_id' => $projetId,
+                'nom' => $projets->get($projetId)?->nom,
+                'slug' => $projets->get($projetId)?->slug,
+                'commune' => $voisin['commune'],
+                'code' => $voisin['code'],
+                'distance_km' => round($voisin['distance_km'], 1),
+            ];
+        }
+
+        usort($result, fn (array $a, array $b) => $a['distance_km'] <=> $b['distance_km']);
+
+        return $result;
+    }
+
+    /**
+     * Distance orthodromique (km) entre deux points WGS84 (haversine).
+     */
+    private function distanceKm(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+
+        return 6371.0 * 2 * asin(min(1.0, sqrt($a)));
     }
 
     /**

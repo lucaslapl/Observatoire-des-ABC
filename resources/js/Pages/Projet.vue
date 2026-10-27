@@ -262,6 +262,25 @@ onBeforeUnmount(() => {
                         </Link>
                     </div>
 
+                    <div v-if="projet.voisins?.length" class="mb-4">
+                        <h2 class="h5"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i> ABC voisins</h2>
+                        <p class="text-muted small">Projets dont au moins une commune est à moins de {{ projet.voisinage_km }} km du périmètre.</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <Link
+                                v-for="v in projet.voisins"
+                                :key="v.projet_id"
+                                :href="`/abc/${v.slug}`"
+                                class="list-group-item border rounded-3 px-3 py-2 small text-decoration-none text-reset"
+                            >
+                                {{ v.nom }}
+                                <small class="text-muted">· {{ v.commune }}
+                                    <template v-if="v.distance_km === 0">(commune partagée)</template>
+                                    <template v-else>à {{ v.distance_km.toLocaleString('fr-FR') }} km</template>
+                                </small>
+                            </Link>
+                        </div>
+                    </div>
+
                     <section v-if="projet.historique?.length" class="mb-4" aria-label="Historique des modifications">
                         <h2 class="h5"><i class="bi bi-clock-history me-1" aria-hidden="true"></i> Historique des modifications</h2>
                         <div class="card shadow-sm">
