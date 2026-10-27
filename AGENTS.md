@@ -175,11 +175,21 @@ vendor/bin/phpstan analyse --no-progress --memory-limit=1G   # niveau 5
 docker compose --profile build run --rm --no-deps assets npm run build   # compile le front (client + SSR)
 ```
 
-**Avant de déclarer qu'une tâche est terminée, les quatre contrôles de la CI
-doivent avoir été exécutés et passés localement** (PHPUnit, Pint, PHPStan,
-build Vite + `npm run test:js` si le front est touché). Un changement est « bon »
-seulement quand ils sont verts : ne pas se limiter aux tests PHPUnit ni annoncer
-que tout est OK sans avoir lancé l'analyse statique.
+**Ne tester et vérifier que les fichiers touchés et concernés** — pas la CI
+complète à chaque changement. Cibler les contrôles sur le périmètre modifié :
+
+- PHPUnit : `php artisan test tests/Feature/XxxTest.php` ou `--filter=XxxTest`
+  (les tests du service/modifié et de ses appelants) ;
+- Pint : `vendor/bin/pint --test app/Services/Foo.php` (fichiers modifiés) ;
+- PHPStan : `vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+  app/Services/Foo.php` (chemins touchés, pas tout `app/`) ;
+- build Vite + `npm run test:js` uniquement si le front est touché.
+
+Un changement est « bon » quand ces contrôles ciblés passent. La passe
+complète (PHPUnit entier, Pint, PHPStan sur tout le projet, build) est le
+rôle de la CI GitHub Actions au push — ne pas la rejouer intégralement en
+local à chaque tâche. Ne pas annoncer qu'un changement est OK sans avoir
+lancé le contrôle correspondant sur les fichiers concernés.
 
 Suites : `tests/Unit` (AnomalyService, StatusService, ProjectIdService,
 CsvReaderService, DataGouvResolver, GeocodeService, BackupService,
