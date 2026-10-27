@@ -7,12 +7,14 @@ import Breadcrumbs from '../Components/Breadcrumbs.vue';
 
 const props = defineProps({
     commune: { type: Object, required: true },
+    patrimoine: { type: Object, default: null },
 });
 
 const page = usePage();
 const site = computed(() => page.props.site || {});
 
 const c = computed(() => props.commune);
+const patrimoine = computed(() => props.patrimoine);
 
 /* Nombre au format français (espace fine pour les milliers, virgule décimale). */
 const fmtNb = (v, decimales = 0) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: decimales });
@@ -104,6 +106,76 @@ const jsonLd = computed(() => {
                     </div>
                 </div>
             </div>
+
+            <template v-if="patrimoine?.present">
+                <h2 class="h5 mt-4">Patrimoine écologique référencé</h2>
+                <p class="small text-muted">
+                    Inventaires nationaux du patrimoine naturel (<a href="https://inpn.mnhn.fr" target="_blank" rel="noopener">INPN</a>)
+                    touchant la commune : informations factuelles telles que publiées dans les référentiels
+                    <template v-if="patrimoine.versions.znieff">— ZNIEFF : {{ patrimoine.versions.znieff.toLowerCase() }}</template>
+                    <template v-if="patrimoine.versions.natura">, Natura 2000 : {{ patrimoine.versions.natura.toLowerCase() }}</template>
+                    <template v-if="patrimoine.versions.aires">, aires protégées : {{ patrimoine.versions.aires.toLowerCase() }}</template>.
+                    Méthode détaillée : <Link class="text-decoration-none" href="/methodologie">méthodologie</Link>.
+                </p>
+
+                <div v-if="patrimoine.znieff.length" class="mb-3">
+                    <h3 class="h6">ZNIEFF</h3>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle small">
+                            <thead>
+                                <tr><th>Nom</th><th>Type</th><th class="text-end">Surface (ha)</th><th class="text-end">Espèces déterminantes</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="z in patrimoine.znieff" :key="z.id">
+                                    <td>{{ z.nom }} <span class="text-muted">({{ z.id_national }})</span></td>
+                                    <td><span class="badge text-bg-light" :title="z.ty_zone === 1 ? 'Secteur de grand intérêt biologique' : 'Grand ensemble naturel riche'">Type {{ z.ty_zone }}</span></td>
+                                    <td class="text-end">{{ z.surface_ha ? fmtNb(z.surface_ha, 0) : '—' }}</td>
+                                    <td class="text-end">{{ z.nb_especes_determinantes || '—' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div v-if="patrimoine.natura.length" class="mb-3">
+                    <h3 class="h6">Sites Natura 2000</h3>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle small">
+                            <thead>
+                                <tr><th>Site</th><th>Type</th><th class="text-end">Habitats</th><th class="text-end">Espèces (directive)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="s in patrimoine.natura" :key="s.sitecode">
+                                    <td>{{ s.nom || 'Sans nom publié' }} <span class="text-muted">({{ s.sitecode }})</span></td>
+                                    <td><span class="badge text-bg-light" :title="s.type_site === 'ZPS' ? 'Zone de protection spéciale (directive Oiseaux)' : 'Zone spéciale de conservation (directive Habitats)'">{{ s.type_site === 'ZPS' ? 'ZPS' : 'ZSC' }}</span></td>
+                                    <td class="text-end">{{ s.nb_habitats || '—' }}</td>
+                                    <td class="text-end">{{ s.nb_especes || '—' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div v-if="patrimoine.aires.length" class="mb-3">
+                    <h3 class="h6">Aires protégées</h3>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle small">
+                            <thead>
+                                <tr><th>Nom</th><th>Type</th><th class="text-end">Sur la commune (ha)</th><th>Document de gestion</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="a in patrimoine.aires" :key="a.id_mnhn">
+                                    <td><a v-if="a.lien_fiche" :href="a.lien_fiche" target="_blank" rel="noopener">{{ a.nom }}</a><template v-else>{{ a.nom }}</template></td>
+                                    <td>{{ a.type_espace }}</td>
+                                    <td class="text-end">{{ a.surface_intersection_ha ? fmtNb(a.surface_intersection_ha, 0) : '—' }}</td>
+                                    <td><span v-if="a.doc_gestion" class="badge text-bg-success">Oui</span><span v-else class="text-muted">—</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="small text-muted">Les surfaces sur la commune sont des recouvrements calculés (approche décimétrique à l'échelle communale) : à considérer comme des ordres de grandeur.</p>
+                </div>
+            </template>
 
             <p><Link class="btn btn-outline-success btn-sm" href="/">← Revenir à la carte</Link></p>
         </div>

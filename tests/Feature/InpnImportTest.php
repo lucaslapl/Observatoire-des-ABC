@@ -57,7 +57,7 @@ class InpnImportTest extends TestCase
 
         $this->assertSame(3, $counts['zones']);
         $this->assertSame(3, $counts['communes']);
-        $this->assertSame(2, $counts['especes']);
+        $this->assertSame(3, $counts['especes']);
 
         $z1 = $this->dbRow('inpn_znieff', ['id' => 100]);
         $this->assertSame('240009732', $z1->id_national);
@@ -84,13 +84,15 @@ class InpnImportTest extends TestCase
         // Espèces : déterminante importée, confidentielle flaguée, jamais
         // affichée côté public ; fg_supp exclue.
         $especes = $this->dbRows('inpn_znieff_especes', ['znieff_id' => 100]);
-        $this->assertCount(2, $especes);
+        $this->assertCount(3, $especes);
+        // Dictionnaire INPN : D = déterminante, E = enjeux (pas déterminante),
+        // C = confidentielle. fg_conf est un second signal de confidentialité.
         $this->assertSame('3489', (string) $especes[0]->cd_ref);
+        $this->assertTrue((bool) $especes[0]->determinante);
         $this->assertFalse((bool) $especes[0]->confidentielle);
-        $this->assertTrue((bool) $especes[1]->confidentielle);
-        foreach ($especes as $e) {
-            $this->assertTrue((bool) $e->determinante);
-        }
+        $this->assertTrue((bool) $especes[1]->confidentielle); // D + fg_conf
+        $this->assertTrue((bool) $especes[1]->determinante);
+        $this->assertFalse((bool) $especes[2]->determinante); // E = enjeux
     }
 
     public function test_import_natura_filtre_et_joint_les_noms(): void
@@ -222,13 +224,13 @@ class InpnImportTest extends TestCase
 
         $esp = '"id_espece";"id_znieff";"nm_sffzn";"cd_ref";"cd_nom";"fg_conf";"fg_esp";"st_vsd";"fg_supp";'
             .'"date_crea";"date_supp";"date_modif";"groupe_taxo";"nom_cite";"id_sinp"'."\n"
-            .'"1";"100";"420030368";"3489";"3489";"false";"E";"3";"false";"2012-09-14";;"2025-04-03";"Oiseaux";'
+            .'"1";"100";"420030368";"3489";"3489";"false";"D";"3";"false";"2012-09-14";;"2025-04-03";"Oiseaux";'
             .'"<i>Otus scops</i> (Linnaeus, 1758)";"ece2"'."\n"
-            .'"2";"100";"420030368";"3489";"3489";"true";"E";"3";"false";"2012-09-14";;"2025-04-03";"Oiseaux";'
+            .'"2";"100";"420030368";"3489";"3489";"true";"D";"3";"false";"2012-09-14";;"2025-04-03";"Oiseaux";'
             .'"<i>Otus scops</i>";"ece3"'."\n"
-            .'"3";"100";"420030368";"3489";"3489";"false";"E";"3";"true";"2012-09-14";;"2025-04-03";"Oiseaux";'
+            .'"3";"100";"420030368";"77";"77";"false";"E";"3";"false";"2012-09-14";;"2025-04-03";"Oiseaux";'
             .'"<i>Exclue</i>";"ece4"'."\n"
-            .'"4";"999";"420030368";"1";"1";"false";"E";"3";"false";"2012-09-14";;"2025-04-03";"Oiseaux";'
+            .'"4";"100";"420030368";"2";"2";"false";"C";"3";"true";"2012-09-14";;"2025-04-03";"Oiseaux";'
             .'"<i>Zone inconnue</i>";"ece5"'."\n";
         file_put_contents($this->dir.'/ZNIEFF/REF_ESPECE.csv', $esp);
     }

@@ -177,8 +177,11 @@ class InpnImportService
                 'cd_ref' => (int) $rec['cd_ref'],
                 'nom_cite' => $rec['nom_cite'],
                 'groupe_taxo' => $this->nullIfEmpty($rec['groupe_taxo'] ?? null),
-                'determinante' => ($rec['fg_esp'] ?? '') === 'E',
-                'confidentielle' => ($rec['fg_conf'] ?? '') === 'true',
+                // Dictionnaire INPN (ZNIEFF_DICTIONNAIRE.xlsx, FG_ESP) :
+                // A : autre espèce ; E : autre espèce à enjeux ;
+                // D : déterminante ; C : confidentielle.
+                'determinante' => ($rec['fg_esp'] ?? '') === 'D',
+                'confidentielle' => ($rec['fg_conf'] ?? '') === 'true' || ($rec['fg_esp'] ?? '') === 'C',
             ];
             $count++;
             if (count($chunk) >= self::BATCH) {

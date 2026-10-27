@@ -10,6 +10,7 @@ use App\Models\Verification;
 use App\Services\ChangelogService;
 use App\Services\LandingService;
 use App\Services\MarkdownService;
+use App\Services\PatrimoineEcologiqueService;
 use App\Services\StatsService;
 use App\Services\VerificationService;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ class PageController extends Controller
         private LandingService $landing,
         private ChangelogService $changelog,
         private MarkdownService $markdown,
+        private PatrimoineEcologiqueService $patrimoine,
     ) {}
 
     public function index(): Response
@@ -77,6 +79,7 @@ class PageController extends Controller
     {
         return Inertia::render('Commune', [
             'commune' => $this->landing->commune($code),
+            'patrimoine' => $this->patrimoine->pourCommune($code),
         ]);
     }
 
