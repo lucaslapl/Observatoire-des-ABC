@@ -61,12 +61,17 @@ class ModerateurAccessTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('isAdmin', false)
-                ->has('contributions')
-                ->has('meta')
-                ->has('journalVerifications')
-                ->missing('comptes')
-                ->missing('actualites')
-                ->missing('exclusions'));
+                ->has('meta'));
+
+        // Les sections de modération lui sont ouvertes…
+        $this->actingAs($this->moderateur)->get('/admin/contributions')->assertOk();
+        $this->actingAs($this->moderateur)->get('/admin/journaux')->assertOk();
+
+        // …mais pas la maintenance du site (comptes = RGPD, paramétrage).
+        $this->actingAs($this->moderateur)->get('/admin/comptes')->assertForbidden();
+        $this->actingAs($this->moderateur)->get('/admin/actualites')->assertForbidden();
+        $this->actingAs($this->moderateur)->get('/admin/exclusions')->assertForbidden();
+        $this->actingAs($this->moderateur)->get('/admin/maintenance')->assertForbidden();
     }
 
     public function test_admin_voit_le_panneau_complet(): void
@@ -78,11 +83,32 @@ class ModerateurAccessTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('isAdmin', true)
+                ->has('meta'));
+
+        $this->actingAs($admin)->get('/admin/contributions')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
                 ->has('contributions')
+                ->has('counts')
+                ->where('statut', 'en_attente'));
+
+        $this->actingAs($admin)->get('/admin/journaux')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
                 ->has('journalVerifications')
-                ->has('comptes')
-                ->has('actualites')
-                ->has('exclusions'));
+                ->has('journalFusions'));
+
+        $this->actingAs($admin)->get('/admin/comptes')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('comptes'));
+
+        $this->actingAs($admin)->get('/admin/actualites')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('actualites'));
+
+        $this->actingAs($admin)->get('/admin/exclusions')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('exclusions'));
     }
 
     public function test_contributeur_n_accede_pas_au_panneau(): void
@@ -188,13 +214,13 @@ class ModerateurAccessTest extends TestCase
         $this->assertSame('confirme_en_cours', json_decode($entries[1]->apres, true)['etat']);
 
         // Le panneau admin expose ce journal aux modérateurs comme aux admins.
-        $this->actingAs($this->moderateur)->get('/admin')
+        $this->actingAs($this->moderateur)->get('/admin/journaux')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('journalVerifications', 2)
-                ->where('journalVerifications.0.par', $this->moderateur->name)
-                ->where('journalVerifications.0.etat', 'confirme_en_cours')
-                ->where('journalVerifications.0.etat_avant', 'confirme_termine'));
+                ->has('journalVerifications.data', 2)
+                ->where('journalVerifications.data.0.par', $this->moderateur->name)
+                ->where('journalVerifications.data.0.etat', 'confirme_en_cours')
+                ->where('journalVerifications.data.0.etat_avant', 'confirme_termine'));
     }
 
     public function test_verdict_de_date_avec_statut_constate_corrige_aussi_le_statut(): void

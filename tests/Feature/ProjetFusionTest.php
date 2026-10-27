@@ -120,15 +120,15 @@ class ProjetFusionTest extends TestCase
 
         // Panneau d'administration : journal des fusions — qui a fusionné
         // quoi, dans quoi, pourquoi, et quand.
-        $this->actingAs($admin)->get('/admin')
+        $this->actingAs($admin)->get('/admin/journaux')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('journalFusions', 1)
-                ->where('journalFusions.0.doublon', 'ABC de Test Fusion')
-                ->where('journalFusions.0.doublon_id', $this->doublon->id)
-                ->where('journalFusions.0.canonique_id', $this->canonique->id)
-                ->where('journalFusions.0.motif', 'même ABC décrit sous deux noms')
-                ->where('journalFusions.0.par', $admin->email));
+                ->has('journalFusions.data', 1)
+                ->where('journalFusions.data.0.doublon', 'ABC de Test Fusion')
+                ->where('journalFusions.data.0.doublon_id', $this->doublon->id)
+                ->where('journalFusions.data.0.canonique_id', $this->canonique->id)
+                ->where('journalFusions.data.0.motif', 'même ABC décrit sous deux noms')
+                ->where('journalFusions.data.0.par', $admin->email));
 
         // Export CSV d'audit : la fusion y figure, avec son auteur.
         $response = $this->actingAs($admin)->get('/api/admin/exclusions/export');

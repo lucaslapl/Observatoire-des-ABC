@@ -3,13 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Actualite;
-use App\Models\AuditLog;
 use App\Models\Commune;
-use App\Models\Contribution;
 use App\Models\ProjectAlias;
-use App\Models\ProjectExclusion;
 use App\Models\Projet;
-use App\Models\User;
 use App\Models\Verification;
 use App\Services\ChangelogService;
 use App\Services\LandingService;
@@ -178,131 +174,6 @@ class PageController extends Controller
             ->values();
 
         return Inertia::render('Actualites', ['actualites' => $actualites]);
-    }
-
-    public function admin(): Response
-    {
-        $isAdmin = auth()->user()->hasRole('admin');
-
-        $contributions = Contribution::query()
-            ->leftJoin('projets', 'projets.id', '=', 'contributions.projet_id')
-            ->leftJoin('verifications', 'verifications.projet_id', '=', 'contributions.projet_id')
-            ->select([
-                'contributions.*',
-                'projets.nom as projet_nom',
-                'projets.structure_porteuse',
-                'verifications.etat as verif_etat',
-                'verifications.note as verif_note',
-                'verifications.lien as verif_lien',
-            ])
-            ->orderByRaw("CASE contributions.statut WHEN 'en_attente' THEN 0 WHEN 'validee' THEN 1 ELSE 2 END")
-            ->orderByDesc('contributions.created_at')
-            ->get();
-
-        $props = [
-            'isAdmin' => $isAdmin,
-            'meta' => $this->stats->meta(),
-            'contributions' => $contributions,
-            // Journal des vérifications manuelles (verdicts directs enregistrés
-            // depuis /verify) : visible des admins et des modérateurs pour
-            // savoir qui a tranché quoi, et quand.
-            'journalVerifications' => AuditLog::query()
-                ->where('action', 'verification')
-                ->orderByDesc('created_at')
-                ->orderByDesc('id')
-                ->limit(200)
-                ->get()
-                ->map(function (AuditLog $log) {
-                    $avant = json_decode($log->avant ?? 'null', true) ?: [];
-                    $apres = json_decode($log->apres ?? 'null', true) ?: [];
-
-                    return [
-                        'date' => $log->created_at?->toDateTimeString(),
-                        'projet_id' => $apres['projet_id'] ?? $avant['projet_id'] ?? '',
-                        'nom' => $apres['nom'] ?? '',
-                        'etat_avant' => $avant['etat'] ?? null,
-                        'etat' => $apres['etat'] ?? '',
-                        'note' => $apres['note'] ?? null,
-                        'lien' => $apres['lien'] ?? null,
-                        'par' => $log->par_admin,
-                    ];
-                }),
-            // Journal des fusions de doublons (bouton « Fusionner ce
-            // doublon » de /verify et abc:merge-projects) : qui a fusionné
-            // quoi, dans quoi, pourquoi, et quand — visible des admins et
-            // des modérateurs.
-            'journalFusions' => AuditLog::query()
-                ->where('action', 'fusion')
-                ->orderByDesc('created_at')
-                ->orderByDesc('id')
-                ->limit(200)
-                ->get()
-                ->map(function (AuditLog $log) {
-                    $avant = json_decode($log->avant ?? 'null', true) ?: [];
-                    $apres = json_decode($log->apres ?? 'null', true) ?: [];
-
-                    return [
-                        'date' => $log->created_at?->toDateTimeString(),
-                        'doublon_id' => $avant['doublon']['id'] ?? '',
-                        'doublon' => $avant['doublon']['nom'] ?? '',
-                        'canonique_id' => $apres['canonique']['id'] ?? '',
-                        'canonique' => $apres['canonique']['nom'] ?? '',
-                        'motif' => $apres['motif'] ?? '',
-                        'par' => $log->par_admin,
-                    ];
-                }),
-        ];
-
-        // Sections de maintenance : administrateurs uniquement. Les
-        // modérateurs (experts de confiance) n'accèdent qu'à la modération
-        // des contributions — pas aux comptes (RGPD) ni au paramétrage.
-        if ($isAdmin) {
-            $props['exclusions'] = ProjectExclusion::query()
-                ->orderByDesc('created_at')
-                ->get()
-                ->map(function (ProjectExclusion $e) {
-                    return [
-                        'projet_id' => $e->projet_id,
-                        'nom' => Projet::whereKey($e->projet_id)->value('nom'),
-                        'motif' => $e->motif,
-                        'par_admin' => $e->par_admin,
-                        'cree_le' => $e->created_at?->toDateTimeString(),
-                    ];
-                });
-
-            $props['comptes'] = User::query()
-                ->withCount('contributions')
-                ->orderByDesc('created_at')
-                ->get()
-                ->map(function (User $u) {
-                    return [
-                        'id' => $u->id,
-                        'name' => $u->name,
-                        'email' => $u->email,
-                        'roles' => $u->getRoleNames()->values()->all(),
-                        'email_verifie' => $u->hasVerifiedEmail(),
-                        'nb_contributions' => $u->contributions_count,
-                        'cree_le' => $u->created_at?->toDateTimeString(),
-                    ];
-                });
-
-            $props['actualites'] = Actualite::query()
-                ->orderByDesc('created_at')
-                ->get(['id', 'titre', 'slug', 'contenu', 'statut', 'date_publication'])
-                ->map(fn (Actualite $a) => [
-                    'id' => $a->id,
-                    'titre' => $a->titre,
-                    'slug' => $a->slug,
-                    // Contenu Markdown brut pour le formulaire d'édition…
-                    'contenu' => $a->contenu,
-                    // …et extrait nettoyé pour la liste.
-                    'extrait' => $this->markdown->toText($a->contenu, 80),
-                    'statut' => $a->statut,
-                    'date_publication' => $a->date_publication?->toISOString(),
-                ]);
-        }
-
-        return Inertia::render('Admin', $props);
     }
 
     public function diag(): array

@@ -382,13 +382,42 @@ class ContributionFlowTest extends TestCase
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $response = $this->actingAs($admin)->get('/admin');
+        $response = $this->actingAs($admin)->get('/admin/comptes');
 
         $response->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->has('comptes', 2));
+            ->assertInertia(fn (Assert $page) => $page->has('comptes.data', 2));
 
-        $emails = array_column($response->inertiaProps('comptes'), 'email');
+        $emails = array_column($response->inertiaProps('comptes')['data'], 'email');
         $this->assertContains($this->contributeur->email, $emails);
         $this->assertContains($admin->email, $emails);
+    }
+
+    public function test_contributions_sont_paginees_cote_serveur(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        for ($i = 0; $i < 25; $i++) {
+            Contribution::create([
+                'projet_id' => $this->projetId,
+                'type' => 'note',
+                'payload_json' => ['note' => "note $i"],
+                'statut' => 'en_attente',
+            ]);
+        }
+
+        $page1 = $this->actingAs($admin)->get('/admin/contributions');
+        $page1->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('contributions.data', 20)
+                ->where('contributions.last_page', 2)
+                ->where('contributions.total', 25)
+                ->where('counts.en_attente', 25));
+
+        $page2 = $this->actingAs($admin)->get('/admin/contributions?page=2');
+        $page2->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('contributions.data', 5)
+                ->where('contributions.current_page', 2));
     }
 }
