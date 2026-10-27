@@ -48,6 +48,7 @@ class SqlDumpService
         'inpn_natura_communes',
         'inpn_natura_habitats',
         'inpn_natura_especes',
+        'inpn_natura_docob',
         'inpn_aires_protegees',
         'inpn_aires_protegees_communes',
     ];

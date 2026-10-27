@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PatrimoineController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,16 @@ Route::get('/actualites/{actualite:slug}', [PageController::class, 'actualite'])
 
 Route::get('/abc/{slug}', [PageController::class, 'projet'])->name('abc.show');
 Route::get('/commune/{code}', [PageController::class, 'commune'])->name('commune.show');
+
+// Patrimoine écologique INPN (ZNIEFF, Natura 2000) : uniquement les
+// zonages touchant une commune ABC — les autres demandes renvoient 404.
+Route::get('/patrimoine', [PatrimoineController::class, 'index'])->name('patrimoine.index');
+Route::get('/patrimoine/znieff', [PatrimoineController::class, 'znieffListe'])->name('patrimoine.znieff.liste');
+Route::get('/patrimoine/znieff/{idNational}', [PatrimoineController::class, 'znieffShow'])
+    ->where('idNational', '[0-9]{6,12}')->name('patrimoine.znieff.show');
+Route::get('/patrimoine/natura', [PatrimoineController::class, 'naturaListe'])->name('patrimoine.natura.liste');
+Route::get('/patrimoine/natura/{sitecode}', [PatrimoineController::class, 'naturaShow'])
+    ->where('sitecode', 'FR[0-9A-Z]{7}')->name('patrimoine.natura.show');
 Route::get('/departement/{code}', [PageController::class, 'departement'])->where('code', '[0-9a-zA-Z]{1,3}')->name('departement.show');
 Route::get('/region/{slug}', [PageController::class, 'region'])->where('slug', '[a-z0-9-]+')->name('region.show');
 

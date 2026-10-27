@@ -127,7 +127,7 @@ const jsonLd = computed(() => {
                             </thead>
                             <tbody>
                                 <tr v-for="z in patrimoine.znieff" :key="z.id">
-                                    <td>{{ z.nom }} <span class="text-muted">({{ z.id_national }})</span></td>
+                                    <td><Link class="text-reset text-decoration-none" :href="`/patrimoine/znieff/${z.id_national}`" :title="`Fiche ZNIEFF ${z.nom}`">{{ z.nom }}</Link> <span class="text-muted">({{ z.id_national }})</span></td>
                                     <td><span class="badge text-bg-light" :title="z.ty_zone === 1 ? 'Secteur de grand intérêt biologique' : 'Grand ensemble naturel riche'">Type {{ z.ty_zone }}</span></td>
                                     <td class="text-end">{{ z.surface_ha ? fmtNb(z.surface_ha, 0) : '—' }}</td>
                                     <td class="text-end">{{ z.nb_especes_determinantes || '—' }}</td>
@@ -146,7 +146,7 @@ const jsonLd = computed(() => {
                             </thead>
                             <tbody>
                                 <tr v-for="s in patrimoine.natura" :key="s.sitecode">
-                                    <td>{{ s.nom || 'Sans nom publié' }} <span class="text-muted">({{ s.sitecode }})</span></td>
+                                    <td><Link class="text-reset text-decoration-none" :href="`/patrimoine/natura/${s.sitecode}`" :title="`Fiche Natura 2000 ${s.nom || s.sitecode}`">{{ s.nom || 'Sans nom publié' }}</Link> <span class="text-muted">({{ s.sitecode }})</span></td>
                                     <td><span class="badge text-bg-light" :title="s.type_site === 'ZPS' ? 'Zone de protection spéciale (directive Oiseaux)' : 'Zone spéciale de conservation (directive Habitats)'">{{ s.type_site === 'ZPS' ? 'ZPS' : 'ZSC' }}</span></td>
                                     <td class="text-end">{{ s.nb_habitats || '—' }}</td>
                                     <td class="text-end">{{ s.nb_especes || '—' }}</td>

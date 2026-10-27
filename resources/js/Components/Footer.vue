@@ -11,6 +11,7 @@ const colonnes = [
         liens: [
             { label: 'Carte des ABC', href: '/carte' },
             { label: 'Actualités', href: '/actualites' },
+            { label: 'Patrimoine écologique', href: '/patrimoine' },
         ],
     },
     {

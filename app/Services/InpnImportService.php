@@ -254,8 +254,59 @@ class InpnImportService
         $communes = $this->importNaturaCommunes($sitecodes, $tick, $dir);
         $habitats = $this->importNaturaHabitats($sitecodes, $tick, $dir);
         $especes = $this->importNaturaEspeces($sitecodes, $tick, $dir);
+        $docob = $this->importNaturaDocob($sitecodes, $dir);
 
-        return ['sites' => $sites, 'communes' => $communes, 'habitats' => $habitats, 'especes' => $especes];
+        return ['sites' => $sites, 'communes' => $communes, 'habitats' => $habitats, 'especes' => $especes, 'docob' => $docob];
+    }
+
+    /**
+     * Documents d'objectifs référencés dans la base INPN
+     * (generique_upload) : titre + lien INPN. Le PDF hébergé localement
+     * (public/docob/) est préféré à l'affichage.
+     *
+     * @param  array<string, bool>  $sitecodes
+     * @return int nombre de documents importés
+     */
+    private function importNaturaDocob(array $sitecodes, string $dir): int
+    {
+        $file = $dir.'/NATURA_BDD_122024/generique_upload.csv.csv';
+        if (! is_file($file)) {
+            return 0; // fichier optionnel
+        }
+        DB::table('inpn_natura_docob')->delete();
+
+        $count = 0;
+        $chunk = [];
+        $seen = [];
+        foreach ($this->csv->iterate($file) as $rec) {
+            $rec = $this->lower($rec);
+            $filename = mb_strtolower($rec['filename'] ?? '');
+            if (! str_contains($filename, 'docob')) {
+                continue;
+            }
+            $sitecode = $rec['sitecode'] ?? '';
+            if ($sitecode === '' || ! isset($sitecodes[$sitecode])) {
+                continue;
+            }
+            $titre = $this->nullIfEmpty((string) preg_replace('/\s+/u', ' ', $rec['titre'] ?? ''));
+            $lien = $this->nullIfEmpty($rec['link'] ?? null);
+            $key = $sitecode.'|'.(string) $titre;
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $chunk[] = ['sitecode' => $sitecode, 'titre' => $titre, 'lien' => $lien];
+            $count++;
+            if (count($chunk) >= self::BATCH) {
+                DB::table('inpn_natura_docob')->insert($chunk);
+                $chunk = [];
+            }
+        }
+        if ($chunk !== []) {
+            DB::table('inpn_natura_docob')->insert($chunk);
+        }
+
+        return $count;
     }
 
     /**

@@ -37,3 +37,6 @@ Thumbs.db
 /public-build.zip
 
 /.scribe
+
+# DOCOB Natura 2000 (PDF hébergés hors git : ~1 760 fichiers, 112 Mo)
+/public/docob/
