@@ -45,19 +45,36 @@ class AnomalyService
         $groupes = $rows->groupBy('projet_id');
         $anomalies = 0;
         $seuil = (float) config('abc.anomalie_km');
+        $exceptions = collect(config('abc.anomalie_exceptions', []))->map(fn ($codes) => array_flip($codes));
 
         foreach ($groupes as $pid => $cs) {
             if ($cs->count() < 2) {
                 continue;
             }
 
+            // Communes explicitement épargnées pour ce projet (config métier,
+            // grands territoires réels) : elles sortent complètement de la
+            // détection — ni flaguées, ni prises en compte dans le centroïde,
+            // pour ne pas fausser le verdict des autres communes.
+            $exemptes = $exceptions[$pid] ?? [];
+            $detectees = $cs->reject(fn ($c) => isset($exemptes[$c->code_geographique]))->values();
+
+            if ($detectees->count() < 2) {
+                // Quasi tout est exempté : pas assez de points pour détecter.
+                foreach ($cs as $c) {
+                    $this->ecrire($c->projet_id, $c->code_geographique, false, 0.0);
+                }
+
+                continue;
+            }
+
             // Centroïde médian (robuste aux outliers).
-            $clat = $this->median($cs->pluck('lat')->map(fn ($v) => (float) $v)->all());
-            $clon = $this->median($cs->pluck('lon')->map(fn ($v) => (float) $v)->all());
+            $clat = $this->median($detectees->pluck('lat')->map(fn ($v) => (float) $v)->all());
+            $clon = $this->median($detectees->pluck('lon')->map(fn ($v) => (float) $v)->all());
 
             $flagged = [];
             for ($pass = 0; $pass < 2; $pass++) {
-                $outliers = $cs->filter(
+                $outliers = $detectees->filter(
                     fn ($c) => ! isset($flagged[$c->code_geographique])
                         && $this->haversineKm((float) $c->lat, (float) $c->lon, $clat, $clon) > $seuil,
                 );
@@ -67,14 +84,14 @@ class AnomalyService
                 foreach ($outliers as $o) {
                     $flagged[$o->code_geographique] = true;
                 }
-                $ok = $cs->filter(fn ($c) => ! isset($flagged[$c->code_geographique]));
+                $ok = $detectees->filter(fn ($c) => ! isset($flagged[$c->code_geographique]));
                 if ($ok->count() > 0) {
                     $clat = $ok->avg('lat');
                     $clon = $ok->avg('lon');
                 }
             }
 
-            $ok = $cs->filter(fn ($c) => ! isset($flagged[$c->code_geographique]));
+            $ok = $detectees->filter(fn ($c) => ! isset($flagged[$c->code_geographique]));
             if ($ok->count() > 0) {
                 $clat = $ok->avg('lat');
                 $clon = $ok->avg('lon');
@@ -83,12 +100,7 @@ class AnomalyService
             foreach ($cs as $c) {
                 $d = $this->haversineKm((float) $c->lat, (float) $c->lon, $clat, $clon);
                 $isAnomalie = isset($flagged[$c->code_geographique]);
-                Commune::where('projet_id', $c->projet_id)
-                    ->where('code_geographique', $c->code_geographique)
-                    ->update([
-                        'anomalie' => $isAnomalie,
-                        'distance_centre_km' => round($d * 10) / 10,
-                    ]);
+                $this->ecrire($c->projet_id, $c->code_geographique, $isAnomalie, round($d * 10) / 10);
                 if ($isAnomalie) {
                     $anomalies++;
                 }
@@ -96,5 +108,15 @@ class AnomalyService
         }
 
         return $anomalies;
+    }
+
+    private function ecrire(string $projetId, string $code, bool $anomalie, float $distance): void
+    {
+        Commune::where('projet_id', $projetId)
+            ->where('code_geographique', $code)
+            ->update([
+                'anomalie' => $anomalie,
+                'distance_centre_km' => $distance,
+            ]);
     }
 }

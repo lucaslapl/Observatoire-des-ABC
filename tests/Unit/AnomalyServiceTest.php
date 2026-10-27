@@ -63,6 +63,41 @@ class AnomalyServiceTest extends TestCase
         $this->assertNotNull($ok->distance_centre_km);
     }
 
+    public function test_compute_anomalies_respecte_les_exceptions_configurees(): void
+    {
+        config(['abc.anomalie_exceptions' => ['abc-test-epidor' => ['30000']]]);
+
+        $projet = Projet::create([
+            'id' => 'abc-test-epidor',
+            'nom' => 'ABC Test Epidor',
+            'statut' => 'en_cours',
+            'source' => 'datagouv',
+        ]);
+
+        // Même géométrie que test_compute_anomalies_detects_outlier_commune :
+        // la commune éloignée est exemptée par la config (grand territoire réel).
+        Commune::insert([
+            ['projet_id' => 'abc-test-epidor', 'code_geographique' => '10000', 'libelle_geographique' => 'A', 'lon' => 2.35, 'lat' => 48.85, 'created_at' => now(), 'updated_at' => now()],
+            ['projet_id' => 'abc-test-epidor', 'code_geographique' => '20000', 'libelle_geographique' => 'B', 'lon' => 2.40, 'lat' => 48.80, 'created_at' => now(), 'updated_at' => now()],
+            ['projet_id' => 'abc-test-epidor', 'code_geographique' => '30000', 'libelle_geographique' => 'C', 'lon' => -4.50, 'lat' => 48.40, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $n = $this->service->computeAnomalies();
+        $this->assertSame(0, $n);
+
+        $exemptee = Commune::where('code_geographique', '30000')->first();
+        $this->assertFalse((bool) $exemptee->anomalie);
+        $this->assertGreaterThan(100, $exemptee->distance_centre_km);
+
+        // Une autre commune éloignée non exemptée du même projet reste détectée.
+        Commune::insert([
+            ['projet_id' => 'abc-test-epidor', 'code_geographique' => '40000', 'libelle_geographique' => 'D', 'lon' => -4.60, 'lat' => 48.50, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+        $this->assertSame(1, $this->service->computeAnomalies());
+        $this->assertTrue((bool) Commune::where('code_geographique', '40000')->first()->anomalie);
+        $this->assertFalse((bool) Commune::where('code_geographique', '30000')->first()->anomalie);
+    }
+
     public function test_distance_rounded_to_0_1_km(): void
     {
         $projet = Projet::create([

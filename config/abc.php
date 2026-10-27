@@ -106,6 +106,19 @@ return [
     'anomalie_km' => 100,
 
     /**
+     * Communes épargnées par la détection d'anomalie géographique, bien
+     * qu'au-delà du seuil : grands territoires réels dont une partie des
+     * communes est naturelment éloignée du centroïde. Clé = id de projet,
+     * valeur = codes géographiques (INSEE) des communes.
+     *
+     * Epidor (EPTB Dordogne) couvre tout le bassin de la Dordogne, de la
+     * source (Auvergne) à l'estuaire (Gironde) : Coutras (33) est légitime.
+     */
+    'anomalie_exceptions' => [
+        'abc-de-la-vallee-de-la-dordogne-epidor-epidor-eptb-dordogne-2018' => ['33138'],
+    ],
+
+    /**
      * Durée (ans) d'un ABC pour les flags potentiellement_*.
      */
     'duree_abc_ans' => 3,
