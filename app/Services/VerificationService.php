@@ -23,6 +23,7 @@ class VerificationService
             ->select([
                 'p.id',
                 'p.nom',
+                'p.slug',
                 'p.structure_porteuse',
                 'p.annee_debut',
                 'p.statut',
@@ -99,6 +100,7 @@ class VerificationService
             return [
                 'id' => $p->id,
                 'nom' => $p->nom,
+                'slug' => $p->slug,
                 'structure_porteuse' => $p->structure_porteuse,
                 'annee_debut' => $p->annee_debut,
                 'statut' => $p->statut,

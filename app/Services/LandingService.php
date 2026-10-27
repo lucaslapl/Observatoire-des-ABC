@@ -392,6 +392,10 @@ class LandingService
             'region_label' => $region,
             'region_slug' => $region ? $this->regions->slug($region) : null,
             'anomalie' => (bool) $c->anomalie,
+            // Coordonnées pour la mini-carte de la fiche projet (null si le
+            // géocodage n'a pas abouti).
+            'lat' => $c->lat,
+            'lon' => $c->lon,
         ];
     }
 }

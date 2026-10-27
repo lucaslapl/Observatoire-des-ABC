@@ -471,7 +471,10 @@ const sendSuggestion = async (p) => {
                     <tbody>
                         <tr v-for="p in paged" :key="p.id" :class="rowClass(p)" :data-projet-id="p.id">
                             <td>
-                                <div class="nom">{{ p.nom }}</div>
+                                <div class="nom">
+                                    <Link v-if="p.slug" :href="`/abc/${p.slug}`" title="Ouvrir la fiche du projet">{{ p.nom }}</Link>
+                                    <template v-else>{{ p.nom }}</template>
+                                </div>
                                 <div class="sub">{{ p.structure_porteuse || '—' }}{{ p.departements ? ' · ' + p.departements : '' }}</div>
                                 <div v-if="p.note_auto" class="small text-muted mt-1" :title="p.note_auto">
                                     <div v-for="(ligne, i) in p.note_auto.split('\n')" :key="i">{{ ligne }}</div>
