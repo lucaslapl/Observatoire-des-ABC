@@ -62,7 +62,7 @@ class DatagouvCollector
                     'libelle_departement' => $r['libelle_departement'] ?? null,
                     'region' => $this->regions->label($r['region'] ?? null),
                     'libelle_pnr' => $r['libelle_pnr'] ?? null,
-                ]);
+                ], $key);
                 if ($c['code_geographique']) {
                     $communes[] = $c;
                 }

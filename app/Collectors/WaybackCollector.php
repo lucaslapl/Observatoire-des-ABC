@@ -59,7 +59,7 @@ class WaybackCollector
                     $c = $this->corrections->corrigerCommune([
                         'code_geographique' => $r['code_commune'] ?? '',
                         'libelle_geographique' => $r['commune'] ?? null,
-                    ]);
+                    ], $key);
                     if ($c['code_geographique']) {
                         $communes[] = $c;
                     }
