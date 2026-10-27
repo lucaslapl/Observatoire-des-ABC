@@ -17,7 +17,7 @@ class GeoJsonService
             ->join('projets as p', 'p.id', '=', 'communes.projet_id')
             ->leftJoin('verifications as v', 'v.projet_id', '=', 'p.id')
             ->select([
-                'communes.*', 'p.nom', 'p.structure_porteuse', 'p.annee_debut',
+                'communes.*', 'p.nom', 'p.slug', 'p.structure_porteuse', 'p.annee_debut',
                 'p.annee_fin', 'p.statut', 'p.source',
                 'p.potentiellement_termine', 'p.potentiellement_en_cours',
                 'p.estime_termine',
@@ -37,6 +37,7 @@ class GeoJsonService
                 'properties' => [
                     'projet_id' => $c->projet_id,
                     'nom' => $c->nom,
+                    'slug' => $c->slug,
                     'structure_porteuse' => $c->structure_porteuse,
                     'annee_debut' => $c->annee_debut,
                     'annee_fin' => $c->annee_fin,

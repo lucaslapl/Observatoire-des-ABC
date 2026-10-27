@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * d'agrégats (StatsService) : documentés pour l'analyse statique.
  *
  * @property string|null $nom
+ * @property string|null $slug
  * @property string|null $structure_porteuse
  * @property int|null $annee_debut
  * @property int|null $annee_fin

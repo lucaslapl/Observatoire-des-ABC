@@ -43,6 +43,20 @@ class GeoJsonParityTest extends TestCase
         $this->assertSame([-1.55, 47.20], $feature['geometry']['coordinates']);
     }
 
+    public function test_geojson_expose_le_slug_du_projet(): void
+    {
+        $projet = Projet::create([
+            'id' => 'abc-slug',
+            'nom' => 'ABC Slug',
+            'statut' => 'en_cours',
+            'source' => 'datagouv',
+        ]);
+        Commune::create(['projet_id' => 'abc-slug', 'code_geographique' => '10006', 'libelle_geographique' => 'A', 'lon' => 2.35, 'lat' => 48.85]);
+
+        $feature = app(GeoJsonService::class)->buildGeoJson()['features'][0];
+        $this->assertSame($projet->slug, $feature['properties']['slug']);
+    }
+
     public function test_geojson_statut_affichage_overrides_statut(): void
     {
         $projet = Projet::create([

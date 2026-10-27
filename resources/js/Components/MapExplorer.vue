@@ -3,7 +3,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
 import { router } from '@inertiajs/vue3';
 import { COLOR, METRO, DEFAULT_PALETTE_KEY, applyPalette, dStatut, fmtCount, visible } from '../map/constants.js';
-import { buildPopup as buildPopupHtml, buildMultiRow, buildMultiHeader } from '../map/popupBuilders.js';
+import { buildPopup as buildPopupHtml, buildMultiRow, buildMultiHeader, titreHtml } from '../map/popupBuilders.js';
 import { exportMap as exportMapImage } from '../map/exportImage.js';
 
 let L = null;
@@ -332,15 +332,15 @@ function apply() {
                     fillColor: COLOR[st] || COLOR.inconnu, fillOpacity: 0.9,
                 }).addTo(layer);
                 centroid.bindTooltip(
-                    `<b>${e.feats[0].properties.nom}</b> — ${e.feats.length} communes`,
-                    { direction: 'top', offset: [0, -12], className: 'map-tooltip' }
+                    `<b>${titreHtml(e.feats[0].properties)}</b> — ${e.feats.length} communes`,
+                    { direction: 'top', offset: [0, -12], className: 'map-tooltip', interactive: true }
                 );
                 const nomListe = e.feats.map(f => f.properties.commune);
                 const popupCommunes = nomListe.length > 15
                     ? nomListe.slice(0, 15).join(', ') + `, … et ${nomListe.length - 15} autres`
                     : nomListe.join(', ');
                 centroid.bindPopup(
-                    `<b>${e.feats[0].properties.nom}</b><br>` +
+                    `<b>${titreHtml(e.feats[0].properties)}</b><br>` +
                     `${e.feats.length} communes : ${popupCommunes}<br>` +
                     `<small>Cliquez pour voir les communes</small>`
                 );
@@ -901,6 +901,10 @@ html, body { margin: 0; }
 .leaflet-popup-content { max-height: 300px; overflow-y: auto; }
 .map-tooltip { background: #1f2937; color: #fff; border: none; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 500; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .map-tooltip::before { border-top-color: #1f2937; }
+.map-tooltip .pop-title { color: inherit; text-decoration: none; }
+.map-tooltip .pop-title:hover { color: #fff; text-decoration: underline; }
+.pop-title { color: inherit; text-decoration: none; }
+.pop-title:hover { color: #14532d; text-decoration: underline; }
 .pop-contrib { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
 .pop-contrib .contrib-toggle {
     border: 1px solid #cbd5e1; background: #fff; color: #14532d;

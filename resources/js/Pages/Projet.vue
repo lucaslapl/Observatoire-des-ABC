@@ -78,6 +78,8 @@ const fmtHistoriqueDate = (d) => {
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                 <h1 class="h3 mb-0">{{ projet.nom }}</h1>
                 <span class="badge" :class="statutClass(projet.statut)">{{ projet.statut_label }}</span>
+                <small v-if="!projet.statut_verifie" class="text-muted">d'après la source originale</small>
+                <small v-else class="text-muted">statut vérifié manuellement</small>
                 <span class="badge text-bg-light">{{ projet.source_label }}</span>
             </div>
 
@@ -128,7 +130,7 @@ const fmtHistoriqueDate = (d) => {
                         Début {{ projet.annee_debut }}, durée d'un ABC ≈ 3 ans : potentiellement terminé.
                     </div>
                     <div v-else-if="projet.potentiellement_en_cours" class="alert alert-light small mt-3 mb-0">
-                        Début annoncé {{ projet.annee_debut }}, toujours « va débuter » : potentiellement en cours.
+                        Début annoncé {{ projet.annee_debut }}, toujours « va débuter » d'après la source originale : potentiellement en cours.
                     </div>
                 </div>
             </div>

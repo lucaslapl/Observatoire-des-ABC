@@ -45,6 +45,15 @@ export function noteHtml(note) {
     return (out + esc(note.slice(last))).replace(/\n/g, '<br>');
 }
 
+/** Titre d'un projet : lien vers sa fiche (/abc/{slug}) quand le slug est
+ * connu, texte simple sinon. Échappe le nom en toutes circonstances. */
+export function titreHtml(p) {
+    const nom = esc(p.nom);
+    return p.slug
+        ? `<a class="pop-title" href="/abc/${esc(p.slug)}">${nom}</a>`
+        : nom;
+}
+
 /** Popup d'un point (une commune d'un projet). */
 export function buildPopup(p, isAdmin) {
     const src = p.source || '';
@@ -57,7 +66,7 @@ export function buildPopup(p, isAdmin) {
         (p.verif_lien ? `<br><small><a href="${p.verif_lien.replace(/"/g, '&quot;')}" target="_blank" rel="noopener">Lien source</a></small>` : '')
         : '';
     const info = [
-        `<b>${p.nom}</b><br>${p.commune}${p.departement ? ' (' + p.departement + ')' : ''}<br>`,
+        `<b>${titreHtml(p)}</b><br>${p.commune}${p.departement ? ' (' + p.departement + ')' : ''}<br>`,
         `Structure : ${p.structure_porteuse || '—'}<br>Année : ${p.annee_debut ? (p.annee_fin ? p.annee_debut + '–' + p.annee_fin : p.annee_debut) : '—'}<br>`,
         `<b>${p.categorie}</b>`,
         !confirme && p.potentiellement_termine ? `<br><b style="color:#8d6e63"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Potentiellement terminé</b><br><small>Début ${p.annee_debut}, durée d'un ABC ≈ 3 ans</small>` : '',
@@ -94,7 +103,7 @@ export function buildMultiRow(p, isAdmin) {
         : '';
     return `<div class="multi-row">` +
         `<span class="multi-chip" style="background:${color}"></span>` +
-        `<div class="multi-main"><div class="multi-name">${p.nom}</div>` +
+        `<div class="multi-main"><div class="multi-name">${titreHtml(p)}</div>` +
         `<div class="multi-tags"><span class="multi-badge" style="border-color:${color};color:${color}">${sLabel}${year}</span>` +
         srcChip(p) + verdict + `</div>${figee}</div>` +
         delBtn(p, isAdmin) +

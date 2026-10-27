@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    buildPopup, buildContribLink, buildMultiRow, buildMultiHeader, shortenUrl, noteHtml,
+    buildPopup, buildContribLink, buildMultiRow, buildMultiHeader, shortenUrl, noteHtml, titreHtml,
 } from '../../resources/js/map/popupBuilders.js';
 
 const base = {
@@ -30,6 +30,27 @@ test('buildPopup : contenu principal et lien de contribution', () => {
     assert.match(html, /Structure : Mairie/);
     assert.match(html, /data-sugg data-pid="abc-x"/);
     assert.doesNotMatch(html, /data-del-pid/);
+});
+
+test('titreHtml : titre lien vers la fiche quand le slug est connu, texte sinon', () => {
+    assert.equal(titreHtml({ ...base, slug: 'abc-test' }), '<a class="pop-title" href="/abc/abc-test">ABC Test</a>');
+    // Sans slug (ancien GeoJSON mis en cache) : texte simple, jamais de lien cassé.
+    assert.equal(titreHtml(base), 'ABC Test');
+    // Le nom est échappé, le slug aussi.
+    assert.equal(
+        titreHtml({ ...base, nom: 'ABC <Test> & "Ouest"', slug: 'abc-test' }),
+        '<a class="pop-title" href="/abc/abc-test">ABC &lt;Test&gt; &amp; &quot;Ouest&quot;</a>'
+    );
+});
+
+test('buildPopup : le titre est un lien vers la fiche projet quand le slug est présent', () => {
+    const html = buildPopup({ ...base, slug: 'abc-test' }, false);
+    assert.match(html, /<b><a class="pop-title" href="\/abc\/abc-test">ABC Test<\/a><\/b>/);
+});
+
+test('buildMultiRow : nom du projet en lien vers sa fiche quand le slug est présent', () => {
+    const html = buildMultiRow({ ...base, slug: 'abc-test' }, false);
+    assert.match(html, /multi-name"><a class="pop-title" href="\/abc\/abc-test">ABC Test<\/a>/);
 });
 
 test('buildPopup : bouton suppression uniquement pour un admin', () => {

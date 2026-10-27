@@ -77,7 +77,8 @@ class LandingService
 
         // Statut affiché : le verdict de vérification prime sur le statut
         // calculé, comme sur la carte (GeoJsonService::statut_affichage).
-        $statutAffiche = $this->status->statutDepuisVerification($projet->verification?->etat) ?? $projet->statut;
+        $statutVerifie = $this->status->statutDepuisVerification($projet->verification?->etat);
+        $statutAffiche = $statutVerifie ?? $projet->statut;
 
         return [
             'id' => $projet->id,
@@ -89,6 +90,10 @@ class LandingService
             'annee_fin' => $projet->annee_fin,
             'statut' => $statutAffiche,
             'statut_label' => $this->statutLabel($statutAffiche),
+            // Vrai quand le statut affiché vient d'une vérification manuelle ;
+            // faux quand il reprend tel quel la source d'origine (registre,
+            // Fonds vert, archives 2022).
+            'statut_verifie' => $statutVerifie !== null,
             'source' => $projet->source,
             'source_label' => $this->sourceLabel($projet->source),
             'url_page' => $projet->url_page,
