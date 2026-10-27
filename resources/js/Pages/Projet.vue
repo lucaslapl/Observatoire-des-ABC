@@ -75,7 +75,7 @@ const fmtHistoriqueDate = (d) => {
         />
         <div class="container py-4">
             <Breadcrumbs :items="crumbs" />
-            <div class="d-flex flex-wrap align-items-baseline gap-2 mb-3">
+            <div class="fiche-header d-flex flex-wrap align-items-baseline gap-2 mb-3">
                 <h1 class="h3 mb-0">{{ projet.nom }}</h1>
                 <span class="badge" :class="statutClass(projet.statut)">{{ projet.statut_label }}</span>
                 <small v-if="!projet.statut_verifie" class="text-muted">d'après la source originale</small>
@@ -171,6 +171,10 @@ const fmtHistoriqueDate = (d) => {
 </template>
 
 <style scoped>
+/* Badges de l'en-tête : alignés sur la ligne de base du titre, puis remontés
+   de 0,25em pour compenser le padding sous la ligne de base de la pastille —
+   sans ce décalage, la masse optique du badge paraît plus basse que le titre. */
+.fiche-header .badge { position: relative; top: -0.25em; }
 .historique-list .date { color: #94a3b8; font-variant-numeric: tabular-nums; margin-right: .5rem; }
 .historique-list .label { color: #334155; }
 .historique-list .detail { color: #64748b; }
