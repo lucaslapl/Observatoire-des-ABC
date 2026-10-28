@@ -115,8 +115,22 @@ class PageController extends Controller
                 'nb_communes' => $projet->communes->count(),
                 'nb_communes_ecartees' => $projet->communes->where('anomalie', true)->count(),
             ],
-            'patrimoine' => $this->patrimoine->pourPerimetre($this->codesPerimetre($projet)),
+            'patrimoine' => $this->patrimoine->pourPerimetre(
+                $this->codesPerimetre($projet),
+                $this->paramPage('znieff'),
+                $this->paramPage('natura'),
+                $this->paramPage('aires'),
+            ),
         ]);
+    }
+
+    /**
+     * Page courante d'une section paginée de /abc/{slug}/patrimoine
+     * (?znieff=N&natura=M&aires=K) : entier >= 1, borné par le service.
+     */
+    private function paramPage(string $param): int
+    {
+        return max(1, (int) request()->query($param, '1'));
     }
 
     /**

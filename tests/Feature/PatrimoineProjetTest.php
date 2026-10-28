@@ -128,20 +128,66 @@ class PatrimoineProjetTest extends TestCase
                 ->where('patrimoine.versions.znieff', 'extraction ZNIEFF INPN 2025')
                 // Une seule ZNIEFF : la zone « anomalie » et la zone hors ABC
                 // ne sortent pas, et la commune écartée n'est pas listée.
-                ->has('patrimoine.znieff', 1)
-                ->where('patrimoine.znieff.0.nom', 'BOIS DE LOUZAIE')
-                ->where('patrimoine.znieff.0.nb_especes_determinantes', 1)
-                ->has('patrimoine.znieff.0.communes', 1)
-                ->where('patrimoine.znieff.0.communes.0.libelle', 'Rives-du-Couesnon')
-                ->has('patrimoine.natura', 1)
-                ->where('patrimoine.natura.0.nb_habitats', 2)
-                ->where('patrimoine.natura.0.nb_especes', 1)
-                ->has('patrimoine.natura.0.communes', 1)
-                ->has('patrimoine.aires', 1)
+                ->where('patrimoine.znieff.total', 1)
+                ->has('patrimoine.znieff.items', 1)
+                ->where('patrimoine.znieff.items.0.nom', 'BOIS DE LOUZAIE')
+                ->where('patrimoine.znieff.items.0.nb_especes_determinantes', 1)
+                ->has('patrimoine.znieff.items.0.communes', 1)
+                ->where('patrimoine.znieff.items.0.communes.0.libelle', 'Rives-du-Couesnon')
+                ->where('patrimoine.natura.total', 1)
+                ->where('patrimoine.natura.items.0.nb_habitats', 2)
+                ->where('patrimoine.natura.items.0.nb_especes', 1)
+                ->has('patrimoine.natura.items.0.communes', 1)
+                ->where('patrimoine.aires.total', 1)
                 // Somme des recouvrements sur les communes retenues (42,7),
                 // le recouvrement de la commune écartée n'est pas compté
-                ->where('patrimoine.aires.0.surface_perimetre_ha', 42.7)
-                ->has('patrimoine.aires.0.communes', 1)
+                ->where('patrimoine.aires.items.0.surface_perimetre_ha', 42.7)
+                ->has('patrimoine.aires.items.0.communes', 1)
+        );
+    }
+
+    public function test_les_sections_sont_paginees_et_bornees(): void
+    {
+        $this->seedProjet();
+        $this->seedInpn();
+        // 27 ZNIEFF touchent la commune retenue : 2 pages (25 + 2).
+        $zones = [];
+        $liens = [];
+        for ($i = 0; $i < 26; $i++) {
+            $zones[] = ['id' => 1000 + $i, 'id_national' => '24'.str_pad((string) (10000 + $i), 8, '0', STR_PAD_LEFT), 'ty_zone' => 2, 'nom' => 'ZONE '.str_pad((string) $i, 3, '0', STR_PAD_LEFT), 'surface_ha' => 1];
+            $liens[] = ['znieff_id' => 1000 + $i, 'code_commune' => self::CODE];
+        }
+        DB::table('inpn_znieff')->insert($zones);
+        DB::table('inpn_znieff_communes')->insert($liens);
+
+        $assertPage1 = fn (Assert $page) => $page->component('ProjetPatrimoine')
+            ->where('patrimoine.znieff.total', 27)
+            ->where('patrimoine.znieff.page', 1)
+            ->where('patrimoine.znieff.pages', 2)
+            ->has('patrimoine.znieff.items', 25);
+
+        $this->get('/abc/'.self::SLUG.'/patrimoine')->assertOk()->assertInertia($assertPage1);
+
+        // Page 2 : les 2 zones restantes, la section Natura reste en page 1
+        $this->get('/abc/'.self::SLUG.'/patrimoine?znieff=2')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('ProjetPatrimoine')
+                ->where('patrimoine.znieff.page', 2)
+                ->has('patrimoine.znieff.items', 2)
+                // Les pages des autres sections ne bougent pas
+                ->where('patrimoine.natura.page', 1)
+                ->where('patrimoine.aires.page', 1)
+        );
+
+        // Pages invalides ou au-delà du nombre de pages : bornées
+        $this->get('/abc/'.self::SLUG.'/patrimoine?znieff=99')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('ProjetPatrimoine')
+                ->where('patrimoine.znieff.page', 2)
+                ->has('patrimoine.znieff.items', 2)
+        );
+        $this->get('/abc/'.self::SLUG.'/patrimoine?znieff=abc')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('ProjetPatrimoine')
+                ->where('patrimoine.znieff.page', 1)
+                ->has('patrimoine.znieff.items', 25)
         );
     }
 
@@ -158,9 +204,10 @@ class PatrimoineProjetTest extends TestCase
         $this->get('/abc/'.self::SLUG.'/patrimoine')->assertOk()->assertInertia(
             fn (Assert $page) => $page->component('ProjetPatrimoine')
                 ->where('patrimoine.present', false)
-                ->where('patrimoine.znieff', [])
-                ->where('patrimoine.natura', [])
-                ->where('patrimoine.aires', [])
+                ->where('patrimoine.znieff.total', 0)
+                ->where('patrimoine.znieff.items', [])
+                ->where('patrimoine.natura.total', 0)
+                ->where('patrimoine.aires.total', 0)
         );
     }
 

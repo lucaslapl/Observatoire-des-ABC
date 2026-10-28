@@ -58,6 +58,26 @@ const versionsTexte = computed(() => {
     if (v.aires) morceaux.push(`aires protégées : ${v.aires.toLowerCase()}`);
     return morceaux.join(', ');
 });
+
+/* Sections paginées côté serveur : la navigation d'une section conserve
+   la page courante des deux autres dans l'URL (?znieff=&natura=&aires=,
+   un paramètre absent vaut page 1). */
+const SECTIONS = ['znieff', 'natura', 'aires'];
+
+const pageUrl = (section, n) => {
+    const params = new URLSearchParams();
+    if (n > 1) params.set(section, String(n));
+    for (const autre of SECTIONS) {
+        if (autre !== section && pat.value[autre].page > 1) params.set(autre, String(pat.value[autre].page));
+    }
+    const q = params.toString();
+    return `/abc/${p.value.slug}/patrimoine${q ? '?' + q : ''}`;
+};
+
+const libelleTotal = (section, singulier, pluriel) => {
+    const total = pat.value[section].total;
+    return `${fmtNb(total)} ${total > 1 ? pluriel : singulier}`;
+};
 </script>
 
 <template>
@@ -80,8 +100,8 @@ const versionsTexte = computed(() => {
             </p>
 
             <template v-if="pat.present">
-                <section v-if="pat.znieff.length" class="mb-4" aria-label="ZNIEFF">
-                    <h2 class="h5">ZNIEFF</h2>
+                <section v-if="pat.znieff.total" class="mb-4" aria-label="ZNIEFF">
+                    <h2 class="h5">ZNIEFF <small class="text-muted fs-6">{{ libelleTotal('znieff', 'zone', 'zones') }}</small></h2>
                     <p class="small text-muted">
                         Zones naturelles d'intérêt écologique, faunistique et floristique recensées sur au moins une commune du périmètre.
                     </p>
@@ -91,10 +111,10 @@ const versionsTexte = computed(() => {
                                 <tr><th>Nom</th><th>Type</th><th class="text-end">Surface (ha)</th><th class="text-end">Espèces déterminantes</th><th>Communes du périmètre</th></tr>
                             </thead>
                             <tbody>
-                                <tr v-for="z in pat.znieff" :key="z.id_national">
+                                <tr v-for="z in pat.znieff.items" :key="z.id_national">
                                     <td>
                                         <Link class="text-reset text-decoration-none" :href="`/patrimoine/znieff/${z.id_national}`" :title="`Fiche ZNIEFF ${z.nom}`">{{ z.nom }}</Link>
-                                        <span class="text-muted">({{ z.id_national }})</span>
+                                        <span class="text-muted"> ({{ z.id_national }})</span>
                                     </td>
                                     <td><span class="badge text-bg-light" :title="z.ty_zone === 1 ? 'Secteur de grand intérêt biologique' : 'Grand ensemble naturel riche'">Type {{ z.ty_zone }}</span></td>
                                     <td class="text-end">{{ z.surface_ha ? fmtNb(z.surface_ha, 0) : '—' }}</td>
@@ -109,10 +129,21 @@ const versionsTexte = computed(() => {
                             </tbody>
                         </table>
                     </div>
+                    <nav v-if="pat.znieff.pages > 1" aria-label="Pagination ZNIEFF">
+                        <ul class="pagination pagination-sm">
+                            <li class="page-item" :class="{ disabled: pat.znieff.page <= 1 }">
+                                <Link class="page-link" :href="pageUrl('znieff', pat.znieff.page - 1)" :aria-disabled="pat.znieff.page <= 1">Précédent</Link>
+                            </li>
+                            <li class="page-item disabled"><span class="page-link">Page {{ pat.znieff.page }} / {{ pat.znieff.pages }}</span></li>
+                            <li class="page-item" :class="{ disabled: pat.znieff.page >= pat.znieff.pages }">
+                                <Link class="page-link" :href="pageUrl('znieff', pat.znieff.page + 1)">Suivant</Link>
+                            </li>
+                        </ul>
+                    </nav>
                 </section>
 
-                <section v-if="pat.natura.length" class="mb-4" aria-label="Sites Natura 2000">
-                    <h2 class="h5">Sites Natura 2000</h2>
+                <section v-if="pat.natura.total" class="mb-4" aria-label="Sites Natura 2000">
+                    <h2 class="h5">Sites Natura 2000 <small class="text-muted fs-6">{{ libelleTotal('natura', 'site', 'sites') }}</small></h2>
                     <p class="small text-muted">
                         Sites du réseau européen Natura 2000 (directive Habitats ou Oiseaux) touchant au moins une commune du périmètre.
                     </p>
@@ -122,10 +153,10 @@ const versionsTexte = computed(() => {
                                 <tr><th>Site</th><th>Type</th><th class="text-end">Habitats</th><th class="text-end">Espèces (directive)</th><th>Communes du périmètre</th></tr>
                             </thead>
                             <tbody>
-                                <tr v-for="s in pat.natura" :key="s.sitecode">
+                                <tr v-for="s in pat.natura.items" :key="s.sitecode">
                                     <td>
                                         <Link class="text-reset text-decoration-none" :href="`/patrimoine/natura/${s.sitecode}`" :title="`Fiche Natura 2000 ${s.nom || s.sitecode}`">{{ s.nom || 'Site ' + s.sitecode }}</Link>
-                                        <span class="text-muted">({{ s.sitecode }})</span>
+                                        <span class="text-muted"> ({{ s.sitecode }})</span>
                                     </td>
                                     <td><span class="badge text-bg-light" :title="s.type_site === 'ZPS' ? 'Zone de protection spéciale (directive Oiseaux)' : 'Zone spéciale de conservation (directive Habitats)'">{{ s.type_site === 'ZPS' ? 'ZPS' : 'ZSC' }}</span></td>
                                     <td class="text-end">{{ s.nb_habitats || '—' }}</td>
@@ -140,10 +171,21 @@ const versionsTexte = computed(() => {
                             </tbody>
                         </table>
                     </div>
+                    <nav v-if="pat.natura.pages > 1" aria-label="Pagination sites Natura 2000">
+                        <ul class="pagination pagination-sm">
+                            <li class="page-item" :class="{ disabled: pat.natura.page <= 1 }">
+                                <Link class="page-link" :href="pageUrl('natura', pat.natura.page - 1)" :aria-disabled="pat.natura.page <= 1">Précédent</Link>
+                            </li>
+                            <li class="page-item disabled"><span class="page-link">Page {{ pat.natura.page }} / {{ pat.natura.pages }}</span></li>
+                            <li class="page-item" :class="{ disabled: pat.natura.page >= pat.natura.pages }">
+                                <Link class="page-link" :href="pageUrl('natura', pat.natura.page + 1)">Suivant</Link>
+                            </li>
+                        </ul>
+                    </nav>
                 </section>
 
-                <section v-if="pat.aires.length" class="mb-4" aria-label="Aires protégées">
-                    <h2 class="h5">Aires protégées</h2>
+                <section v-if="pat.aires.total" class="mb-4" aria-label="Aires protégées">
+                    <h2 class="h5">Aires protégées <small class="text-muted fs-6">{{ libelleTotal('aires', 'aire', 'aires') }}</small></h2>
                     <p class="small text-muted">
                         Aires protégées (APA-INPN) recouvrant au moins une commune du périmètre.
                     </p>
@@ -153,7 +195,7 @@ const versionsTexte = computed(() => {
                                 <tr><th>Nom</th><th>Type</th><th class="text-end">Sur le périmètre (ha)</th><th>Document de gestion</th><th>Communes du périmètre</th></tr>
                             </thead>
                             <tbody>
-                                <tr v-for="a in pat.aires" :key="a.id_mnhn">
+                                <tr v-for="a in pat.aires.items" :key="a.id_mnhn">
                                     <td>
                                         <a v-if="a.lien_fiche" :href="a.lien_fiche" target="_blank" rel="noopener">{{ a.nom }}</a>
                                         <template v-else>{{ a.nom }}</template>
@@ -175,6 +217,17 @@ const versionsTexte = computed(() => {
                         Les surfaces sur le périmètre sont des recouvrements calculés (approche décimétrique à l'échelle communale) :
                         à considérer comme des ordres de grandeur.
                     </p>
+                    <nav v-if="pat.aires.pages > 1" aria-label="Pagination aires protégées">
+                        <ul class="pagination pagination-sm">
+                            <li class="page-item" :class="{ disabled: pat.aires.page <= 1 }">
+                                <Link class="page-link" :href="pageUrl('aires', pat.aires.page - 1)" :aria-disabled="pat.aires.page <= 1">Précédent</Link>
+                            </li>
+                            <li class="page-item disabled"><span class="page-link">Page {{ pat.aires.page }} / {{ pat.aires.pages }}</span></li>
+                            <li class="page-item" :class="{ disabled: pat.aires.page >= pat.aires.pages }">
+                                <Link class="page-link" :href="pageUrl('aires', pat.aires.page + 1)">Suivant</Link>
+                            </li>
+                        </ul>
+                    </nav>
                 </section>
 
                 <p class="small">
