@@ -119,6 +119,7 @@ const seoJsonLd = computed(() => {
                         </p>
                         <p class="mt-3 mb-0">
                             <a class="btn btn-outline-success btn-sm" href="/carte">Accéder à la carte complète</a>
+                            <Link class="btn btn-outline-success btn-sm ms-2" href="/abc">Tous les ABC — liste filtrable</Link>
                             <Link class="btn btn-outline-success btn-sm ms-2" href="/a-propos">En savoir plus</Link>
                             <Link class="btn btn-outline-success btn-sm ms-2" href="/actualites">Suivre l'actualité</Link>
                             <Link class="btn btn-outline-success btn-sm ms-2" href="/verify">Page de vérification</Link>

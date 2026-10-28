@@ -12,6 +12,7 @@ defineProps({
 const pages = [
     { name: 'home', component: 'Map', label: 'Accueil', icon: 'bi-house', href: '/' },
     { name: 'Carte', component: 'Carte', label: 'Carte des ABC', icon: 'bi-map', href: '/carte' },
+    { name: 'liste', component: 'ProjetsListe', label: 'Tous les ABC', icon: 'bi-list-ul', href: '/abc' },
     { name: 'verify', component: 'Verify', label: 'Vérification', icon: 'bi-clipboard-check', href: '/verify' },
     { name: 'actualites', component: 'Actualites', label: 'Actualités', icon: 'bi-newspaper', href: '/actualites' },
 ];
