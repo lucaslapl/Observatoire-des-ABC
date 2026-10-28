@@ -239,7 +239,7 @@ class PatrimoineFicheService
         $especes = DB::table('inpn_natura_especes')
             ->where('sitecode', $sitecode)
             ->orderBy('nom_scientifique')
-            ->get(['code_n2000', 'nom_scientifique', 'nom_vernaculaire', 'annexe_ii', 'annexe_1', 'prioritaire'])
+            ->get(['code_n2000', 'nom_scientifique', 'nom_vernaculaire', 'annexe_ii', 'annexe_1', 'prioritaire', 'presences'])
             ->map(fn ($e) => [
                 'code_n2000' => (string) $e->code_n2000,
                 'nom_scientifique' => $e->nom_scientifique !== null ? (string) $e->nom_scientifique : null,
@@ -247,6 +247,7 @@ class PatrimoineFicheService
                 'annexe_ii' => (bool) $e->annexe_ii,
                 'annexe_1' => (bool) $e->annexe_1,
                 'prioritaire' => (bool) $e->prioritaire,
+                'presences' => $e->presences !== null ? (string) $e->presences : null,
             ])
             ->all();
 

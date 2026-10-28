@@ -20,6 +20,16 @@ const crumbs = [
 
 const typeLabel = computed(() => (s.value.type_site === 'ZPS' ? 'ZPS — zone de protection spéciale' : 'ZSC — zone spéciale de conservation'));
 
+/* Statuts biologiques du formulaire standard (FSD) : r = reproduction,
+   c = concentration, w = hivernage, p = passage/migration. */
+const presenceLabel = (p) =>
+    p
+        ? p
+              .split(',')
+              .map((x) => ({ r: 'nicheuse', c: 'concentration', w: 'hivernante', p: 'de passage' })[x] || x)
+              .join(', ')
+        : null;
+
 const pageTitle = computed(() => `Site Natura 2000 ${s.value.nom || s.value.sitecode} (${s.value.sitecode})`);
 const pageDescription = computed(() =>
     `Site Natura 2000 ${typeLabel.value.split(' — ')[0]} « ${s.value.nom || s.value.sitecode} » : habitats et espèces de la directive Habitats, communes ABC concernées, d'après la base INPN.`
@@ -123,7 +133,10 @@ const jsonLd = computed(() => [
                         </thead>
                         <tbody>
                             <tr v-for="(e, i) in s.especes" :key="i">
-                                <td><em>{{ e.nom_scientifique || '—' }}</em></td>
+                                <td>
+                                    <em>{{ e.nom_scientifique || '—' }}</em>
+                                    <span v-if="presenceLabel(e.presences)" class="text-muted small"> ({{ presenceLabel(e.presences) }})</span>
+                                </td>
                                 <td>{{ e.nom_vernaculaire || '—' }}</td>
                                 <td><span class="badge text-bg-light">{{ e.code_n2000.startsWith('A') ? 'Oiseaux' : 'Habitats' }}</span></td>
                                 <td>

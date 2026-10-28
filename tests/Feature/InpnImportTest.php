@@ -133,6 +133,7 @@ class InpnImportTest extends TestCase
         $this->assertSame('Fuligule morillon', $oiseau->nom_vernaculaire);
         $this->assertTrue((bool) $oiseau->annexe_1);
         $this->assertFalse((bool) $oiseau->annexe_ii);
+        $this->assertSame('r,w', $oiseau->presences); // deux lignes FSD fusionnees
         // Espèce Habitats : nom, annexe II et prioritaire venus du référentiel DHFF
         $loutre = $this->dbRow('inpn_natura_especes', ['sitecode' => 'FR8212001', 'code_n2000' => '1355']);
         $this->assertSame('Lutra lutra', $loutre->nom_scientifique);
@@ -140,6 +141,7 @@ class InpnImportTest extends TestCase
         $this->assertTrue((bool) $loutre->annexe_ii);
         $this->assertTrue((bool) $loutre->prioritaire);
         $this->assertFalse((bool) $loutre->annexe_1);
+        $this->assertSame('c', $loutre->presences);
     }
 
     public function test_import_aires_protegees_convertit_cp1252(): void
@@ -270,11 +272,14 @@ class InpnImportTest extends TestCase
             .'"64688";"FRXXXXXXX";"2110";"2682";"0.10";"B";"C";"0.10";'."\n");
 
         file_put_contents($dir.'/species.csv.csv',
-            '"id_species";"sitecode";"code_n2000";"cd_ref";"taxgroup";"annexe_ii";"date_supp"'."\n"
+            '"id_species";"sitecode";"code_n2000";"cd_ref";"taxgroup";"annexe_ii";"type";"date_supp"'."\n"
             // A### = oiseaux (directive Oiseaux) ; 1355 = Lutra (directive Habitats).
-            .'"95048";"FR8212001";"A061";"1998";"B";"N";'."\n"
-            .'"95050";"FR8212001";"1355";"60758";"M";"Y";'."\n"
-            .'"95049";"FR8212001";"A234";"100";"B";"N";"2021-05-05"'."\n");
+            // A061 apparait deux fois : le FSD compte une ligne par statut
+            // biologique (r/c/w/p) — l'import fusionne en une ligne unique.
+            .'"95048";"FR8212001";"A061";"1998";"B";"N";"w";'."\n"
+            .'"95051";"FR8212001";"A061";"1998";"B";"N";"r";'."\n"
+            .'"95050";"FR8212001";"1355";"60758";"M";"Y";"c";'."\n"
+            .'"95049";"FR8212001";"A234";"100";"B";"N";"p";"2021-05-05"'."\n");
 
         file_put_contents($dir.'/code_do_oiseaux.csv.csv',
             '"code_n2000";"cd_nom";"cd_ref";"nom_n2000";"lb_nom";"lb_auteur";"nom_vern";"annexe_i"'."\n"

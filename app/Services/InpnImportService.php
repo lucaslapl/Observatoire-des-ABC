@@ -371,6 +371,7 @@ class InpnImportService
 
         $count = 0;
         $chunk = [];
+        $seen = []; // rares doublons dans la base INPN (~28) : première occurrence
         foreach ($this->csv->iterate($file) as $rec) {
             $rec = $this->lower($rec);
             if (! empty($rec['date_supp'] ?? '')) {
@@ -380,6 +381,11 @@ class InpnImportService
             if (! isset($sitecodes[$sitecode])) {
                 continue;
             }
+            $key = $sitecode.'|'.($rec['cd_ue'] ?? '').'|'.($rec['cd_hab'] ?? '');
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
             $chunk[] = [
                 'sitecode' => $sitecode,
                 'cd_ue' => $rec['cd_ue'] ?? '',
@@ -421,6 +427,10 @@ class InpnImportService
 
         $count = 0;
         $chunk = [];
+        // Le FSD compte une ligne par statut biologique (r/c/w/p) : une
+        // même espèce-site apparaît jusqu'à 4 fois. On dédoublonne en
+        // fusionnant les statuts dans « presences » (ex. « c,r,w »).
+        $uniques = [];
         foreach ($this->csv->iterate($file) as $rec) {
             $rec = $this->lower($rec);
             if (! empty($rec['date_supp'] ?? '')) {
@@ -431,18 +441,44 @@ class InpnImportService
                 continue;
             }
             $codeN2000 = $rec['code_n2000'] ?? '';
-            $ref = $referentiel[$codeN2000] ?? [];
+            $cdRef = $this->intOrNull($rec['cd_ref'] ?? null);
+            $key = $sitecode.'|'.$codeN2000.'|'.(string) $cdRef;
+            $statut = $this->nullIfEmpty($rec['type'] ?? null);
+            if (isset($uniques[$key])) {
+                if ($statut !== null && ! in_array($statut, $uniques[$key]['statuts'], true)) {
+                    $uniques[$key]['statuts'][] = $statut;
+                }
+
+                continue;
+            }
+            $uniques[$key] = [
+                'row' => [
+                    'sitecode' => $sitecode,
+                    'code_n2000' => $codeN2000,
+                    'cd_ref' => $cdRef,
+                    'taxgroup' => $this->nullIfEmpty($rec['taxgroup'] ?? null),
+                    'annexe_ii' => $this->nullIfEmpty($rec['annexe_ii'] ?? null),
+                ],
+                'statuts' => $statut !== null ? [$statut] : [],
+            ];
+        }
+
+        foreach ($uniques as $u) {
+            $ref = $referentiel[$u['row']['code_n2000']] ?? [];
+            $annexeIi = $u['row']['annexe_ii'] ?? $ref['annexe_ii'] ?? '';
+            $statuts = $u['statuts'];
+            sort($statuts);
             $chunk[] = [
-                'sitecode' => $sitecode,
-                'code_n2000' => $codeN2000,
-                'cd_ref' => $this->intOrNull($rec['cd_ref'] ?? null),
-                'nom_scientifique' => $ref['nom'] ?? $this->nullIfEmpty($rec['nom_eval_2013'] ?? null),
+                'sitecode' => $u['row']['sitecode'],
+                'code_n2000' => $u['row']['code_n2000'],
+                'cd_ref' => $u['row']['cd_ref'],
+                'nom_scientifique' => $ref['nom'] ?? null,
                 'nom_vernaculaire' => $ref['vern'] ?? null,
-                'taxgroup' => $this->nullIfEmpty($rec['taxgroup'] ?? null),
-                'annexe_ii' => ($rec['annexe_ii'] ?? $ref['annexe_ii'] ?? '') === 'Y'
-                    || ($rec['annexe_ii'] ?? $ref['annexe_ii'] ?? '') === 'true',
+                'taxgroup' => $u['row']['taxgroup'],
+                'annexe_ii' => $annexeIi === 'Y' || $annexeIi === 'true',
                 'annexe_1' => ($ref['annexe_1'] ?? '') === 'Y',
                 'prioritaire' => ($ref['prioritaire'] ?? '') === 'true',
+                'presences' => $statuts !== [] ? implode(',', $statuts) : null,
             ];
             $count++;
             if (count($chunk) >= self::BATCH) {
