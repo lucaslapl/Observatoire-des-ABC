@@ -128,7 +128,7 @@ const jsonLd = computed(() => [
                         </thead>
                         <tbody>
                             <tr v-for="h in s.habitats" :key="h.cd_ue + (h.cd_hab || '')">
-                                <td>
+                                <td class="habitat-nom">
                                     <span class="badge text-bg-light">{{ h.cd_ue }}</span>
                                     <span v-if="h.prioritaire" class="badge text-bg-warning" title="Habitat prioritaire (directive Habitats)">prioritaire</span>
                                     <span v-if="h.nom"> {{ h.nom }}</span>
@@ -208,3 +208,12 @@ const jsonLd = computed(() => [
         </div>
     </Layout>
 </template>
+
+<style scoped>
+/* Les noms d'habitats (annexe I) sont longs : la colonne est bornée
+   pour les faire passer à la ligne et laisser respirer les notations. */
+.habitat-nom {
+    max-width: 26rem;
+    min-width: 16rem;
+}
+</style>
