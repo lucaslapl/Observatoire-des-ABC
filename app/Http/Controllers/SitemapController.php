@@ -86,6 +86,24 @@ class SitemapController extends Controller
                 $urls[] = $this->entry($base.'/patrimoine/natura/'.$n->sitecode, null, '0.4', 'monthly');
             }
 
+            // Pages « patrimoine du périmètre » des fiches ABC : une URL par
+            // projet dont au moins une commune (non écartée) touche un zonage
+            // ou une aire des référentiels INPN.
+            $codesInpn = DB::table('inpn_znieff_communes')->whereIn('code_commune', $codesAbc)->distinct()->pluck('code_commune')
+                ->merge(DB::table('inpn_natura_communes')->whereIn('code_commune', $codesAbc)->distinct()->pluck('code_commune'))
+                ->merge(DB::table('inpn_aires_protegees_communes')->whereIn('code_commune', $codesAbc)->distinct()->pluck('code_commune'))
+                ->unique();
+            foreach (DB::table('projets')
+                ->whereNotNull('slug')
+                ->whereIn('id', fn ($q) => $q->select('projet_id')
+                    ->from('communes')
+                    ->whereIn('code_geographique', $codesInpn)
+                    ->where('anomalie', false))
+                ->orderBy('slug')
+                ->pluck('slug') as $slug) {
+                $urls[] = $this->entry($base.'/abc/'.$slug.'/patrimoine', null, '0.4', 'monthly');
+            }
+
             $lines = implode("\n", $urls);
 
             return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

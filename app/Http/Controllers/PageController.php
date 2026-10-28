@@ -72,7 +72,68 @@ class PageController extends Controller
 
         return Inertia::render('Projet', [
             'projet' => $this->landing->projet($projet),
+            // Comptages INPN sur le périmètre (communes non écartées) :
+            // annoncent la page dédiée ci-dessous quand il y a du patrimoine.
+            'patrimoine_resume' => $this->patrimoine->resumePerimetre($this->codesPerimetre($projet)),
         ]);
+    }
+
+    /**
+     * Page dédiée « patrimoine écologique du périmètre » d'un ABC
+     * (/abc/{slug}/patrimoine) : ZNIEFF, sites Natura 2000 et aires
+     * protégées touchant les communes du périmètre. Même résolution
+     * d'alias que la fiche projet (301 vers le projet canonique).
+     */
+    public function projetPatrimoine(string $slug): Response|RedirectResponse
+    {
+        $projet = Projet::where('slug', $slug)->first();
+
+        if (! $projet) {
+            $alias = ProjectAlias::where('alias_slug', $slug)->first();
+            if ($alias && ($canonique = Projet::find($alias->project_id))) {
+                return redirect()->to('/abc/'.$canonique->slug.'/patrimoine', 301);
+            }
+            abort(404);
+        }
+
+        $projet->loadMissing('communes');
+
+        $regionLabel = $projet->communes
+            ->map(fn ($c) => $this->landing->regionLabel($c->region))
+            ->filter()
+            ->countBy()
+            ->sortDesc()
+            ->keys()
+            ->first();
+
+        return Inertia::render('ProjetPatrimoine', [
+            'projet' => [
+                'nom' => $projet->nom,
+                'slug' => $projet->slug,
+                'region_label' => $regionLabel,
+                'region_slug' => $regionLabel ? $this->landing->regionSlug($regionLabel) : null,
+                'nb_communes' => $projet->communes->count(),
+                'nb_communes_ecartees' => $projet->communes->where('anomalie', true)->count(),
+            ],
+            'patrimoine' => $this->patrimoine->pourPerimetre($this->codesPerimetre($projet)),
+        ]);
+    }
+
+    /**
+     * Codes INSEE des communes du périmètre retenues pour le patrimoine
+     * INPN : les communes « anomalie » (association douteuse) sont écartées,
+     * comme pour la démographie de la fiche.
+     *
+     * @return array<int, string>
+     */
+    private function codesPerimetre(Projet $projet): array
+    {
+        return $projet->communes
+            ->where('anomalie', false)
+            ->pluck('code_geographique')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function commune(string $code): Response

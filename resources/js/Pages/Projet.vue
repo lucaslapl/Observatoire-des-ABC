@@ -8,6 +8,7 @@ import { COLOR, DEFAULT_PALETTE_KEY, applyPalette } from '../map/constants.js';
 
 const props = defineProps({
     projet: { type: Object, required: true },
+    patrimoine_resume: { type: Object, required: true },
 });
 
 const page = usePage();
@@ -248,6 +249,30 @@ onBeforeUnmount(() => {
                             <div v-else-if="projet.potentiellement_en_cours" class="alert alert-light small mt-3 mb-0">
                                 Début annoncé {{ projet.annee_debut }}, toujours « va débuter » d'après la source originale : potentiellement en cours.
                             </div>
+                        </div>
+                    </div>
+
+                    <div v-if="patrimoine_resume.present" class="card shadow-sm mb-4">
+                        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <h2 class="h6 mb-1">
+                                    <i class="bi bi-tree me-1" aria-hidden="true"></i>
+                                    Patrimoine écologique du périmètre
+                                </h2>
+                                <p class="small text-muted mb-0">
+                                    Inventaires nationaux (<a href="https://inpn.mnhn.fr" target="_blank" rel="noopener">INPN</a>) touchant les communes du périmètre :
+                                    <template v-if="patrimoine_resume.nb_znieff"><strong>{{ patrimoine_resume.nb_znieff }}</strong> ZNIEFF<template v-if="patrimoine_resume.nb_natura || patrimoine_resume.nb_aires"> · </template></template>
+                                    <template v-if="patrimoine_resume.nb_natura"><strong>{{ patrimoine_resume.nb_natura }}</strong> site(s) Natura 2000<template v-if="patrimoine_resume.nb_aires"> · </template></template>
+                                    <template v-if="patrimoine_resume.nb_aires"><strong>{{ patrimoine_resume.nb_aires }}</strong> aire(s) protégée(s)</template>.
+                                </p>
+                            </div>
+                            <Link
+                                class="btn btn-success btn-sm text-nowrap"
+                                :href="`/abc/${projet.slug}/patrimoine`"
+                            >
+                                Explorer le patrimoine
+                                <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                            </Link>
                         </div>
                     </div>
 

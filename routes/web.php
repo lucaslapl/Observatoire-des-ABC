@@ -56,6 +56,8 @@ Route::get('/actualites', [PageController::class, 'actualites'])->name('actualit
 Route::get('/actualites/{actualite:slug}', [PageController::class, 'actualite'])->name('actualites.show');
 
 Route::get('/abc/{slug}', [PageController::class, 'projet'])->name('abc.show');
+// Patrimoine écologique INPN du périmètre d'un ABC (page dédiée de la fiche).
+Route::get('/abc/{slug}/patrimoine', [PageController::class, 'projetPatrimoine'])->name('abc.patrimoine');
 Route::get('/commune/{code}', [PageController::class, 'commune'])->name('commune.show');
 
 // Patrimoine écologique INPN (ZNIEFF, Natura 2000) : uniquement les

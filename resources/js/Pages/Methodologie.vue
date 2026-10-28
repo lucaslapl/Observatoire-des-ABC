@@ -151,7 +151,9 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
 
             <h2>6. Le patrimoine écologique : des faits bruts de l'INPN</h2>
             <p>
-                Les pages communes affichent les inventaires nationaux du patrimoine naturel
+                Les pages communes et les fiches projet (bloc « patrimoine écologique du
+                périmètre » et sa page dédiée) affichent les inventaires nationaux du
+                patrimoine naturel
                 (<a href="https://inpn.mnhn.fr" rel="noopener" target="_blank">INPN</a>,
                 Muséum national d'Histoire naturelle) qui touchent le territoire :
                 <strong>ZNIEFF</strong> (zones naturelles d'intérêt écologique, faunistique et
