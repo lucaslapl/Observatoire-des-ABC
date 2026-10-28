@@ -34,6 +34,7 @@ class PageController extends Controller
             'meta' => $this->stats->meta(),
             'index' => $this->stats->index(),
             'journal' => $this->changelog->paginate(),
+            'dernieresActualites' => $this->publishedActualites(3, 160),
             'isAdmin' => auth()->check() && auth()->user()->hasRole('admin'),
         ]);
     }
@@ -235,23 +236,33 @@ class PageController extends Controller
 
     public function actualites(): Response
     {
-        $actualites = Actualite::query()
+        return Inertia::render('Actualites', ['actualites' => $this->publishedActualites()]);
+    }
+
+    /**
+     * Actualités publiées (date passée ou absente), les plus récentes d'abord.
+     * La liste publique n'affiche qu'un extrait en texte brut : le Markdown
+     * brut ne doit jamais fuiter dans les pages index.
+     *
+     * @return array<int, array{id: int, titre: string, slug: string, extrait: string, date_publication: string|null}>
+     */
+    private function publishedActualites(?int $limit = null, int $extrait = 300): array
+    {
+        return Actualite::query()
             ->where('statut', 'publie')
             ->where(fn ($q) => $q->whereNull('date_publication')->orWhere('date_publication', '<=', now()))
             ->orderByDesc('date_publication')
+            ->when($limit, fn ($q) => $q->limit($limit))
             ->get(['id', 'titre', 'slug', 'contenu', 'date_publication'])
-            // La liste publique n'affiche qu'un extrait en texte brut : le
-            // Markdown brut ne doit jamais fuiter dans les pages index.
             ->map(fn (Actualite $a) => [
                 'id' => $a->id,
                 'titre' => $a->titre,
                 'slug' => $a->slug,
-                'extrait' => $this->markdown->toText($a->contenu, 300),
+                'extrait' => $this->markdown->toText($a->contenu, $extrait),
                 'date_publication' => $a->date_publication?->toDateString(),
             ])
-            ->values();
-
-        return Inertia::render('Actualites', ['actualites' => $actualites]);
+            ->values()
+            ->all();
     }
 
     public function diag(): array

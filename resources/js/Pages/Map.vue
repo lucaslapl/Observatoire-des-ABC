@@ -24,6 +24,10 @@ const props = defineProps({
         type: Object,
         default: () => ({ items: [], page: 1, last_page: 1, total: 0, has_prev: false, has_next: false }),
     },
+    dernieresActualites: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const page = usePage();
@@ -31,6 +35,8 @@ const site = computed(() => page.props.site || {});
 const authUser = computed(() => page.props.auth?.user || null);
 const fmtSourceDate = (d) =>
     d ? new Date(`${d}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+const fmtActuDate = (d) =>
+    d ? new Date(`${d}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 const fmtJournalDate = (d) => {
     if (!d) return '—';
     const dt = new Date(d.replace(' ', 'T'));
@@ -130,9 +136,48 @@ const seoJsonLd = computed(() => {
                             <Link href="/register?raison=contribution">Créez un compte</Link>
                             pour proposer vos corrections et suivre leurs validations.
                         </p>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="contribute-card">
+                            <h2><i class="bi bi-pencil-square" aria-hidden="true"></i> Contribuer à l'Observatoire</h2>
+                            <p>
+                                L'Observatoire s'appuie sur des données publiques, mais votre connaissance du terrain
+                                compte tout autant : corrigez un statut, précisez une période, signalez un projet manquant.
+                            </p>
+                            <template v-if="!authUser">
+                                <Link class="btn btn-success btn-sm" href="/register?raison=contribution">Créer un compte</Link>
+                                <Link class="btn btn-outline-success btn-sm ms-1" href="/login">Se connecter</Link>
+                                <div class="mt-1">
+                                    <Link class="alt" href="/login">Déjà inscrit ? Connectez-vous pour retrouver vos contributions.</Link>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <Link class="btn btn-success btn-sm" href="/profil">Gérer mes contributions</Link>
+                            </template>
+                        </div>
+                    </div>
+                </div>
 
-                        <section class="home-changelog mt-4" aria-label="Dernières mises à jour de la carte">
-                            <h2 class="h5"><i class="bi bi-clock-history me-1" aria-hidden="true"></i> Dernières mises à jour de la carte</h2>
+                <h2 class="home-band-title">Suivre l'Observatoire</h2>
+                <div class="row g-4">
+                    <div v-if="dernieresActualites.length" class="col-lg-5">
+                        <section class="home-actus h-100" aria-label="Dernières actualités">
+                            <h3 class="h6"><i class="bi bi-newspaper me-1" aria-hidden="true"></i> Dernières actualités</h3>
+                            <ul class="list-unstyled actus-list mb-2">
+                                <li v-for="a in dernieresActualites" :key="a.id">
+                                    <span class="date">{{ fmtActuDate(a.date_publication) }}</span>
+                                    <Link class="titre" :href="`/actualites/${a.slug}`">{{ a.titre }}</Link>
+                                    <p class="extrait mb-0">{{ a.extrait }}</p>
+                                </li>
+                            </ul>
+                            <Link class="actus-tout" href="/actualites">
+                                Toutes les actualités<i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                            </Link>
+                        </section>
+                    </div>
+                    <div :class="dernieresActualites.length ? 'col-lg-7' : 'col-12'">
+                        <section class="home-changelog h-100" aria-label="Dernières mises à jour de la carte">
+                            <h3 class="h6"><i class="bi bi-clock-history me-1" aria-hidden="true"></i> Dernières mises à jour de la carte</h3>
                             <p class="small text-muted">
                                 Corrections et vérifications appliquées aux données publiées : dates validées,
                                 statuts corrigés, doublons fusionnés…
@@ -181,32 +226,21 @@ const seoJsonLd = computed(() => {
                             </nav>
                         </section>
                     </div>
+                </div>
+
+                <h2 class="home-band-title">Explorer par territoire</h2>
+                <div class="row g-4">
                     <div class="col-lg-4">
-                        <div class="contribute-card mb-4">
-                            <h2><i class="bi bi-pencil-square" aria-hidden="true"></i> Contribuer à l'Observatoire</h2>
-                            <p>
-                                L'Observatoire s'appuie sur des données publiques, mais votre connaissance du terrain
-                                compte tout autant : corrigez un statut, précisez une période, signalez un projet manquant.
-                            </p>
-                            <template v-if="!authUser">
-                                <Link class="btn btn-success btn-sm" href="/register?raison=contribution">Créer un compte</Link>
-                                <Link class="btn btn-outline-success btn-sm ms-1" href="/login">Se connecter</Link>
-                                <div class="mt-1">
-                                    <Link class="alt" href="/login">Déjà inscrit ? Connectez-vous pour retrouver vos contributions.</Link>
-                                </div>
-                            </template>
-                            <template v-else>
-                                <Link class="btn btn-success btn-sm" href="/profil">Gérer mes contributions</Link>
-                            </template>
-                        </div>
-                        <h2 class="h5">Explorer par région</h2>
-                        <ul class="list-unstyled home-links">
+                        <h3 class="h6">Par région</h3>
+                        <ul class="list-unstyled home-links home-links-regions">
                             <li v-for="r in index?.regions" :key="r.slug">
                                 <Link :href="`/region/${r.slug}`">{{ r.label }} <small>({{ r.n }})</small></Link>
                             </li>
                         </ul>
-                        <h2 class="h5 mt-4">Explorer par département</h2>
-                        <ul class="list-unstyled home-links">
+                    </div>
+                    <div class="col-lg-8">
+                        <h3 class="h6">Par département</h3>
+                        <ul class="list-unstyled home-links home-links-departements">
                             <li v-for="d in index?.departements" :key="d.code">
                                 <Link :href="`/departement/${d.code}`">{{ d.label }} <small>({{ d.n }})</small></Link>
                             </li>
@@ -244,11 +278,39 @@ const seoJsonLd = computed(() => {
 }
 .home-stats .stat .n { display: block; font-size: 1.35rem; font-weight: 700; color: #14532d; }
 .home-stats .stat .l { display: block; font-size: .8rem; color: #64748b; }
-.home-links { column-count: 2; column-gap: 1rem; font-size: .9rem; }
+.home-links { font-size: .9rem; }
 .home-links li { break-inside: avoid; margin-bottom: .25rem; }
 .home-links a { color: #14532d; text-decoration: none; }
 .home-links a:hover { text-decoration: underline; }
 .home-links small { color: #94a3b8; }
+.home-links-regions { column-count: 2; column-gap: 1rem; }
+.home-links-departements { column-count: 3; column-gap: 1.25rem; }
+@media (max-width: 991.98px) {
+    .home-links-departements { column-count: 2; }
+}
+.home-band-title {
+    color: #14532d; font-weight: 700; font-size: 1.15rem;
+    margin: 2.5rem 0 1rem; padding-bottom: .35rem; border-bottom: 1px solid #e2e8f0;
+}
+.home-actus {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 1rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.home-actus h3 { color: #14532d; font-weight: 700; }
+.actus-list li { padding: .6rem 0; border-bottom: 1px dashed #e2e8f0; }
+.actus-list li:last-child { border-bottom: none; }
+.actus-list .date {
+    display: block; font-size: .75rem; color: #689f38;
+    font-variant-numeric: tabular-nums; margin-bottom: .15rem;
+}
+.actus-list .titre { display: block; font-size: .95rem; font-weight: 600; color: #14532d; text-decoration: none; }
+.actus-list .titre:hover { text-decoration: underline; }
+.actus-list .extrait {
+    font-size: .82rem; color: #64748b; margin-top: .2rem;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.actus-tout { font-size: .85rem; font-weight: 600; color: #166534; text-decoration: none; }
+.actus-tout:hover { text-decoration: underline; }
 .home-sources { padding: 1rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; }
 .contribute-card {
     background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 1rem 1.25rem;
@@ -264,7 +326,7 @@ const seoJsonLd = computed(() => {
     background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
     padding: 1rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
-.home-changelog h2 { color: #14532d; }
+.home-changelog h3 { color: #14532d; }
 .home-changelog > p { margin-bottom: .75rem; }
 .changelog-list li { font-size: .9rem; color: #334155; padding: .35rem 0; border-bottom: 1px dashed #e2e8f0; }
 .changelog-list li:last-child { border-bottom: none; }

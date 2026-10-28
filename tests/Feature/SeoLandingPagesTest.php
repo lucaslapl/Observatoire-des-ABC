@@ -227,6 +227,45 @@ class SeoLandingPagesTest extends TestCase
         $this->get('/actualites/brouillon')->assertNotFound();
     }
 
+    public function test_home_lists_three_latest_published_actualites(): void
+    {
+        foreach (['2024-01-01', '2024-02-01', '2024-03-01', '2024-04-01'] as $i => $date) {
+            Actualite::create([
+                'titre' => "Actualité {$i}",
+                'slug' => "actu-{$i}",
+                'contenu' => 'Contenu de la publication.',
+                'statut' => 'publie',
+                'date_publication' => $date,
+            ]);
+        }
+        Actualite::create([
+            'titre' => 'Brouillon',
+            'slug' => 'brouillon-accueil',
+            'contenu' => '...',
+            'statut' => 'brouillon',
+        ]);
+        Actualite::create([
+            'titre' => 'Future',
+            'slug' => 'future-accueil',
+            'contenu' => '...',
+            'statut' => 'publie',
+            'date_publication' => now()->addWeek(),
+        ]);
+
+        $this->get('/')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Map', true)
+                ->has('dernieresActualites', 3)
+                ->where('dernieresActualites.0.slug', 'actu-3')
+                ->where('dernieresActualites.2.slug', 'actu-1')
+        );
+
+        $this->get('/actualites')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Actualites', true)
+                ->has('actualites', 4)
+                ->where('actualites.0.slug', 'actu-3')
+        );
+    }
+
     public function test_about_pages_rendered(): void
     {
         $this->get('/a-propos')
