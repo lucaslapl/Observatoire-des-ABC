@@ -1,6 +1,6 @@
 <script setup>
-import { computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { computed, nextTick } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
 import Breadcrumbs from '../Components/Breadcrumbs.vue';
@@ -61,9 +61,7 @@ const versionsTexte = computed(() => {
 
 /* Sections paginées côté serveur : la navigation d'une section conserve
    la page courante des deux autres dans l'URL (?znieff=&natura=&aires=,
-   un paramètre absent vaut page 1). Les liens portent preserve-scroll :
-   changer de page garde la position de défilement (les sections sont
-   longues, revenir en haut de page à chaque clic serait déroutant). */
+   un paramètre absent vaut page 1). */
 const SECTIONS = ['znieff', 'natura', 'aires'];
 
 const pageUrl = (section, n) => {
@@ -74,6 +72,42 @@ const pageUrl = (section, n) => {
     }
     const q = params.toString();
     return `/abc/${p.value.slug}/patrimoine${q ? '?' + q : ''}`;
+};
+
+/* Changer de page ne doit rien faire bouger à l'écran : ni le saut en
+   haut de page (comportement par défaut d'Inertia), ni le glissement du
+   contenu quand la hauteur du tableau change d'une page à l'autre. On
+   mémorise donc la position à l'écran du bandeau de pagination cliqué
+   avant la visite, puis on la restaure exactement une fois la nouvelle
+   page rendue : le bandeau reste sous le curseur, seules les lignes du
+   tableau changent. */
+const PAGINATION = {
+    znieff: 'Pagination ZNIEFF',
+    natura: 'Pagination sites Natura 2000',
+    aires: 'Pagination aires protégées',
+};
+
+const navSection = (section) => document.querySelector(`nav[aria-label="${PAGINATION[section]}"]`);
+
+const aller = (section, n) => {
+    if (n < 1 || n > pat.value[section].pages) return;
+
+    const nav = navSection(section);
+    const ancre = nav ? nav.getBoundingClientRect().top : null;
+
+    router.visit(pageUrl(section, n), {
+        // Sans ceci, Inertia remonte en haut avant la restauration.
+        preserveScroll: true,
+        onSuccess: () => {
+            if (ancre === null) return;
+            nextTick(() => {
+                const navApres = navSection(section);
+                if (navApres) {
+                    window.scrollTo(0, navApres.getBoundingClientRect().top + window.scrollY - ancre);
+                }
+            });
+        },
+    });
 };
 
 const libelleTotal = (section, singulier, pluriel) => {
@@ -134,11 +168,11 @@ const libelleTotal = (section, singulier, pluriel) => {
                     <nav v-if="pat.znieff.pages > 1" aria-label="Pagination ZNIEFF">
                         <ul class="pagination pagination-sm">
                             <li class="page-item" :class="{ disabled: pat.znieff.page <= 1 }">
-                                <Link class="page-link" preserve-scroll :href="pageUrl('znieff', pat.znieff.page - 1)" :aria-disabled="pat.znieff.page <= 1">Précédent</Link>
+                                <a class="page-link" :href="pageUrl('znieff', pat.znieff.page - 1)" :aria-disabled="pat.znieff.page <= 1" @click.prevent="aller('znieff', pat.znieff.page - 1)">Précédent</a>
                             </li>
                             <li class="page-item disabled"><span class="page-link">Page {{ pat.znieff.page }} / {{ pat.znieff.pages }}</span></li>
                             <li class="page-item" :class="{ disabled: pat.znieff.page >= pat.znieff.pages }">
-                                <Link class="page-link" preserve-scroll :href="pageUrl('znieff', pat.znieff.page + 1)">Suivant</Link>
+                                <a class="page-link" :href="pageUrl('znieff', pat.znieff.page + 1)" :aria-disabled="pat.znieff.page >= pat.znieff.pages" @click.prevent="aller('znieff', pat.znieff.page + 1)">Suivant</a>
                             </li>
                         </ul>
                     </nav>
@@ -176,11 +210,11 @@ const libelleTotal = (section, singulier, pluriel) => {
                     <nav v-if="pat.natura.pages > 1" aria-label="Pagination sites Natura 2000">
                         <ul class="pagination pagination-sm">
                             <li class="page-item" :class="{ disabled: pat.natura.page <= 1 }">
-                                <Link class="page-link" preserve-scroll :href="pageUrl('natura', pat.natura.page - 1)" :aria-disabled="pat.natura.page <= 1">Précédent</Link>
+                                <a class="page-link" :href="pageUrl('natura', pat.natura.page - 1)" :aria-disabled="pat.natura.page <= 1" @click.prevent="aller('natura', pat.natura.page - 1)">Précédent</a>
                             </li>
                             <li class="page-item disabled"><span class="page-link">Page {{ pat.natura.page }} / {{ pat.natura.pages }}</span></li>
                             <li class="page-item" :class="{ disabled: pat.natura.page >= pat.natura.pages }">
-                                <Link class="page-link" preserve-scroll :href="pageUrl('natura', pat.natura.page + 1)">Suivant</Link>
+                                <a class="page-link" :href="pageUrl('natura', pat.natura.page + 1)" :aria-disabled="pat.natura.page >= pat.natura.pages" @click.prevent="aller('natura', pat.natura.page + 1)">Suivant</a>
                             </li>
                         </ul>
                     </nav>
@@ -222,11 +256,11 @@ const libelleTotal = (section, singulier, pluriel) => {
                     <nav v-if="pat.aires.pages > 1" aria-label="Pagination aires protégées">
                         <ul class="pagination pagination-sm">
                             <li class="page-item" :class="{ disabled: pat.aires.page <= 1 }">
-                                <Link class="page-link" preserve-scroll :href="pageUrl('aires', pat.aires.page - 1)" :aria-disabled="pat.aires.page <= 1">Précédent</Link>
+                                <a class="page-link" :href="pageUrl('aires', pat.aires.page - 1)" :aria-disabled="pat.aires.page <= 1" @click.prevent="aller('aires', pat.aires.page - 1)">Précédent</a>
                             </li>
                             <li class="page-item disabled"><span class="page-link">Page {{ pat.aires.page }} / {{ pat.aires.pages }}</span></li>
                             <li class="page-item" :class="{ disabled: pat.aires.page >= pat.aires.pages }">
-                                <Link class="page-link" preserve-scroll :href="pageUrl('aires', pat.aires.page + 1)">Suivant</Link>
+                                <a class="page-link" :href="pageUrl('aires', pat.aires.page + 1)" :aria-disabled="pat.aires.page >= pat.aires.pages" @click.prevent="aller('aires', pat.aires.page + 1)">Suivant</a>
                             </li>
                         </ul>
                     </nav>
