@@ -18,6 +18,9 @@
 /data/cache/
 /data/exports/
 /data/server.pid
+# Données brutes INPN (ZNIEFF, Natura 2000, espaces protégés) : import local
+# uniquement via un futur artisan abc:import-inpn — jamais poussées dans le dépôt.
+/data/inpn-data/
 /node_modules
 /public/build
 /bootstrap/ssr
@@ -34,3 +37,6 @@ Thumbs.db
 /public-build.zip
 
 /.scribe
+
+# DOCOB Natura 2000 (PDF hébergés hors git : ~1 760 fichiers, 112 Mo)
+/public/docob/

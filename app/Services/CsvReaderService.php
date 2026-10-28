@@ -41,6 +41,47 @@ class CsvReaderService
     }
 
     /**
+     * Lecture CSV en flux (générateur) : pour les fichiers de plusieurs
+     * millions de lignes (référentiels INPN) que `read()` ne peut pas
+     * charger en mémoire. Gère le BOM UTF-8 et les champs multi-lignes
+     * quotés ; les lignes au nombre de colonnes différent sont ignorées,
+     * comme dans `read()`.
+     *
+     * @return \Generator<int, array<string, string>>
+     */
+    public function iterate(string $file, string $delimiter = ';'): \Generator
+    {
+        $handle = fopen($file, 'r');
+        if ($handle === false) {
+            throw new RuntimeException("Impossible de lire le fichier CSV : {$file}");
+        }
+
+        $header = fgetcsv($handle, 0, $delimiter);
+        if ($header === false) {
+            fclose($handle);
+
+            return; // fichier vide — yield aucune ligne
+        }
+
+        $header[0] = (string) preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
+        $header = array_map(fn ($h) => trim((string) $h), $header);
+
+        try {
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+                if ($row === [null]) { // ligne vide
+                    continue;
+                }
+                if (count($row) !== count($header)) {
+                    continue; // skip_records_with_error
+                }
+                yield array_combine($header, $row);
+            }
+        } finally {
+            fclose($handle);
+        }
+    }
+
+    /**
      * Tente league/csv ; retourne null si le fichier n'est pas strictement valide.
      */
     private function tryLeagueCsv(string $text, string $delimiter): ?array

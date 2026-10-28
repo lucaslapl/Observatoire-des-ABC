@@ -69,6 +69,35 @@ return [
     'legacy_db' => base_path('data/abc.db'),
 
     /**
+     * Référentiels INPN (ZNIEFF, Natura 2000, aires protégées).
+     *
+     * `dir` n'est JAMAIS dans le dépôt (voir .gitignore) : les données
+     * brutes viennent des téléchargements INPN et ne sont importées que
+     * localement (abc:import-inpn), puis exportées en SQL portable vers
+     * la production (abc:export-inpn) — l'hébergeur n'a pas PostGIS.
+     *
+     * `admin_express_dir` doit contenir le GeoJSON des communes
+     * (Admin Express COG, IGN, Licence Ouverte 2.0) : il sert uniquement
+     * à la jointure spatiale aires protégées ↔ communes, calculée en
+     * local au moment de l'import.
+     *
+     * `versions` : date de référence de chaque base, affichée avec
+     * l'attribution INPN (page Méthodologie).
+     */
+    'inpn' => [
+        'dir' => base_path('data/inpn-data'),
+        'admin_express_dir' => base_path('data/inpn-data/admin-express'),
+        // PDF DOCOB servis en statique (upload manuel, hors git) :
+        // surchargeable en test via config.
+        'docob_dir' => public_path('docob'),
+        'versions' => [
+            'znieff' => 'extraction ZNIEFF INPN 2025 (ZIP de secours)',
+            'natura' => 'Base Natura 2000 — décembre 2024',
+            'aires' => 'Inventaire des aires protégées APA-INPN — extraction juillet 2025',
+        ],
+    ],
+
+    /**
      * Répertoire d'export (CSV / GeoJSON).
      */
     'export_dir' => storage_path('app/abc/exports'),

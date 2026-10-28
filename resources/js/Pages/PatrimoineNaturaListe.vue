@@ -1,0 +1,73 @@
+<script setup>
+import { computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
+import Layout from '../Components/Layout.vue';
+import Seo from '../Components/Seo.vue';
+import Breadcrumbs from '../Components/Breadcrumbs.vue';
+
+const props = defineProps({
+    listing: { type: Object, required: true },
+});
+
+const crumbs = [
+    { label: 'Accueil', url: '/' },
+    { label: 'Patrimoine écologique', url: '/patrimoine' },
+    { label: 'Sites Natura 2000' },
+];
+
+const typeLabel = (t) => (t === 'ZPS' ? 'ZPS' : 'ZSC');
+const typeTitle = (t) =>
+    t === 'ZPS'
+        ? 'Zone de protection spéciale (directive Oiseaux)'
+        : 'Zone spéciale de conservation (directive Habitats)';
+
+const pageTitle = computed(() => `Sites Natura 2000 des communes ABC — page ${props.listing.page}`);
+const pageDescription = computed(() =>
+    `Liste des ${props.listing.total.toLocaleString('fr-FR')} sites Natura 2000 (ZSC et ZPS) touchant les communes ayant un Atlas de la Biodiversité Communale.`
+);
+
+const pageUrl = (n) => (n === 1 ? '/patrimoine/natura' : `/patrimoine/natura?page=${n}`);
+</script>
+
+<template>
+    <Layout>
+        <Seo :title="pageTitle" :description="pageDescription" />
+        <div class="container py-4">
+            <Breadcrumbs :items="crumbs" />
+            <h1 class="h3 mb-2">Sites Natura 2000 des communes ABC</h1>
+            <p class="text-muted">
+                {{ listing.total.toLocaleString('fr-FR') }} sites Natura 2000
+                (<a href="https://inpn.mnhn.fr" target="_blank" rel="noopener">INPN</a>) touchent au moins une
+                commune ayant un ABC.
+            </p>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-striped align-middle small">
+                    <thead>
+                        <tr><th>Site</th><th>Code</th><th>Type</th><th class="text-end">Communes ABC concernées</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="s in listing.items" :key="s.sitecode">
+                            <td><Link class="text-reset text-decoration-none" :href="`/patrimoine/natura/${s.sitecode}`">{{ s.nom || 'Site ' + s.sitecode }}</Link></td>
+                            <td class="text-muted">{{ s.sitecode }}</td>
+                            <td><span class="badge text-bg-light" :title="typeTitle(s.type_site)">{{ typeLabel(s.type_site) }}</span></td>
+                            <td class="text-end">{{ s.nb_communes_abc }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav v-if="listing.pages > 1" aria-label="Pagination Natura 2000">
+                <ul class="pagination pagination-sm">
+                    <li class="page-item" :class="{ disabled: listing.page <= 1 }">
+                        <Link class="page-link" :href="pageUrl(listing.page - 1)">Précédent</Link>
+                    </li>
+                    <li class="page-item disabled"><span class="page-link">Page {{ listing.page }} / {{ listing.pages }}</span></li>
+                    <li class="page-item" :class="{ disabled: listing.page >= listing.pages }">
+                        <Link class="page-link" :href="pageUrl(listing.page + 1)">Suivant</Link>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </Layout>
+</template>

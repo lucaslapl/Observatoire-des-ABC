@@ -62,6 +62,48 @@ class SitemapController extends Controller
                 $urls[] = $this->entry($base.'/region/'.$slug, null, '0.7', 'weekly');
             }
 
+            // Patrimoine écologique INPN : pages hub + fiches éligibles
+            // (zonages touchant au moins une commune ABC).
+            $urls[] = $this->entry($base.'/patrimoine', null, '0.4', 'monthly');
+            $urls[] = $this->entry($base.'/patrimoine/znieff', null, '0.4', 'weekly');
+            $urls[] = $this->entry($base.'/patrimoine/natura', null, '0.4', 'weekly');
+
+            $codesAbc = DB::table('communes')->distinct()->pluck('code_geographique');
+            foreach (DB::table('inpn_znieff as z')
+                ->join('inpn_znieff_communes as zc', 'zc.znieff_id', '=', 'z.id')
+                ->whereIn('zc.code_commune', $codesAbc)
+                ->groupBy('z.id', 'z.id_national')
+                ->orderBy('z.id_national')
+                ->get(['z.id_national']) as $z) {
+                $urls[] = $this->entry($base.'/patrimoine/znieff/'.$z->id_national, null, '0.4', 'monthly');
+            }
+            foreach (DB::table('inpn_natura_sites as s')
+                ->join('inpn_natura_communes as nc', 'nc.sitecode', '=', 's.sitecode')
+                ->whereIn('nc.code_commune', $codesAbc)
+                ->groupBy('s.sitecode')
+                ->orderBy('s.sitecode')
+                ->get(['s.sitecode']) as $n) {
+                $urls[] = $this->entry($base.'/patrimoine/natura/'.$n->sitecode, null, '0.4', 'monthly');
+            }
+
+            // Pages « patrimoine du périmètre » des fiches ABC : une URL par
+            // projet dont au moins une commune (non écartée) touche un zonage
+            // ou une aire des référentiels INPN.
+            $codesInpn = DB::table('inpn_znieff_communes')->whereIn('code_commune', $codesAbc)->distinct()->pluck('code_commune')
+                ->merge(DB::table('inpn_natura_communes')->whereIn('code_commune', $codesAbc)->distinct()->pluck('code_commune'))
+                ->merge(DB::table('inpn_aires_protegees_communes')->whereIn('code_commune', $codesAbc)->distinct()->pluck('code_commune'))
+                ->unique();
+            foreach (DB::table('projets')
+                ->whereNotNull('slug')
+                ->whereIn('id', fn ($q) => $q->select('projet_id')
+                    ->from('communes')
+                    ->whereIn('code_geographique', $codesInpn)
+                    ->where('anomalie', false))
+                ->orderBy('slug')
+                ->pluck('slug') as $slug) {
+                $urls[] = $this->entry($base.'/abc/'.$slug.'/patrimoine', null, '0.4', 'monthly');
+            }
+
             $lines = implode("\n", $urls);
 
             return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

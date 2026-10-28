@@ -149,7 +149,47 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 du projet concerné.
             </p>
 
-            <h2>6. Tout est consultable</h2>
+            <h2>6. Le patrimoine écologique : des faits bruts de l'INPN</h2>
+            <p>
+                Les pages communes et les fiches projet (bloc « patrimoine écologique du
+                périmètre » et sa page dédiée) affichent les inventaires nationaux du
+                patrimoine naturel
+                (<a href="https://inpn.mnhn.fr" rel="noopener" target="_blank">INPN</a>,
+                Muséum national d'Histoire naturelle) qui touchent le territoire :
+                <strong>ZNIEFF</strong> (zones naturelles d'intérêt écologique, faunistique et
+                floristique), <strong>sites Natura 2000</strong> et <strong>aires protégées</strong>
+                (réserves, arrêtés de protection de biotope, sites classés…). La date de
+                référence de chaque base est indiquée sur la page concernée, car ces
+                référentiels sont actualisés périodiquement et nos données datent de
+                l'extraction importée.
+            </p>
+            <p>
+                Nous affichons ces informations <strong>telles quelles</strong> : des zonages,
+                des surfaces et des comptages d'espèces déterminantes ou d'habitats, jamais un
+                score ou un indicateur composite qui n'aurait pas de valeur scientifique. Les
+                associations zonage ↔ commune de ZNIEFF et Natura 2000 sont celles des
+                référentiels officiels de l'INPN ; pour les aires protégées, qui ne sont
+                publiées que sous forme géographique, le recouvrement avec les communes est
+                calculé au moment de l'import à l'aide du découpage administratif
+                <a href="https://geoservices.ign.fr/adminexpress" rel="noopener" target="_blank">Admin Express</a>
+                (IGN) : c'est une approche à l'échelle communale, les surfaces indiquées sont
+                des ordres de grandeur. Les espèces dites « confidentielles » dans le
+                référentiel ZNIEFF ne sont jamais affichées. Sources réutilisées sous
+                <a href="https://inpn.mnhn.fr/legal" rel="noopener" target="_blank">les licences de l'INPN</a>
+                et la Licence Ouverte (IGN).
+            </p>
+            <p>
+                Les fiches ZNIEFF et Natura 2000 ne sont publiées que pour les zonages touchant
+                au moins une commune ayant un ABC : cet Observatoire ne reflète pas l'ensemble
+                de l'inventaire national, il le met en regard des Atlas de la Biodiversité
+                Communale — pour le reste, l'INPN reste la source de référence. Enfin, les
+                <strong>documents d'objectifs</strong> (DOCOB) des sites Natura 2000 sont
+                hébergés sur ce site tels que transmis dans la base INPN de décembre 2024 :
+                chaque document est celui en vigueur à cette date et peut depuis avoir été
+                révisé.
+            </p>
+
+            <h2>7. Tout est consultable</h2>
             <p>
                 L'intégralité des données est exportable librement en
                 <a href="/api/abc.geojson">GeoJSON</a>
