@@ -111,7 +111,9 @@ class PatrimoineFicheService
             ->orderBy('groupe_taxo')
             ->orderBy('nom_cite')
             ->get(['groupe_taxo', 'nom_cite']) as $e) {
-            $groupes[$e->groupe_taxo ?: 'Autres'][] = $this->htmlInpn($e->nom_cite);
+            // Noms cités : le référentiel INPN contient de l'italique HTML
+            // (<i>Otus scops</i>). En liste jointe, on affiche du texte pur.
+            $groupes[$e->groupe_taxo ?: 'Autres'][] = trim((string) preg_replace('/\s+/u', ' ', strip_tags((string) $e->nom_cite)));
         }
 
         $parent = null;

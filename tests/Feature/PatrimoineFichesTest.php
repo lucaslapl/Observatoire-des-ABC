@@ -90,6 +90,8 @@ class PatrimoineFichesTest extends TestCase
                 // enjeux et la confidentielle ne sortent pas
                 ->has('znieff.groupes_especes', 1)
                 ->where('znieff.groupes_especes.0.n', 2)
+                // <i>Espèce déterminante A</i> -> texte pur, sans balise
+                ->where('znieff.groupes_especes.0.noms.0', 'Espèce déterminante A')
         );
     }
 
