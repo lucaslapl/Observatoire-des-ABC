@@ -160,6 +160,7 @@ class PatrimoineFicheService
             ),
             'parent' => $parent,
             'enfants' => $enfants,
+            'versions' => $this->versions(),
         ];
     }
 
@@ -253,9 +254,10 @@ class PatrimoineFicheService
             ])
             ->all();
 
-        // DOCOB : PDF hébergé localement (public/docob/) en priorité,
-        // sinon le document référencé dans la base INPN.
-        $pdf = public_path('docob/'.$sitecode.'.pdf');
+        // DOCOB : PDF hébergé localement (public/docob/, config surchargeable
+        // en test) en priorité, sinon le document référencé dans la base INPN.
+        $docobDir = (string) config('abc.inpn.docob_dir');
+        $pdf = $docobDir.'/'.$sitecode.'.pdf';
         $docob = DB::table('inpn_natura_docob')
             ->where('sitecode', $sitecode)
             ->orderByDesc('id')
@@ -279,7 +281,19 @@ class PatrimoineFicheService
             'nb_communes_total' => $communes->count(),
             'habitats' => $habitats,
             'especes' => $especes,
+            'versions' => $this->versions(),
         ];
+    }
+
+    /**
+     * Date de référence de chaque base INPN importée (inpn_imports) :
+     * affichée sur les fiches, à côté de l'attribution.
+     *
+     * @return array<string, string>
+     */
+    private function versions(): array
+    {
+        return DB::table('inpn_imports')->pluck('version_source', 'source')->all();
     }
 
     /**

@@ -21,9 +21,18 @@ class PatrimoineFichesTest extends TestCase
 
     private const CODE = '35282';
 
+    private string $publicHermetique;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Dossier DOCOB éphémère : la détection du PDF local doit être
+        // hermétique (la machine de dev a les 1 759 PDF réels, la CI non).
+        $this->publicHermetique = sys_get_temp_dir().'/public-docob-'.uniqid();
+        mkdir($this->publicHermetique, 0777, true);
+        file_put_contents($this->publicHermetique.'/FR8212001.pdf', 'stub');
+        config(['abc.inpn.docob_dir' => $this->publicHermetique]);
 
         $projet = Projet::create([
             'id' => 'abc-patrimoine',
@@ -74,6 +83,20 @@ class PatrimoineFichesTest extends TestCase
         DB::table('inpn_natura_docob')->insert([
             ['sitecode' => 'FR8212001', 'titre' => 'DOCOB 2012', 'lien' => 'http://natura2000.mnhn.fr/uploads/doc/PRODBIOTOP/1382_DOCOB.pdf'],
         ]);
+
+        DB::table('inpn_imports')->insert([
+            ['source' => 'znieff', 'version_source' => 'extraction ZNIEFF INPN 2025', 'nb_entites' => 3, 'importe_le' => now()],
+            ['source' => 'natura', 'version_source' => 'Base Natura 2000 — décembre 2024', 'nb_entites' => 1, 'importe_le' => now()],
+        ]);
+    }
+
+    protected function tearDown(): void
+    {
+        foreach (glob($this->publicHermetique.'/*') ?: [] as $f) {
+            @unlink($f);
+        }
+        @rmdir($this->publicHermetique);
+        parent::tearDown();
     }
 
     public function test_fiche_znieff_eligible(): void
@@ -88,10 +111,14 @@ class PatrimoineFichesTest extends TestCase
                 ->where('znieff.texte_interet', '<p>Boisement <b>remarquable</b></p>')
                 // 2 déterminantes non confidentielles, groupées ; l'espèce à
                 // enjeux et la confidentielle ne sortent pas
+                // 2 déterminantes non confidentielles, groupées ; l'espèce à
+                // enjeux et la confidentielle ne sortent pas
                 ->has('znieff.groupes_especes', 1)
                 ->where('znieff.groupes_especes.0.n', 2)
                 // <i>Espèce déterminante A</i> -> texte pur, sans balise
                 ->where('znieff.groupes_especes.0.noms.0', 'Espèce déterminante A')
+                // date de référence de la base, affichée avec l'attribution
+                ->where('znieff.versions.znieff', 'extraction ZNIEFF INPN 2025')
         );
     }
 
@@ -121,8 +148,10 @@ class PatrimoineFichesTest extends TestCase
                 ->where('site.especes.1.annexe_1', true)
                 ->where('site.especes.1.annexe_ii', false)
                 ->where('site.docob.0.titre', 'DOCOB 2012')
-                // pas de PDF local en test : on retombe sur le lien INPN
-                ->where('site.pdf_local', null)
+                // DOCOB local détecté via le public_path éphémère du test
+                ->where('site.pdf_local', '/docob/FR8212001.pdf')
+                // date de référence de la base, affichée avec l'attribution
+                ->where('site.versions.natura', 'Base Natura 2000 — décembre 2024')
         );
     }
 

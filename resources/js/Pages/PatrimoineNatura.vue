@@ -68,7 +68,7 @@ const jsonLd = computed(() => [
             <div v-if="s.pdf_local || s.docob.length" class="my-3">
                 <h2 class="h6">Document d'objectifs</h2>
                 <template v-if="s.pdf_local">
-                    <p class="small text-muted">Document d'objectifs (DOCOB) consultable :</p>
+                    <p class="small text-muted">Document d'objectifs (DOCOB) consultable — tel que transmis dans la base INPN (décembre 2024), il peut depuis avoir été révisé :</p>
                     <p><a class="btn btn-outline-success btn-sm" :href="s.pdf_local" target="_blank" rel="noopener">Ouvrir le DOCOB (PDF)</a></p>
                 </template>
                 <template v-else>
@@ -163,7 +163,8 @@ const jsonLd = computed(() => [
             <p class="small text-muted mt-4">
                 Fiche établie à partir de la base Natura 2000 de l'
                 <a href="https://inpn.mnhn.fr" target="_blank" rel="noopener">INPN</a>
-                (MNHN). <Link class="text-decoration-none" href="/methodologie">Méthodologie et licences.</Link>
+                (MNHN)<template v-if="s.versions.natura"> — {{ s.versions.natura }}</template>.
+                <Link class="text-decoration-none" href="/methodologie">Méthodologie et licences.</Link>
             </p>
             <p><Link class="btn btn-outline-success btn-sm" href="/patrimoine/natura">← Tous les sites Natura 2000</Link></p>
         </div>

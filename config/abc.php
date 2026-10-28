@@ -87,6 +87,9 @@ return [
     'inpn' => [
         'dir' => base_path('data/inpn-data'),
         'admin_express_dir' => base_path('data/inpn-data/admin-express'),
+        // PDF DOCOB servis en statique (upload manuel, hors git) :
+        // surchargeable en test via config.
+        'docob_dir' => public_path('docob'),
         'versions' => [
             'znieff' => 'extraction ZNIEFF INPN 2025 (ZIP de secours)',
             'natura' => 'Base Natura 2000 — décembre 2024',

@@ -133,7 +133,8 @@ const jsonLd = computed(() => [
             <p class="small text-muted mt-4">
                 Fiche établie à partir de l'inventaire national ZNIEFF de l'
                 <a href="https://inpn.mnhn.fr" target="_blank" rel="noopener">INPN</a>
-                (MNHN). <Link class="text-decoration-none" href="/methodologie">Méthodologie et licences.</Link>
+                (MNHN)<template v-if="z.versions.znieff"> — {{ z.versions.znieff }}</template>.
+                <Link class="text-decoration-none" href="/methodologie">Méthodologie et licences.</Link>
             </p>
             <p><Link class="btn btn-outline-success btn-sm" href="/patrimoine/znieff">← Toutes les ZNIEFF</Link></p>
         </div>

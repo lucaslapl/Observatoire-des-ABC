@@ -176,6 +176,16 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0);
                 <a href="https://inpn.mnhn.fr/legal" rel="noopener" target="_blank">les licences de l'INPN</a>
                 et la Licence Ouverte (IGN).
             </p>
+            <p>
+                Les fiches ZNIEFF et Natura 2000 ne sont publiées que pour les zonages touchant
+                au moins une commune ayant un ABC : cet Observatoire ne reflète pas l'ensemble
+                de l'inventaire national, il le met en regard des Atlas de la Biodiversité
+                Communale — pour le reste, l'INPN reste la source de référence. Enfin, les
+                <strong>documents d'objectifs</strong> (DOCOB) des sites Natura 2000 sont
+                hébergés sur ce site tels que transmis dans la base INPN de décembre 2024 :
+                chaque document est celui en vigueur à cette date et peut depuis avoir été
+                révisé.
+            </p>
 
             <h2>7. Tout est consultable</h2>
             <p>
