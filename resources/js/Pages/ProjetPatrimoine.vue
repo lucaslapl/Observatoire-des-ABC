@@ -78,9 +78,9 @@ const pageUrl = (section, n) => {
    haut de page (comportement par défaut d'Inertia), ni le glissement du
    contenu quand la hauteur du tableau change d'une page à l'autre. On
    mémorise donc la position à l'écran du bandeau de pagination cliqué
-   avant la visite, puis on la restaure exactement une fois la nouvelle
-   page rendue : le bandeau reste sous le curseur, seules les lignes du
-   tableau changent. */
+   avant la visite, puis on la restaure une fois la nouvelle page rendue :
+   le bandeau reste sous le curseur, seules les lignes du tableau
+   changent. */
 const PAGINATION = {
     znieff: 'Pagination ZNIEFF',
     natura: 'Pagination sites Natura 2000',
@@ -88,6 +88,15 @@ const PAGINATION = {
 };
 
 const navSection = (section) => document.querySelector(`nav[aria-label="${PAGINATION[section]}"]`);
+
+const repositionner = (section, ancre) => {
+    const nav = navSection(section);
+    if (!nav) return;
+    const top = nav.getBoundingClientRect().top + window.scrollY - ancre;
+    // behavior 'instant' obligatoire : Bootstrap pose scroll-behavior:
+    // smooth sur <html>, un scrollTo() sans option partirait en animation.
+    window.scrollTo({ top, left: 0, behavior: 'instant' });
+};
 
 const aller = (section, n) => {
     if (n < 1 || n > pat.value[section].pages) return;
@@ -101,10 +110,11 @@ const aller = (section, n) => {
         onSuccess: () => {
             if (ancre === null) return;
             nextTick(() => {
-                const navApres = navSection(section);
-                if (navApres) {
-                    window.scrollTo(0, navApres.getBoundingClientRect().top + window.scrollY - ancre);
-                }
+                repositionner(section, ancre);
+                // Inertia restaure lui-même l'offset sauvegardé dans une
+                // requestAnimationFrame : on recorrige après lui, dans la
+                // même frame, pour que l'offset peint soit le bon.
+                requestAnimationFrame(() => repositionner(section, ancre));
             });
         },
     });
