@@ -12,7 +12,6 @@ const props = defineProps({
 const s = computed(() => props.site);
 
 const crumbs = [
-    { label: 'Accueil', url: '/' },
     { label: 'Patrimoine écologique', url: '/patrimoine' },
     { label: 'Sites Natura 2000', url: '/patrimoine/natura' },
     { label: s.value.nom || s.value.sitecode },

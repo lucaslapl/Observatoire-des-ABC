@@ -10,7 +10,6 @@ const props = defineProps({
 });
 
 const crumbs = [
-    { label: 'Accueil', url: '/' },
     { label: 'Patrimoine écologique', url: '/patrimoine' },
     { label: 'Sites Natura 2000' },
 ];

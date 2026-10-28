@@ -12,7 +12,7 @@ const props = defineProps({
 const page = usePage();
 const site = computed(() => page.props.site || {});
 
-const crumbs = [{ label: 'Accueil', url: '/' }, { label: 'Patrimoine écologique' }];
+const crumbs = [{ label: 'Patrimoine écologique' }];
 
 const pageTitle = computed(() => 'Patrimoine écologique INPN — ZNIEFF et Natura 2000 des communes ABC');
 const pageDescription = computed(() =>

@@ -12,7 +12,6 @@ const props = defineProps({
 const z = computed(() => props.znieff);
 
 const crumbs = [
-    { label: 'Accueil', url: '/' },
     { label: 'Patrimoine écologique', url: '/patrimoine' },
     { label: 'ZNIEFF', url: '/patrimoine/znieff' },
     { label: z.value.nom },
