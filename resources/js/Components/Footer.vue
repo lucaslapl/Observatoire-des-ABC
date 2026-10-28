@@ -10,6 +10,7 @@ const colonnes = [
         titre: 'Explorer',
         liens: [
             { label: 'Carte des ABC', href: '/carte' },
+            { label: 'Tous les ABC', href: '/abc' },
             { label: 'Actualités', href: '/actualites' },
             { label: 'Patrimoine écologique', href: '/patrimoine' },
         ],

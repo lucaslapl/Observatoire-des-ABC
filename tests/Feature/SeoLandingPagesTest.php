@@ -265,6 +265,9 @@ class SeoLandingPagesTest extends TestCase
         $this->get('/sitemap.xml')
             ->assertOk()
             ->assertSee('/carte')
+            // L'URL de la liste « tous les ABC » (l'entrée /abc/{slug} ne
+            // doit pas la masquer : on vérifie le </loc> fermé).
+            ->assertSee('/abc</loc>', false)
             ->assertSee('/abc/'.$projet->slug)
             ->assertSee('/commune/56001')
             ->assertSee('/departement/56')

@@ -12,6 +12,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PatrimoineController;
+use App\Http\Controllers\ProjetsListeController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,9 @@ Route::get('/verify', [PageController::class, 'verify'])->name('verify');
 Route::get('/actualites', [PageController::class, 'actualites'])->name('actualites');
 Route::get('/actualites/{actualite:slug}', [PageController::class, 'actualite'])->name('actualites.show');
 
+// Liste « tous les ABC » : recherche, filtres et tris (query string).
+// Déclarée avant /abc/{slug} pour lisibilité, sans conflit de motif.
+Route::get('/abc', [ProjetsListeController::class, 'index'])->name('abc.liste');
 Route::get('/abc/{slug}', [PageController::class, 'projet'])->name('abc.show');
 // Patrimoine écologique INPN du périmètre d'un ABC (page dédiée de la fiche).
 Route::get('/abc/{slug}/patrimoine', [PageController::class, 'projetPatrimoine'])->name('abc.patrimoine');
