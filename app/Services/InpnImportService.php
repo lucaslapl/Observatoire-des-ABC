@@ -581,20 +581,30 @@ class InpnImportService
 
         DB::statement('DROP TABLE IF EXISTS inpn_tmp_communes');
         DB::statement('CREATE TEMP TABLE inpn_tmp_communes (code char(5) PRIMARY KEY, geom geometry)');
+        $chunkCodes = [];
+        $chunkGeoms = [];
         foreach ($this->geojsonFeatures($geojson) as $feature) {
             $props = $feature['properties'];
             $code = $this->codeCommune(
-                (string) ($props['insee_com'] ?? $props['code_insee'] ?? $props['INSEE_COM'] ?? '')
+                // Admin Express COG PLUS : « codgeo » ; autres éditions : insee_com.
+                (string) ($props['codgeo'] ?? $props['insee_com'] ?? $props['code_insee'] ?? $props['INSEE_COM'] ?? '')
             );
             $geometry = json_encode($feature['geometry']);
             if ($code === null || $geometry === false) {
                 continue;
             }
-            DB::statement(
-                'INSERT INTO inpn_tmp_communes (code, geom) VALUES (?, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))',
-                [$code, $geometry]
-            );
+            $chunkCodes[] = $code;
+            $chunkGeoms[] = $geometry;
+            if (count($chunkCodes) >= 100) {
+                $this->insertCommunesTemp($chunkCodes, $chunkGeoms);
+                $chunkCodes = [];
+                $chunkGeoms = [];
+            }
         }
+        if ($chunkCodes !== []) {
+            $this->insertCommunesTemp($chunkCodes, $chunkGeoms);
+        }
+
         $nbCommunes = (int) DB::scalar('SELECT COUNT(*) FROM inpn_tmp_communes');
         if ($nbCommunes === 0) {
             DB::statement('DROP TABLE IF EXISTS inpn_tmp_communes');
@@ -637,15 +647,30 @@ class InpnImportService
             }
         }
 
+        // Reprojection unique + index GIST sur les deux tables : une
+        // jointure avec ST_Transform dans la condition de jointure ne
+        // peut pas utiliser les index spatiaux (test séquentiel de 387
+        // millions de paires = plusieurs heures).
+        // ST_MakeValid : certains polygones INPN sont invalides
+        // (auto-intersection -> TopologyException de GEOS au calcul).
+        // ST_CollectionExtract(.., 3) ne garde que les polygones.
+        DB::statement('UPDATE inpn_tmp_apa SET geom = ST_CollectionExtract(ST_MakeValid(ST_Transform(geom, 4326)), 3)');
+        DB::statement('CREATE INDEX inpn_tmp_apa_geom_idx ON inpn_tmp_apa USING GIST (geom)');
+        DB::statement('CREATE INDEX inpn_tmp_communes_geom_idx ON inpn_tmp_communes USING GIST (geom)');
+        DB::statement('ANALYZE inpn_tmp_apa');
+        DB::statement('ANALYZE inpn_tmp_communes');
+
         DB::table('inpn_aires_protegees_communes')->delete();
         DB::statement(
             'INSERT INTO inpn_aires_protegees_communes (aire_protegee_id, code_commune, surface_intersection_ha)'
             .' SELECT a.id_mnhn, c.code,'
-            .' ROUND(ST_Area(ST_Intersection(ST_Transform(a.geom, 4326), c.geom)::geography) / 10000, 4)'
-            .' FROM inpn_tmp_apa a JOIN inpn_tmp_communes c ON ST_Intersects(ST_Transform(a.geom, 4326), c.geom)'
+            // ROUND(x, n) n'existe pas pour double precision : cast numeric.
+            .' ROUND((ST_Area(ST_Intersection(a.geom, c.geom)::geography) / 10000)::numeric, 4)'
+            .' FROM inpn_tmp_apa a JOIN inpn_tmp_communes c ON ST_Intersects(a.geom, c.geom)'
             .' JOIN inpn_aires_protegees ap ON ap.id_mnhn = a.id_mnhn'
-            .' WHERE ST_Area(ST_Intersection(ST_Transform(a.geom, 4326), c.geom)::geography) > 0'
+            .' WHERE ST_Area(ST_Intersection(a.geom, c.geom)::geography) > 0'
         );
+
         $nb = (int) DB::scalar('SELECT COUNT(*) FROM inpn_aires_protegees_communes');
 
         DB::statement('DROP TABLE IF EXISTS inpn_tmp_communes');
@@ -673,6 +698,24 @@ class InpnImportService
         };
 
         return substr($blob, 8 + $envelopeBytes);
+    }
+
+    /**
+     * Insertion par lots des communes dans la table temporaire (100 par
+     * requête : ~34 000 insertions unitaires ralentissent tout).
+     *
+     * @param  array<int, string>  $codes
+     * @param  array<int, string>  $geometries
+     */
+    private function insertCommunesTemp(array $codes, array $geometries): void
+    {
+        $placeholders = implode(', ', array_fill(0, count($codes), '(?, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326))'));
+        $bindings = [];
+        foreach ($codes as $i => $code) {
+            $bindings[] = $code;
+            $bindings[] = $geometries[$i];
+        }
+        DB::insert('INSERT INTO inpn_tmp_communes (code, geom) VALUES '.$placeholders, $bindings);
     }
 
     /**
@@ -733,6 +776,7 @@ class InpnImportService
             if ($char === '}' && $depth > 0) {
                 $depth--;
                 if ($depth === 1 && $obj !== null) {
+                    $obj .= '}'; // accolade fermante de l'objet capturé
                     $feature = json_decode($obj, true);
                     if (is_array($feature) && ($feature['type'] ?? '') === 'Feature') {
                         $properties = is_array($feature['properties'] ?? null) ? $feature['properties'] : [];
