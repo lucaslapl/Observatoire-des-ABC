@@ -49,6 +49,13 @@ Après un arrêt du conteneur Vite (`--profile hmr`), supprimer `public/hot`
 s'il traîne : sinon le site sert des assets pointant vers le serveur HMR
 éteint et affiche une page blanche.
 
+Le SSR Inertia n'est actif **qu'en production** (watchdog + `bootstrap/ssr`).
+En local, on ne s'en préoccupe pas : les pages sont rendues côté client et
+c'est normal si le HTML servi par curl ne contient pas le contenu des pages.
+En revanche, le bundle SSR doit continuer de compiler et de fonctionner en
+production — tout changement du front doit donc passer par un build complet
+(client + SSR) et, au déploiement, une relance de `ssr:watchdog`.
+
 Au premier démarrage, `docker/php/entrypoint.sh` fait tout seul : `composer
 install` (volume `abc_vendor`), `APP_KEY` si absente, `migrate`, `db:seed`
 (admin depuis `ADMIN_*` du `.env`), puis `abc:import-legacy` si la table
