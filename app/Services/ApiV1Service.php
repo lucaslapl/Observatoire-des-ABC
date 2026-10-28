@@ -11,6 +11,8 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * API publique v1 (lecture seule) : mêmes données que le site (sources
@@ -32,6 +34,8 @@ class ApiV1Service
         private StatusService $status,
         private RegionService $regions,
         private StatsService $stats,
+        private PatrimoineEcologiqueService $patrimoine,
+        private PatrimoineFicheService $patrimoineFiches,
     ) {}
 
     // -----------------------------------------------------------------
@@ -188,6 +192,79 @@ class ApiV1Service
         $fiche['derniere_mise_a_jour'] = $this->derniereMajRegion($label);
 
         return $fiche;
+    }
+
+    // -----------------------------------------------------------------
+    // Patrimoine écologique INPN (ZNIEFF, Natura 2000, aires protégées)
+    // -----------------------------------------------------------------
+
+    /**
+     * Patrimoine écologique d'une commune : ZNIEFF, sites Natura 2000
+     * et aires protégées la touchant (faits bruts INPN, espèces
+     * confidentielles jamais diffusées), avec attribution MNHN.
+     * 404 JSON si la commune n'existe pas dans le référentiel (communes
+     * sans ABC comprises, comme la page publique).
+     *
+     * @return array<string, mixed>
+     */
+    public function patrimoineCommune(string $code): array
+    {
+        $existe = Commune::query()->where('code_geographique', $code)->exists();
+
+        if (! $existe) {
+            throw $this->introuvable('Commune introuvable.');
+        }
+
+        return $this->avecAttributionInpn($this->patrimoine->pourCommune($code));
+    }
+
+    /**
+     * Liste paginée des ZNIEFF éligibles (touchant au moins une commune
+     * ayant un ABC), même périmètre éditorial que le site.
+     *
+     * @return array<string, mixed>
+     */
+    public function patrimoineZnieffListing(int $page): array
+    {
+        return $this->avecAttributionInpn($this->patrimoineFiches->znieffListing($page));
+    }
+
+    /**
+     * Fiche ZNIEFF (404 JSON si inconnue ou hors périmètre ABC).
+     *
+     * @return array<string, mixed>
+     */
+    public function patrimoineZnieff(string $idNational): array
+    {
+        try {
+            return $this->avecAttributionInpn($this->patrimoineFiches->znieff($idNational));
+        } catch (NotFoundHttpException) {
+            throw $this->introuvable('ZNIEFF introuvable ou hors du périmètre des communes ABC.');
+        }
+    }
+
+    /**
+     * Liste paginée des sites Natura 2000 éligibles.
+     *
+     * @return array<string, mixed>
+     */
+    public function patrimoineNaturaListing(int $page): array
+    {
+        return $this->avecAttributionInpn($this->patrimoineFiches->naturaListing($page));
+    }
+
+    /**
+     * Fiche Natura 2000 (404 JSON si inconnue ou hors périmètre ABC).
+     *
+     * @return array<string, mixed>
+     */
+    public function patrimoineNatura(string $sitecode): array
+    {
+        try {
+            return $this->avecAttributionInpn($this->patrimoineFiches->natura($sitecode));
+        } catch (NotFoundHttpException) {
+            throw $this->introuvable('Site Natura 2000 introuvable ou hors du périmètre des communes ABC.');
+        }
     }
 
     // -----------------------------------------------------------------
@@ -435,6 +512,36 @@ class ApiV1Service
     private function statutVerification(?string $verifEtat): string
     {
         return $verifEtat !== null && $verifEtat !== 'a_verifier' ? 'verifie' : 'en_attente';
+    }
+
+    /**
+     * 404 JSON homogène (même contrat que la fiche région).
+     */
+    private function introuvable(string $message): HttpResponseException
+    {
+        return new HttpResponseException(response()->json(['message' => $message], 404));
+    }
+
+    /**
+     * Attribution INPN/MNHN sur chaque réponse patrimoine : les faits
+     * bruts des référentiels restent sous les licences de l'INPN (pas
+     * Etalab), et la version de référence de chaque base est toujours
+     * présente — même rigueur que les fiches publiques du site.
+     *
+     * @param  array<string, mixed>  $fiche
+     * @return array<string, mixed>
+     */
+    private function avecAttributionInpn(array $fiche): array
+    {
+        $fiche['versions'] ??= DB::table('inpn_imports')->pluck('version_source', 'source')->all();
+        $fiche['attribution'] = [
+            'source' => (string) config('api.inpn.source'),
+            'url' => (string) config('api.inpn.url'),
+            'licences' => (string) config('api.inpn.licences'),
+            'credit' => (string) config('api.inpn.credit'),
+        ];
+
+        return $fiche;
     }
 
     private function licence(): string

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\V1\CommunesController;
 use App\Http\Controllers\Api\V1\DepartementsController;
 use App\Http\Controllers\Api\V1\JournalController;
+use App\Http\Controllers\Api\V1\PatrimoineController;
 use App\Http\Controllers\Api\V1\ProjetsController;
 use App\Http\Controllers\Api\V1\RegionsController;
 use App\Http\Controllers\Api\V1\StatsController as StatsV1Controller;
@@ -47,6 +48,21 @@ Route::prefix('v1')
         Route::get('/regions/{code}', [RegionsController::class, 'show'])->name('regions.show');
         Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
         Route::get('/stats', [StatsV1Controller::class, 'index'])->name('stats.index');
+
+        // Patrimoine écologique INPN : additif, même périmètre éditorial
+        // que le site (zonages touchant au moins une commune ABC),
+        // attribution MNHN sur chaque réponse (les données INPN ne sont
+        // pas sous Licence Ouverte Etalab).
+        Route::get('/communes/{code}/patrimoine', [PatrimoineController::class, 'commune'])
+            ->name('patrimoine.commune');
+        Route::get('/patrimoine/znieff', [PatrimoineController::class, 'znieffListing'])
+            ->name('patrimoine.znieff.liste');
+        Route::get('/patrimoine/znieff/{id}', [PatrimoineController::class, 'znieffShow'])
+            ->where('id', '[0-9]{6,12}')->name('patrimoine.znieff.show');
+        Route::get('/patrimoine/natura', [PatrimoineController::class, 'naturaListing'])
+            ->name('patrimoine.natura.liste');
+        Route::get('/patrimoine/natura/{sitecode}', [PatrimoineController::class, 'naturaShow'])
+            ->where('sitecode', 'FR[0-9A-Z]{7}')->name('patrimoine.natura.show');
     });
 
 // Documentation OpenAPI (HTML généré + spécification), hors throttling :

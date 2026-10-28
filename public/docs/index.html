@@ -102,6 +102,35 @@ contributions sont créditées collectivement, jamais nominativement.</a>
                             </li>
                                                                         </ul>
                             </ul>
+                    <ul id="tocify-header-patrimoine-inpn" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="patrimoine-inpn">
+                    <a href="#patrimoine-inpn">Patrimoine INPN</a>
+                </li>
+                                    <ul id="tocify-subheader-patrimoine-inpn" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="patrimoine-inpn-GETapi-v1-communes--code--patrimoine">
+                                <a href="#patrimoine-inpn-GETapi-v1-communes--code--patrimoine">Patrimoine écologique d'une commune : ZNIEFF, sites Natura 2000
+et aires protégées la touchant, faits bruts INPN avec attribution
+MNHN et version de référence de chaque base.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="patrimoine-inpn-GETapi-v1-patrimoine-znieff">
+                                <a href="#patrimoine-inpn-GETapi-v1-patrimoine-znieff">Liste paginée des ZNIEFF éligibles (touchant au moins une commune
+ayant un ABC), 100 par page.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="patrimoine-inpn-GETapi-v1-patrimoine-znieff--id-">
+                                <a href="#patrimoine-inpn-GETapi-v1-patrimoine-znieff--id-">Fiche ZNIEFF : intérêt écologique, communes ABC concernées,
+espèces déterminantes (hors confidentielles), parent et enfants.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="patrimoine-inpn-GETapi-v1-patrimoine-natura">
+                                <a href="#patrimoine-inpn-GETapi-v1-patrimoine-natura">Liste paginée des sites Natura 2000 éligibles (touchant au moins
+une commune ayant un ABC), 100 par page.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="patrimoine-inpn-GETapi-v1-patrimoine-natura--sitecode-">
+                                <a href="#patrimoine-inpn-GETapi-v1-patrimoine-natura--sitecode-">Fiche Natura 2000 : habitats et espèces de la directive recensés
+sur le site, DOCOB, communes ABC concernées. 404 si le site ne
+touche aucune commune ABC.</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-projets" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="projets">
                     <a href="#projets">Projets</a>
@@ -146,7 +175,7 @@ projets vérifiés, anomalies, contributions en attente.</a>
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: October 26, 2026</li>
+        <li>Last updated: October 28, 2026</li>
     </ul>
 </div>
 
@@ -208,7 +237,7 @@ ou `Accept: application/geo+json` (une feature par projet lié).</h2>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"format\": \"geojson\"
+    \"format\": \"json\"
 }"
 </code></pre></div>
 
@@ -224,7 +253,7 @@ const headers = {
 };
 
 let body = {
-    "format": "geojson"
+    "format": "json"
 };
 
 fetch(url, {
@@ -348,10 +377,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="format"                data-endpoint="GETapi-v1-communes--code-"
-               value="geojson"
+               value="json"
                data-component="body">
     <br>
-<p>Example: <code>geojson</code></p>
+<p>Example: <code>json</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>json</code></li> <li><code>geojson</code></li></ul>
         </div>
@@ -577,21 +606,21 @@ access-control-expose-headers: ETag, Cache-Control
 <code class="language-json" style="max-height: 300px;">{
     &quot;data&quot;: [
         {
-            &quot;date&quot;: &quot;2026-10-22 14:32:01&quot;,
-            &quot;label&quot;: &quot;Dates resynchronis&eacute;es&quot;,
-            &quot;detail&quot;: &quot;depuis 2026&quot;,
-            &quot;auteur&quot;: &quot;Synchronisation automatique&quot;,
-            &quot;commune&quot;: &quot;Vitr&eacute;&quot;,
-            &quot;projet_nom&quot;: &quot;Atlas de la Biodiversit&eacute; Communale&quot;,
-            &quot;projet_slug&quot;: &quot;atlas-de-la-biodiversite-communale&quot;,
-            &quot;projet_id&quot;: &quot;atlas-de-la-biodiversite-communale-commune-de-vitre-2025&quot;
+            &quot;date&quot;: &quot;2026-10-28 11:38:13&quot;,
+            &quot;label&quot;: &quot;Projet retir&eacute; de la carte&quot;,
+            &quot;detail&quot;: null,
+            &quot;auteur&quot;: &quot;un administrateur&quot;,
+            &quot;commune&quot;: null,
+            &quot;projet_nom&quot;: &quot;ABC d&#039;Amb&eacute;rieu-en-Bugey&quot;,
+            &quot;projet_slug&quot;: null,
+            &quot;projet_id&quot;: &quot;abc-d-amberieu-en-bugey-amberieu-en-bugey-2014&quot;
         }
     ],
     &quot;meta&quot;: {
         &quot;per_page&quot;: 1,
-        &quot;next_cursor&quot;: &quot;eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0&quot;,
+        &quot;next_cursor&quot;: &quot;eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yOCAxMTozODoxMyIsImlkIjoyODMsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0&quot;,
         &quot;prev_cursor&quot;: null,
-        &quot;next_page_url&quot;: &quot;https://observatoire-abc.fr/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0&quot;,
+        &quot;next_page_url&quot;: &quot;https://observatoire-abc.fr/api/v1/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yOCAxMTozODoxMyIsImlkIjoyODMsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0&quot;,
         &quot;licence&quot;: &quot;Etalab-2.0&quot;
     }
 }</code>
@@ -697,6 +726,3318 @@ Must be one of:
         </div>
         </form>
 
+                <h1 id="patrimoine-inpn">Patrimoine INPN</h1>
+
+    
+
+                                <h2 id="patrimoine-inpn-GETapi-v1-communes--code--patrimoine">Patrimoine écologique d&#039;une commune : ZNIEFF, sites Natura 2000
+et aires protégées la touchant, faits bruts INPN avec attribution
+MNHN et version de référence de chaque base.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-communes--code--patrimoine">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://observatoire-abc.fr/api/v1/communes/12045/patrimoine" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://observatoire-abc.fr/api/v1/communes/12045/patrimoine"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-communes--code--patrimoine">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: max-age=3600, public
+content-type: application/json
+x-ratelimit-limit: 60
+x-ratelimit-remaining: 59
+access-control-allow-origin: *
+access-control-expose-headers: ETag, Cache-Control
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: {
+        &quot;present&quot;: true,
+        &quot;versions&quot;: {
+            &quot;znieff&quot;: &quot;extraction ZNIEFF INPN 2025 (ZIP de secours)&quot;,
+            &quot;aires&quot;: &quot;Inventaire des aires prot&eacute;g&eacute;es APA-INPN &mdash; extraction juillet 2025&quot;,
+            &quot;natura&quot;: &quot;Base Natura 2000 &mdash; d&eacute;cembre 2024&quot;
+        },
+        &quot;znieff&quot;: [
+            {
+                &quot;id&quot;: 23652,
+                &quot;id_national&quot;: &quot;730011386&quot;,
+                &quot;nom&quot;: &quot;Pentes du Viaur &agrave; Centr&egrave;s&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1148.29,
+                &quot;nb_especes_determinantes&quot;: 10
+            },
+            {
+                &quot;id&quot;: 23199,
+                &quot;id_national&quot;: &quot;730030564&quot;,
+                &quot;nom&quot;: &quot;Rivi&egrave;re du Viaur&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 697.66,
+                &quot;nb_especes_determinantes&quot;: 64
+            },
+            {
+                &quot;id&quot;: 23432,
+                &quot;id_national&quot;: &quot;730010131&quot;,
+                &quot;nom&quot;: &quot;Vall&eacute;e du Viaur et ses affluents&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 27586.93,
+                &quot;nb_especes_determinantes&quot;: 165
+            }
+        ],
+        &quot;natura&quot;: [
+            {
+                &quot;sitecode&quot;: &quot;FR7301631&quot;,
+                &quot;nom&quot;: &quot;Cours de la Garonne, de l&#039;Aveyron, du Viaur et du Tarn&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_habitats&quot;: 17,
+                &quot;nb_especes&quot;: 24
+            }
+        ],
+        &quot;aires&quot;: [],
+        &quot;attribution&quot;: {
+            &quot;source&quot;: &quot;Inventaire national du patrimoine naturel (INPN) &mdash; Mus&eacute;um national d&#039;Histoire naturelle&quot;,
+            &quot;url&quot;: &quot;https://inpn.mnhn.fr&quot;,
+            &quot;licences&quot;: &quot;https://inpn.mnhn.fr/legal&quot;,
+            &quot;credit&quot;: &quot;D&#039;apr&egrave;s l&#039;inventaire national du patrimoine naturel (INPN), Mus&eacute;um national d&#039;Histoire naturelle. Esp&egrave;ces confidentielles non diffus&eacute;es.&quot;
+        }
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-communes--code--patrimoine" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-communes--code--patrimoine"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-communes--code--patrimoine"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-communes--code--patrimoine" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-communes--code--patrimoine">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-communes--code--patrimoine" data-method="GET"
+      data-path="api/v1/communes/{code}/patrimoine"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-communes--code--patrimoine', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-communes--code--patrimoine"
+                    onclick="tryItOut('GETapi-v1-communes--code--patrimoine');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-communes--code--patrimoine"
+                    onclick="cancelTryOut('GETapi-v1-communes--code--patrimoine');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-communes--code--patrimoine"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/communes/{code}/patrimoine</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-communes--code--patrimoine"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-communes--code--patrimoine"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>code</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="code"                data-endpoint="GETapi-v1-communes--code--patrimoine"
+               value="12045"
+               data-component="url">
+    <br>
+<p>Code INSEE de la commune (ex. 35282). Example: <code>12045</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="patrimoine-inpn-GETapi-v1-patrimoine-znieff">Liste paginée des ZNIEFF éligibles (touchant au moins une commune
+ayant un ABC), 100 par page.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-patrimoine-znieff">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://observatoire-abc.fr/api/v1/patrimoine/znieff?page=1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://observatoire-abc.fr/api/v1/patrimoine/znieff"
+);
+
+const params = {
+    "page": "1",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-patrimoine-znieff">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: max-age=3600, public
+content-type: application/json
+x-ratelimit-limit: 60
+x-ratelimit-remaining: 59
+access-control-allow-origin: *
+access-control-expose-headers: ETag, Cache-Control
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: {
+        &quot;items&quot;: [
+            {
+                &quot;id_national&quot;: &quot;030030036&quot;,
+                &quot;nom&quot;: &quot;Abattis et montagne Cottica&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 23895.57,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;530006026&quot;,
+                &quot;nom&quot;: &quot;ABER ILDUT&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 122.85,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;id_national&quot;: &quot;530030190&quot;,
+                &quot;nom&quot;: &quot;ABER WRAC&rsquo;H (ancien nom : ABER VRAC&rsquo;H)&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 326.27,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;820032328&quot;,
+                &quot;nom&quot;: &quot;Abords de l&#039;Etang Vidrieux et du Puy Money&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 46.96,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;730010670&quot;,
+                &quot;nom&quot;: &quot;Adour et milieux annexes&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 3634.16,
+                &quot;nb_communes_abc&quot;: 9
+            },
+            {
+                &quot;id_national&quot;: &quot;520006683&quot;,
+                &quot;nom&quot;: &quot;AERODROME DE LA FLECHE-THOREE-LES-PINS&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 189.51,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;910030009&quot;,
+                &quot;nom&quot;: &quot;A&eacute;roport de Montpellier-Fr&eacute;jorgues&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 161.46,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;820030184&quot;,
+                &quot;nom&quot;: &quot;A&eacute;roport de Valence-Chabeuil&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 130.76,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;410030336&quot;,
+                &quot;nom&quot;: &quot;AFFLUENT DE LA MORTAGNE A MORTAGNE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 31.14,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;410030331&quot;,
+                &quot;nom&quot;: &quot;AFFLUENT DU SAINT-OGER A DEYVILLERS&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 27.85,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;id_national&quot;: &quot;820031383&quot;,
+                &quot;nom&quot;: &quot;Affluents de la Turdine&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 892.47,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;430020424&quot;,
+                &quot;nom&quot;: &quot;A GALEVEU&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 16.35,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;940031087&quot;,
+                &quot;nom&quot;: &quot;AGROSYST&Egrave;ME D&rsquo;AFA APIETTO&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 330.85,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;id_national&quot;: &quot;730030158&quot;,
+                &quot;nom&quot;: &quot;Agrosyst&egrave;me de Berthol&egrave;ne&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1489.97,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;730030095&quot;,
+                &quot;nom&quot;: &quot;Agrosyst&egrave;me de Grioudas&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 335.38,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;940013183&quot;,
+                &quot;nom&quot;: &quot;AGROSYSTEME DE SAINT JEAN&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 85.08,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;940013182&quot;,
+                &quot;nom&quot;: &quot;AGROSYSTEME DE ST-JULIEN&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 72.28,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;940013186&quot;,
+                &quot;nom&quot;: &quot;AJACCIO-ST ANTOINE-MONT SALARIO-SCUDO&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 889.33,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;430002264&quot;,
+                &quot;nom&quot;: &quot;&Agrave; LA DRUGNE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 44.69,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;430020512&quot;,
+                &quot;nom&quot;: &quot;&Agrave; LA TOURBI&Egrave;RE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 9.82,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;520016228&quot;,
+                &quot;nom&quot;: &quot;ALENTOURS DU VAL&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 6.7,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;420030067&quot;,
+                &quot;nom&quot;: &quot;Alignements de saules t&ecirc;tards de Kolbsheim&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 18.36,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;830020421&quot;,
+                &quot;nom&quot;: &quot;ALLIER PONT DE MIREFLEURS - DALLET&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 831.46,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;id_national&quot;: &quot;820031758&quot;,
+                &quot;nom&quot;: &quot;Alpages du Mont Br&eacute;quin&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1543.56,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;820030569&quot;,
+                &quot;nom&quot;: &quot;Alpages et pr&eacute;bois du S&eacute;n&eacute;pi&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1904.34,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;820031569&quot;,
+                &quot;nom&quot;: &quot;Alpages, rochers et tourbi&egrave;re de la Dent d&rsquo;Oche&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1439.92,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;430020423&quot;,
+                &quot;nom&quot;: &quot;A MONTAIN&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 27.88,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;410030475&quot;,
+                &quot;nom&quot;: &quot;ANASTOMOSE DE LA MOSELLE A IGNEY&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 165.63,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;id_national&quot;: &quot;420030378&quot;,
+                &quot;nom&quot;: &quot;Ancien carreau minier &agrave; Ungersheim&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 11.48,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;520520002&quot;,
+                &quot;nom&quot;: &quot;ANCIEN COURS DE LA BAISSE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 274.32,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;110020328&quot;,
+                &quot;nom&quot;: &quot;ANCIEN HIPPODROME DE LA CROIX DAUPHINE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 8.37,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;420014522&quot;,
+                &quot;nom&quot;: &quot;Ancien lit majeur du Rhin de Strasbourg &agrave; Lauterbourg&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 13331.82,
+                &quot;nb_communes_abc&quot;: 6
+            },
+            {
+                &quot;id_national&quot;: &quot;420014529&quot;,
+                &quot;nom&quot;: &quot;Ancien lit majeur du Rhin de Village-Neuf &agrave; Strasbourg&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 22900.36,
+                &quot;nb_communes_abc&quot;: 12
+            },
+            {
+                &quot;id_national&quot;: &quot;930020167&quot;,
+                &quot;nom&quot;: &quot;ANCIEN MARAIS DE SAINT-GABRIEL&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 11.09,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;520015236&quot;,
+                &quot;nom&quot;: &quot;ANCIENNE ARDOISIERE DE SAINT AIGNAN&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 18.21,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;410001923&quot;,
+                &quot;nom&quot;: &quot;ANCIENNE CARRIERE A REMBERCOURT-SUR-MAD&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 2.63,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;730030431&quot;,
+                &quot;nom&quot;: &quot;Ancienne carri&egrave;re de Saint-Cricq&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 38.63,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;820000422&quot;,
+                &quot;nom&quot;: &quot;Ancienne carri&egrave;re de Saint Martin&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 18.78,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;940030371&quot;,
+                &quot;nom&quot;: &quot;ANCIENNE CARRIERE RD 14, BORD TAVIGNANO&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 0.1,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;110120055&quot;,
+                &quot;nom&quot;: &quot;ANCIENNE GLAISIERE DES LIBEZIERES&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 3.6,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;720030024&quot;,
+                &quot;nom&quot;: &quot;ANCIENNE GRAVIERE DU MARQUIS&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1.72,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;820032423&quot;,
+                &quot;nom&quot;: &quot;Ancienne mine de la Soulagette&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 3.46,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;820032422&quot;,
+                &quot;nom&quot;: &quot;Ancienne mine du Mas&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 3.87,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;110001451&quot;,
+                &quot;nom&quot;: &quot;ANCIENNE SABLIERE DE PAINCOURT&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 0.74,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;110030034&quot;,
+                &quot;nom&quot;: &quot;ANCIENNE SABLIERE DU BOIS BIQUET&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 0.63,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;520220066&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES ARDOISIERES D&#039;ANGERS-TRELAZE&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 147.73,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;520016253&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES CARRIERES DE LA JASLERIE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 21.57,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;210020243&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES CARRIERES DE LA MALADIERE ET DU COTEAU GERARD ENTRE CHAUMONT ET CHOIGNES&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 2.95,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;520616274&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES CARRIERES DE MAUVES-SUR-LOIRE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1.09,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;110020267&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES CARRIERES DU VOSSERY&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 2.57,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;210013049&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES CARRIERES ENTRE BOSSANCOURT, ECLANCE ET ARSONVAL&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 335.64,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;id_national&quot;: &quot;520030115&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES FORGES DE TRIGNAC&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1.42,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;940030410&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES MINES DE CASTIFAO&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 299.87,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;940030425&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES MINES DE FRANCONE ET DEFILE DU LANCONE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 478.88,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;940030405&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES MINES DE LOZARI&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1.41,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;250030132&quot;,
+                &quot;nom&quot;: &quot;ANCIENNES MINES DE SAINT-REMY-SUR-ORNE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 59.77,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;01M000014&quot;,
+                &quot;nom&quot;: &quot;Anse &agrave; la Barque&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 10.67,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;010000022&quot;,
+                &quot;nom&quot;: &quot;Anse &agrave; la Barque et bassin versant Morne Bellevue&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 81.27,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;010000030&quot;,
+                &quot;nom&quot;: &quot;Anse &agrave; la Barque - rivi&egrave;re&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 84.15,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;010000029&quot;,
+                &quot;nom&quot;: &quot;Anse &agrave; l&#039;Eau&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 260.39,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;93M000022&quot;,
+                &quot;nom&quot;: &quot;ANSE DE CARTEAU&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1002.69,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;530014341&quot;,
+                &quot;nom&quot;: &quot;ANSE DE GAREAU&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 97.61,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;530030187&quot;,
+                &quot;nom&quot;: &quot;ANSE DE KEROULLE ET RIVIERE DU FAOU&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 400.86,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;01M000007&quot;,
+                &quot;nom&quot;: &quot;Anse de la Gu&eacute;rite &agrave; Anse du Canal&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 497.03,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;540003309&quot;,
+                &quot;nom&quot;: &quot;ANSE DE L&#039;AIGUILLON, MARAIS DE CHARRON&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 5290.42,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;id_national&quot;: &quot;530014342&quot;,
+                &quot;nom&quot;: &quot;ANSE DE LA RICHARDAIS&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 89.51,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;940014119&quot;,
+                &quot;nom&quot;: &quot;ANSE DE MINACCIA&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 8.15,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;530006456&quot;,
+                &quot;nom&quot;: &quot;ANSE DE PENFOUL&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 116.23,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;530014343&quot;,
+                &quot;nom&quot;: &quot;ANSE DE PLEUDIHEN&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 204.99,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;530015667&quot;,
+                &quot;nom&quot;: &quot;ANSE DE QUELISOY&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 52.67,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;530002406&quot;,
+                &quot;nom&quot;: &quot;ANSE DE SAINT-BRIAC-SUR-MER&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 151.52,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;010030034&quot;,
+                &quot;nom&quot;: &quot;Anse du Bord de Mer au Frais / Grand Nord&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 59.22,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;530005995&quot;,
+                &quot;nom&quot;: &quot;ANSE DU LEDANO DANS L&#039;ESTUAIRE DU TRIEUX&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 249.13,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;530008376&quot;,
+                &quot;nom&quot;: &quot;ANSE DU VERGER&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 62.64,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;530030007&quot;,
+                &quot;nom&quot;: &quot;ANSE ET RIVES DU VINCIN&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 107.92,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;020030012&quot;,
+                &quot;nom&quot;: &quot;Anse L&eacute;vrier - Anse Couleuvre Plateau Cocoyer&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 187,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;23M000000&quot;,
+                &quot;nom&quot;: &quot;Antifer - Etretat Porte d&#039;Aval&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 137.68,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;110001429&quot;,
+                &quot;nom&quot;: &quot;AQUEDUC SOUTERRAIN DE LA VO&Ucirc;TE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1.1,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;930012458&quot;,
+                &quot;nom&quot;: &quot;ARCHIPEL DE RIOU&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 166.8,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;53M000006&quot;,
+                &quot;nom&quot;: &quot;ARCHIPEL DES 7 ILES&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 910,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;930020291&quot;,
+                &quot;nom&quot;: &quot;ARCHIPEL DES EMBIEZ&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 104.68,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;930012457&quot;,
+                &quot;nom&quot;: &quot;ARCHIPEL DU FRIOUL, &Icirc;LES D&#039;ENDOUME&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 198.11,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;410010375&quot;,
+                &quot;nom&quot;: &quot;ARC MOSELLAN&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 22480.28,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;520030070&quot;,
+                &quot;nom&quot;: &quot;ARDENAY&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 0.67,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;730012030&quot;,
+                &quot;nom&quot;: &quot;Arize et affluents en aval de Cadarcet&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 379.97,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;910011834&quot;,
+                &quot;nom&quot;: &quot;Arri&egrave;re-dunes de l&#039;Espiguette&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 59.9,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;260014851&quot;,
+                &quot;nom&quot;: &quot;ARROUX, DREE ET TERNIN&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 5450.66,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;830007459&quot;,
+                &quot;nom&quot;: &quot;ARTENSE&quot;,
+                &quot;ty_zone&quot;: 2,
+                &quot;surface_ha&quot;: 33300.99,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;id_national&quot;: &quot;520030033&quot;,
+                &quot;nom&quot;: &quot;&agrave; supprimer AC&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 0.01,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;520030055&quot;,
+                &quot;nom&quot;: &quot;&agrave; supprimer AC&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 0.01,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;240009769&quot;,
+                &quot;nom&quot;: &quot;AULNAIE DE LA FONTAINE DES RAIS (FORET DOMANIALE DE SAINT-PALAIS)&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 1.12,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;110001390&quot;,
+                &quot;nom&quot;: &quot;AULNAIE DU MOULIN NEUF A FRECAMBEAU&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 19.13,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;id_national&quot;: &quot;240030854&quot;,
+                &quot;nom&quot;: &quot;AULNAIE-FRENAIE DE L&#039;ALLEE DES RIOUX (FORET DOMANIALE D&#039;ALLOGNY)&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 103.57,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;240009669&quot;,
+                &quot;nom&quot;: &quot;AULNAIE-FRENAIE DE MALITOURNE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 15.21,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;240030741&quot;,
+                &quot;nom&quot;: &quot;AULNAIE MARECAGEUSE DU PARC&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 14.17,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;240030422&quot;,
+                &quot;nom&quot;: &quot;AULNAIES-FRENAIES DE LA FONTAINE DES VERRIERS ET DE LA FONTAINE SOUS TERRE (FORET DOMANIALE DE SAINT-PALAIS)&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 81.7,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;240009773&quot;,
+                &quot;nom&quot;: &quot;AULNAIE TOURBEUSE DE LA RACLERIE&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 10.37,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;430020511&quot;,
+                &quot;nom&quot;: &quot;AUX PIERRES ET EN FOURADON&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 19.13,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;id_national&quot;: &quot;430002227&quot;,
+                &quot;nom&quot;: &quot;AUX VOU&Egrave;TES ET SUR LES PIERRAILLES&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 74.12,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;id_national&quot;: &quot;730030456&quot;,
+                &quot;nom&quot;: &quot;Aval de l&#039;Arget et affluents (vall&eacute;e de la Barguill&egrave;re)&quot;,
+                &quot;ty_zone&quot;: 1,
+                &quot;surface_ha&quot;: 71.49,
+                &quot;nb_communes_abc&quot;: 1
+            }
+        ],
+        &quot;total&quot;: 5414,
+        &quot;page&quot;: 1,
+        &quot;par_page&quot;: 100,
+        &quot;pages&quot;: 55,
+        &quot;versions&quot;: {
+            &quot;znieff&quot;: &quot;extraction ZNIEFF INPN 2025 (ZIP de secours)&quot;,
+            &quot;aires&quot;: &quot;Inventaire des aires prot&eacute;g&eacute;es APA-INPN &mdash; extraction juillet 2025&quot;,
+            &quot;natura&quot;: &quot;Base Natura 2000 &mdash; d&eacute;cembre 2024&quot;
+        },
+        &quot;attribution&quot;: {
+            &quot;source&quot;: &quot;Inventaire national du patrimoine naturel (INPN) &mdash; Mus&eacute;um national d&#039;Histoire naturelle&quot;,
+            &quot;url&quot;: &quot;https://inpn.mnhn.fr&quot;,
+            &quot;licences&quot;: &quot;https://inpn.mnhn.fr/legal&quot;,
+            &quot;credit&quot;: &quot;D&#039;apr&egrave;s l&#039;inventaire national du patrimoine naturel (INPN), Mus&eacute;um national d&#039;Histoire naturelle. Esp&egrave;ces confidentielles non diffus&eacute;es.&quot;
+        }
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-patrimoine-znieff" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-patrimoine-znieff"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-patrimoine-znieff"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-patrimoine-znieff" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-patrimoine-znieff">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-patrimoine-znieff" data-method="GET"
+      data-path="api/v1/patrimoine/znieff"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-patrimoine-znieff', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-patrimoine-znieff"
+                    onclick="tryItOut('GETapi-v1-patrimoine-znieff');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-patrimoine-znieff"
+                    onclick="cancelTryOut('GETapi-v1-patrimoine-znieff');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-patrimoine-znieff"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/patrimoine/znieff</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-patrimoine-znieff"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-patrimoine-znieff"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-v1-patrimoine-znieff"
+               value="1"
+               data-component="query">
+    <br>
+<p>Page demandée (bornée par le service). Example: <code>1</code></p>
+            </div>
+                </form>
+
+                    <h2 id="patrimoine-inpn-GETapi-v1-patrimoine-znieff--id-">Fiche ZNIEFF : intérêt écologique, communes ABC concernées,
+espèces déterminantes (hors confidentielles), parent et enfants.</h2>
+
+<p>
+</p>
+
+<p>404 si la zone ne touche aucune commune ABC.</p>
+
+<span id="example-requests-GETapi-v1-patrimoine-znieff--id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://observatoire-abc.fr/api/v1/patrimoine/znieff/730010131" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://observatoire-abc.fr/api/v1/patrimoine/znieff/730010131"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-patrimoine-znieff--id-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: max-age=3600, public
+content-type: application/json
+x-ratelimit-limit: 60
+x-ratelimit-remaining: 59
+access-control-allow-origin: *
+access-control-expose-headers: ETag, Cache-Control
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: {
+        &quot;id_national&quot;: &quot;730010131&quot;,
+        &quot;nom&quot;: &quot;Vall&eacute;e du Viaur et ses affluents&quot;,
+        &quot;ty_zone&quot;: 2,
+        &quot;surface_ha&quot;: 27586.93,
+        &quot;altitude_min&quot;: 147,
+        &quot;altitude_max&quot;: 1109,
+        &quot;texte_interet&quot;: null,
+        &quot;texte_delimitation&quot;: &quot;&lt;p&gt;La ZNIEFF est compos&eacute;e de la vall&eacute;e du Viaur et de ses affluents. Le bassin versant du Viaur recouvre 61 communes aveyronnaises, 11 communes tarnaises et une commune du Tarn-et-Garonne, soit au total 73 communes. &Agrave; Tanus, le Viaur sort du d&eacute;partement de l&rsquo;Aveyron pour servir, durant une bonne partie de son cours, de limite entre les d&eacute;partements du Tarn et de l&rsquo;Aveyron. Quelques secteurs dans sa partie aval sont enti&egrave;rement inclus dans le d&eacute;partement du Tarn. Le Viaur, affluent rive gauche de l&rsquo;Aveyron, prend sa source au sud du puech del Pal sur la commune de V&eacute;zins-du-L&eacute;v&eacute;zou, &agrave; une altitude de 1 090 m. Il serpente d&rsquo;est en ouest &agrave; travers deux grandes r&eacute;gions naturelles que sont le L&eacute;v&eacute;zou et le S&eacute;gala. Apr&egrave;s un parcours de 163 km, il conflue avec l&rsquo;Aveyron au niveau de Saint-Martin-Lagu&eacute;pie (d&eacute;partement du Tarn) et Lagu&eacute;pie (d&eacute;partement du Tarn-et-Garonne) &agrave; une altitude de 150 m. La ZNIEFF abrite une flore et une faune remarquables et diversifi&eacute;es.&lt;/p&gt;&quot;,
+        &quot;texte_bilan&quot;: null,
+        &quot;communes&quot;: [
+            {
+                &quot;code&quot;: &quot;12029&quot;,
+                &quot;libelle&quot;: &quot;Bor-et-Bar&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12032&quot;,
+                &quot;libelle&quot;: &quot;Boussac&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12041&quot;,
+                &quot;libelle&quot;: &quot;Caban&egrave;s&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12043&quot;,
+                &quot;libelle&quot;: &quot;Calmont&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12045&quot;,
+                &quot;libelle&quot;: &quot;Camboulazet&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12046&quot;,
+                &quot;libelle&quot;: &quot;Camjac&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12056&quot;,
+                &quot;libelle&quot;: &quot;Baraqueville&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12057&quot;,
+                &quot;libelle&quot;: &quot;Cassagnes-B&eacute;gonh&egrave;s&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12059&quot;,
+                &quot;libelle&quot;: &quot;Castanet&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12060&quot;,
+                &quot;libelle&quot;: &quot;Castelmary&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12065&quot;,
+                &quot;libelle&quot;: &quot;Centr&egrave;s&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12085&quot;,
+                &quot;libelle&quot;: &quot;Crespin&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12113&quot;,
+                &quot;libelle&quot;: &quot;Gramond&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12135&quot;,
+                &quot;libelle&quot;: &quot;Lunac&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12137&quot;,
+                &quot;libelle&quot;: &quot;Manhac&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12144&quot;,
+                &quot;libelle&quot;: &quot;Meljac&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12169&quot;,
+                &quot;libelle&quot;: &quot;Naucelle&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12189&quot;,
+                &quot;libelle&quot;: &quot;Pradinas&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12194&quot;,
+                &quot;libelle&quot;: &quot;Quins&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12210&quot;,
+                &quot;libelle&quot;: &quot;Saint-Andr&eacute;-de-Najac&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12234&quot;,
+                &quot;libelle&quot;: &quot;Sainte-Juliette-sur-Viaur&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12235&quot;,
+                &quot;libelle&quot;: &quot;Saint-Just-sur-Viaur&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12262&quot;,
+                &quot;libelle&quot;: &quot;Sauveterre-de-Rouergue&quot;
+            },
+            {
+                &quot;code&quot;: &quot;12276&quot;,
+                &quot;libelle&quot;: &quot;Tauriac-de-Naucelle&quot;
+            },
+            {
+                &quot;code&quot;: &quot;81110&quot;,
+                &quot;libelle&quot;: &quot;Jouqueviel&quot;
+            },
+            {
+                &quot;code&quot;: &quot;81168&quot;,
+                &quot;libelle&quot;: &quot;Mirandol-Bourgnounac&quot;
+            },
+            {
+                &quot;code&quot;: &quot;81180&quot;,
+                &quot;libelle&quot;: &quot;Montirat&quot;
+            },
+            {
+                &quot;code&quot;: &quot;81201&quot;,
+                &quot;libelle&quot;: &quot;Pampelonne&quot;
+            },
+            {
+                &quot;code&quot;: &quot;81245&quot;,
+                &quot;libelle&quot;: &quot;Saint-Christophe&quot;
+            },
+            {
+                &quot;code&quot;: &quot;81292&quot;,
+                &quot;libelle&quot;: &quot;Tanus&quot;
+            },
+            {
+                &quot;code&quot;: &quot;81302&quot;,
+                &quot;libelle&quot;: &quot;Tr&eacute;ban&quot;
+            }
+        ],
+        &quot;nb_communes_total&quot;: 56,
+        &quot;groupes_especes&quot;: [
+            {
+                &quot;groupe&quot;: &quot;Amphibiens&quot;,
+                &quot;noms&quot;: [
+                    &quot;Epidalea calamita (Laurenti, 1768)&quot;,
+                    &quot;Rana dalmatina Fitzinger in Bonaparte, 1838&quot;,
+                    &quot;Salamandra salamandra (Linnaeus, 1758)&quot;,
+                    &quot;Triturus marmoratus (Latreille, 1800)&quot;
+                ],
+                &quot;n&quot;: 4
+            },
+            {
+                &quot;groupe&quot;: &quot;Ascomyc&egrave;tes&quot;,
+                &quot;noms&quot;: [
+                    &quot;Ascotremella faginea (Peck) Seaver&quot;,
+                    &quot;Caloscypha fulgens (Pers. ex Fr.) Boudier&quot;,
+                    &quot;Scutellinia scutellata (L. ex Fr.) Lambotte&quot;
+                ],
+                &quot;n&quot;: 3
+            },
+            {
+                &quot;groupe&quot;: &quot;Basidiomyc&egrave;tes&quot;,
+                &quot;noms&quot;: [
+                    &quot;Agaricus comtulus Fr.&quot;,
+                    &quot;Albatrellus pes-caprae (Pers. : Fr.) Pouzar&quot;,
+                    &quot;Arrhenia spathulata (Fr. : Fr.) Redhead&quot;,
+                    &quot;Aureoboletus gentilis (Qu&eacute;let) Pouzar&quot;,
+                    &quot;Boletus aemilii Barbier&quot;,
+                    &quot;Boletus impolitus Fr.&quot;,
+                    &quot;Boletus regius Krombholz&quot;,
+                    &quot;Bovista paludosa L&eacute;veill&eacute;&quot;,
+                    &quot;Clavulinopsis fusiformis (Sow. : Fr.) Corner&quot;,
+                    &quot;Clitocybe fritilliformis (Lasch) Gillet&quot;,
+                    &quot;Clitocybe trulliformis (Fr. : Fr.) Qu&eacute;let&quot;,
+                    &quot;Cortinarius balteatocumatilis R. Henry ex P.D. Orton&quot;,
+                    &quot;Cortinarius balteatus (Fr.) Fr.&quot;,
+                    &quot;Cortinarius glaucopus (J.C. Sch. : Fr.) Fr.&quot;,
+                    &quot;Cortinarius humicola (Qu&eacute;let) R. Maire&quot;,
+                    &quot;Cortinarius lividoviolaceus R. Henry ex R. Henry&quot;,
+                    &quot;Cortinarius pseudosulphureus Henry ex Orton&quot;,
+                    &quot;Cortinarius turmalis Fr.&quot;,
+                    &quot;Cystoderma granulosum (Batsch : Fr.) Fayod&quot;,
+                    &quot;Entoloma asprellum (Fr. : Fr.) Fayod&quot;,
+                    &quot;Entoloma icterinum (Fr. : Fr.) Moser&quot;,
+                    &quot;Entoloma mougeotii (Fr.) Hesler&quot;,
+                    &quot;Galerina paludosa (Fr.) K&uuml;hner&quot;,
+                    &quot;Galerina sphagnorum (Pers. : Fr.) K&uuml;hner&quot;,
+                    &quot;Gomphus clavatus (Pers. : Fr.) S.F. Gray&quot;,
+                    &quot;Hericium erinaceum (Bulliard ex Fr.) Pers.&quot;,
+                    &quot;Hohenbuehelia tremula (J.C. Sch. : Fr.) Thorn &amp; Barron&quot;,
+                    &quot;Hydnellum concrescens (Pers.) Banker&quot;,
+                    &quot;Hygrocybe insipida (J.E. Lange ex Lundell) Moser&quot;,
+                    &quot;Hygrocybe lepida Arnolds&quot;,
+                    &quot;Hygrophorus marzuolus (Fr. : Fr.) Bresadola&quot;,
+                    &quot;Hygrophorus mesotephrus Berk. &amp; Br.&quot;,
+                    &quot;Hygrophorus pseudodiscoideus var. formosus Bon&quot;,
+                    &quot;Lactarius pergamenus (Swartz : Fr.) Fr.&quot;,
+                    &quot;Omphalina pyxidata (Bull. : Fr.) Qu&eacute;let&quot;,
+                    &quot;Omphalina sphagnicola (Berk.) Moser&quot;,
+                    &quot;Panellus ringens (Fr. : Fr.) Romagn.&quot;,
+                    &quot;Pholiota henningsii (Bresadola) P.D. Orton&quot;,
+                    &quot;Pholiota lubrica (Pers. : Fr.) Singer&quot;,
+                    &quot;Phylloporus pelletieri (L&eacute;veill&eacute;) Qu&eacute;let&quot;,
+                    &quot;Pleurotus dryinus (Pers. : Fr.) Kummer&quot;,
+                    &quot;Pleurotus ostreatus (Jacq. : Fr.) Kummer&quot;,
+                    &quot;Ramaria apiculata (Fr. : Fr.) Donk&quot;,
+                    &quot;Ramaria aurea (J.C. Sch.) Qu&eacute;let&quot;,
+                    &quot;Ramaria flava (J.C. Sch. : Fr.) Qu&eacute;let&quot;,
+                    &quot;Ramaria formosa (Pers. : Fr.) Qu&eacute;let&quot;,
+                    &quot;Rhodocybe mundula (Lasch : Fr.) Singer&quot;,
+                    &quot;Russula barlae Qu&eacute;let&quot;,
+                    &quot;Russula cicatricata Romagn. ex Bon&quot;,
+                    &quot;Russula melliolens Qu&eacute;let&quot;,
+                    &quot;Russula silvestris (Singer) Reumaux&quot;,
+                    &quot;Russula sororia (Fr.) Romell&quot;,
+                    &quot;Sarcodontia setosa (Pers.) Donk&quot;,
+                    &quot;Spongipellis pachyodon (Pers. : Fr.) Kotlaba &amp; Pouzar&quot;,
+                    &quot;Strobilomyces floccopus (Vahl : Fr.) P. Karsten&quot;,
+                    &quot;Tephrocybe osmophora (E.-J. Gilbert) Bon&quot;,
+                    &quot;Tricholoma joachimii Bon &amp; Riva&quot;
+                ],
+                &quot;n&quot;: 57
+            },
+            {
+                &quot;groupe&quot;: &quot;Bryophytes&quot;,
+                &quot;noms&quot;: [
+                    &quot;Fissidens exilis Hedw.&quot;,
+                    &quot;Sphagnum capillifolium (Ehrh.) Hedw.&quot;,
+                    &quot;Sphagnum papillosum Lindb.&quot;
+                ],
+                &quot;n&quot;: 3
+            },
+            {
+                &quot;groupe&quot;: &quot;Col&eacute;opt&egrave;res&quot;,
+                &quot;noms&quot;: [
+                    &quot;Ampedus praeustus (Fabricius, 1792)&quot;,
+                    &quot;Prostomis mandibularis (Fabricius, 1801)&quot;
+                ],
+                &quot;n&quot;: 2
+            },
+            {
+                &quot;groupe&quot;: &quot;Crustac&eacute;s&quot;,
+                &quot;noms&quot;: [
+                    &quot;Austropotamobius pallipes (Lereboullet, 1858)&quot;
+                ],
+                &quot;n&quot;: 1
+            },
+            {
+                &quot;groupe&quot;: &quot;Mammif&egrave;res&quot;,
+                &quot;noms&quot;: [
+                    &quot;Lutra lutra (Linnaeus, 1758)&quot;,
+                    &quot;Martes martes (Linnaeus, 1758)&quot;,
+                    &quot;Mustela erminea Linnaeus, 1758&quot;,
+                    &quot;Mustela putorius Linnaeus, 1758&quot;
+                ],
+                &quot;n&quot;: 4
+            },
+            {
+                &quot;groupe&quot;: &quot;Oiseaux&quot;,
+                &quot;noms&quot;: [
+                    &quot;Anthus pratensis (Linnaeus, 1758)&quot;,
+                    &quot;Athene noctua (Scopoli, 1769)&quot;,
+                    &quot;Bubo bubo (Linnaeus, 1758)&quot;,
+                    &quot;Circaetus gallicus (Gmelin, 1788)&quot;,
+                    &quot;Circus cyaneus (Linnaeus, 1758)&quot;,
+                    &quot;Dendrocopos medius (Linnaeus, 1758)&quot;,
+                    &quot;Falco peregrinus Tunstall, 1771&quot;,
+                    &quot;Lanius collurio Linnaeus, 1758&quot;,
+                    &quot;Lanius excubitor Linnaeus, 1758&quot;,
+                    &quot;Lanius senator Linnaeus, 1758&quot;,
+                    &quot;Lullula arborea (Linnaeus, 1758)&quot;,
+                    &quot;Milvus milvus (Linnaeus, 1758)&quot;,
+                    &quot;Nycticorax nycticorax (Linnaeus, 1758)&quot;,
+                    &quot;Saxicola rubetra (Linnaeus, 1758)&quot;,
+                    &quot;Streptopelia turtur (Linnaeus, 1758)&quot;,
+                    &quot;Tachybaptus ruficollis (Pallas, 1764)&quot;,
+                    &quot;Upupa epops Linnaeus, 1758&quot;
+                ],
+                &quot;n&quot;: 17
+            },
+            {
+                &quot;groupe&quot;: &quot;Phan&eacute;rogames&quot;,
+                &quot;noms&quot;: [
+                    &quot;Aconitum lycoctonum L., 1753&quot;,
+                    &quot;Adoxa moschatellina L., 1753&quot;,
+                    &quot;Allium ericetorum Thore, 1803&quot;,
+                    &quot;Arnica montana var. montana L., 1753&quot;,
+                    &quot;Asarina procumbens Mill., 1768&quot;,
+                    &quot;Carex binervis Sm., 1800&quot;,
+                    &quot;Carex echinata Murray, 1770&quot;,
+                    &quot;Carex lasiocarpa Ehrh., 1784&quot;,
+                    &quot;Carex pulicaris L., 1753&quot;,
+                    &quot;Carex rostrata Stokes, 1787&quot;,
+                    &quot;Carex umbrosa Host, 1801&quot;,
+                    &quot;Carex viridula subsp. brachyrrhyncha (Celak.) B.Schmid, 1983&quot;,
+                    &quot;Carex viridula var. elatior (Schltdl.) Crins, 1989&quot;,
+                    &quot;Carlina acanthifolia subsp. cynara (Pourr. ex DC.) Arcang., 1882&quot;,
+                    &quot;Cirsium rivulare (Jacq.) All., 1789&quot;,
+                    &quot;Crocus nudiflorus Sm., 1798&quot;,
+                    &quot;Cytisus oromediterraneus Rivas Mart. &amp; al., 1984&quot;,
+                    &quot;Dactylorhiza incarnata subsp. incarnata (L.) So&oacute;, 1962&quot;,
+                    &quot;Dianthus deltoides subsp. deltoides L., 1753&quot;,
+                    &quot;Drosera rotundifolia L., 1753&quot;,
+                    &quot;Epipactis palustris (L.) Crantz, 1769&quot;,
+                    &quot;Eriophorum latifolium Hoppe, 1800&quot;,
+                    &quot;Eriophorum polystachion L., 1753&quot;,
+                    &quot;Euphorbia angulata Jacq., 1789&quot;,
+                    &quot;Festuca rivularis Boiss., 1838&quot;,
+                    &quot;Gentiana pneumonanthe L., 1753&quot;,
+                    &quot;Gentianella campestris (L.) B&ouml;rner, 1912&quot;,
+                    &quot;Hypericum elodes L., 1759&quot;,
+                    &quot;Impatiens noli-tangere L., 1753&quot;,
+                    &quot;Isolepis setacea (L.) R.Br., 1810&quot;,
+                    &quot;Juncus alpinoarticulatus Chaix, 1785&quot;,
+                    &quot;Leucanthemum subglaucum De Laramb., 1861&quot;,
+                    &quot;Lobelia urens L., 1753&quot;,
+                    &quot;Menyanthes trifoliata L., 1753&quot;,
+                    &quot;Narcissus poeticus subsp. poeticus L., 1753&quot;,
+                    &quot;Narthecium ossifragum (L.) Huds., 1762&quot;,
+                    &quot;Pedicularis palustris L., 1753&quot;,
+                    &quot;Phyteuma gallicum R.Schulz, 1904&quot;,
+                    &quot;Polygonatum multiflorum (L.) All., 1785&quot;,
+                    &quot;Polygonum bistorta L.&quot;,
+                    &quot;Potamogeton polygonifolius Pourr., 1788&quot;,
+                    &quot;Potentilla palustris (L.) Scop., 1771&quot;,
+                    &quot;Quercus pyrenaica Willd., 1805&quot;,
+                    &quot;Ranunculus aconitifolius L., 1753&quot;,
+                    &quot;Ranunculus hederaceus L., 1753&quot;,
+                    &quot;Rhynchospora alba (L.) Vahl, 1805&quot;,
+                    &quot;Rumex longifolius DC., 1815&quot;,
+                    &quot;Sanguisorba officinalis L., 1753&quot;,
+                    &quot;Schoenus nigricans L., 1753&quot;,
+                    &quot;Scilla lilio-hyacinthus L., 1753&quot;,
+                    &quot;Serratula tinctoria subsp. monticola (Boreau) Berher, 1887&quot;,
+                    &quot;Sibthorpia europaea L., 1753&quot;,
+                    &quot;Simethis mattiazzii (Vand.) G.L&oacute;pez &amp; Jarvis, 1984&quot;,
+                    &quot;Trichophorum cespitosum (L.) Hartm., 1849&quot;,
+                    &quot;Ulex minor Roth, 1797&quot;,
+                    &quot;Utricularia minor L., 1753&quot;,
+                    &quot;Valeriana dioica L., 1753&quot;,
+                    &quot;Veratrum album L., 1753&quot;
+                ],
+                &quot;n&quot;: 58
+            },
+            {
+                &quot;groupe&quot;: &quot;Poissons&quot;,
+                &quot;noms&quot;: [
+                    &quot;Anguilla anguilla (Linnaeus, 1758)&quot;,
+                    &quot;Barbatula Linck, 1790&quot;,
+                    &quot;Esox lucius Linnaeus, 1758&quot;,
+                    &quot;Gobio Cuvier, 1816&quot;,
+                    &quot;Lampetra planeri (Bloch, 1784)&quot;,
+                    &quot;Leuciscus burdigalensis Valenciennes, 1844&quot;,
+                    &quot;Parachondrostoma toxostoma (Vallot, 1837)&quot;,
+                    &quot;Phoxinus phoxinus (Linnaeus, 1758)&quot;,
+                    &quot;Scardinius erythrophthalmus (Linnaeus, 1758)&quot;,
+                    &quot;Tinca tinca (Linnaeus, 1758)&quot;
+                ],
+                &quot;n&quot;: 10
+            },
+            {
+                &quot;groupe&quot;: &quot;Pt&eacute;ridophytes&quot;,
+                &quot;noms&quot;: [
+                    &quot;Asplenium foreziense Legrand, 1885&quot;,
+                    &quot;Asplenium obovatum subsp. billotii (F.W.Schultz) O.Bol&ograve;s, Vigo, Massales &amp; Ninot, 1990&quot;,
+                    &quot;Equisetum fluviatile L., 1753&quot;,
+                    &quot;Osmunda regalis L., 1753&quot;
+                ],
+                &quot;n&quot;: 4
+            },
+            {
+                &quot;groupe&quot;: &quot;Reptiles&quot;,
+                &quot;noms&quot;: [
+                    &quot;Podarcis liolepis (Boulenger, 1905)&quot;,
+                    &quot;Zootoca vivipara (Lichtenstein, 1823)&quot;
+                ],
+                &quot;n&quot;: 2
+            }
+        ],
+        &quot;parent&quot;: null,
+        &quot;enfants&quot;: [],
+        &quot;versions&quot;: {
+            &quot;znieff&quot;: &quot;extraction ZNIEFF INPN 2025 (ZIP de secours)&quot;,
+            &quot;aires&quot;: &quot;Inventaire des aires prot&eacute;g&eacute;es APA-INPN &mdash; extraction juillet 2025&quot;,
+            &quot;natura&quot;: &quot;Base Natura 2000 &mdash; d&eacute;cembre 2024&quot;
+        },
+        &quot;attribution&quot;: {
+            &quot;source&quot;: &quot;Inventaire national du patrimoine naturel (INPN) &mdash; Mus&eacute;um national d&#039;Histoire naturelle&quot;,
+            &quot;url&quot;: &quot;https://inpn.mnhn.fr&quot;,
+            &quot;licences&quot;: &quot;https://inpn.mnhn.fr/legal&quot;,
+            &quot;credit&quot;: &quot;D&#039;apr&egrave;s l&#039;inventaire national du patrimoine naturel (INPN), Mus&eacute;um national d&#039;Histoire naturelle. Esp&egrave;ces confidentielles non diffus&eacute;es.&quot;
+        }
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-patrimoine-znieff--id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-patrimoine-znieff--id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-patrimoine-znieff--id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-patrimoine-znieff--id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-patrimoine-znieff--id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-patrimoine-znieff--id-" data-method="GET"
+      data-path="api/v1/patrimoine/znieff/{id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-patrimoine-znieff--id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-patrimoine-znieff--id-"
+                    onclick="tryItOut('GETapi-v1-patrimoine-znieff--id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-patrimoine-znieff--id-"
+                    onclick="cancelTryOut('GETapi-v1-patrimoine-znieff--id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-patrimoine-znieff--id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/patrimoine/znieff/{id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-patrimoine-znieff--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-patrimoine-znieff--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="GETapi-v1-patrimoine-znieff--id-"
+               value="730010131"
+               data-component="url">
+    <br>
+<p>Identifiant national ZNIEFF (ex. 240009732). Example: <code>730010131</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="patrimoine-inpn-GETapi-v1-patrimoine-natura">Liste paginée des sites Natura 2000 éligibles (touchant au moins
+une commune ayant un ABC), 100 par page.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-patrimoine-natura">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://observatoire-abc.fr/api/v1/patrimoine/natura?page=1" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://observatoire-abc.fr/api/v1/patrimoine/natura"
+);
+
+const params = {
+    "page": "1",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-patrimoine-natura">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: max-age=3600, public
+content-type: application/json
+x-ratelimit-limit: 60
+x-ratelimit-remaining: 59
+access-control-allow-origin: *
+access-control-expose-headers: ETag, Cache-Control
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: {
+        &quot;items&quot;: [
+            {
+                &quot;sitecode&quot;: &quot;FR1100795&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 7
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1100796&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1100797&quot;,
+                &quot;nom&quot;: &quot;Bois de la brume et mare de Tornibus&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1100801&quot;,
+                &quot;nom&quot;: &quot;Marais d&#039;Episy&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1100803&quot;,
+                &quot;nom&quot;: &quot;Haute vall&eacute;e de Chevreuse&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 6
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1100805&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1100819&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1102005&quot;,
+                &quot;nom&quot;: &quot;Rives du Loing&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1102013&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1102015&quot;,
+                &quot;nom&quot;: &quot;Vexin fran&ccedil;ais&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1110025&quot;,
+                &quot;nom&quot;: &quot;ETANG DE SAINT QUENTIN&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1110102&quot;,
+                &quot;nom&quot;: &quot;MARAIS DITTEVILLE ET DE FONTENAY LE VICOMTE&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1110795&quot;,
+                &quot;nom&quot;: &quot;For&ecirc;t de protection&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 7
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1112003&quot;,
+                &quot;nom&quot;: &quot;Charmentray - Trilbardou&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1112011&quot;,
+                &quot;nom&quot;: &quot;Massif de Rambouillet&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 17
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1112012&quot;,
+                &quot;nom&quot;: &quot;Boucle de Guerne&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 10
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR1112013&quot;,
+                &quot;nom&quot;: &quot;Alisiers du plateau d&#039;Avron (APB)&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 6
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100253&quot;,
+                &quot;nom&quot;: &quot;Etangs de la Champagne humide&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100256&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100258&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100263&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100271&quot;,
+                &quot;nom&quot;: &quot;Montagne de Reims&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100275&quot;,
+                &quot;nom&quot;: &quot;Marais du plateau de Langres&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100276&quot;,
+                &quot;nom&quot;: &quot;Chalmessin&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100281&quot;,
+                &quot;nom&quot;: &quot;Marais de Villech&eacute;tif&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100284&quot;,
+                &quot;nom&quot;: &quot;Montagne de Reims&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100295&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100305&quot;,
+                &quot;nom&quot;: &quot;Etangs de la Champagne humide&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 6
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100310&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100311&quot;,
+                &quot;nom&quot;: &quot;Etangs de la Champagne humide&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100312&quot;,
+                &quot;nom&quot;: &quot;Montagne de Reims&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 12
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100315&quot;,
+                &quot;nom&quot;: &quot;Etangs de la Champagne humide&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100332&quot;,
+                &quot;nom&quot;: &quot;Etang de la Horre&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100334&quot;,
+                &quot;nom&quot;: &quot;LAC DU DER ET ETANGS LATERAUX&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2100339&quot;,
+                &quot;nom&quot;: &quot;Anciennes carri&egrave;res souterraines&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2102001&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2102003&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2110001&quot;,
+                &quot;nom&quot;: &quot;For&ecirc;t d&#039;Orient&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 11
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2110002&quot;,
+                &quot;nom&quot;: &quot;Le Der Chantecoq et les &eacute;tangs d&#039;Outines et d&#039;Arrigny&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2110091&quot;,
+                &quot;nom&quot;: &quot;Etang de la Horre&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2112001&quot;,
+                &quot;nom&quot;: &quot;Etangs de la Champagne humide&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2112002&quot;,
+                &quot;nom&quot;: &quot;Lac du Der-Chantecoq et &eacute;tangs d&#039;Outines et d&#039;Arrigny&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2112010&quot;,
+                &quot;nom&quot;: &quot;rives de l&#039;Aube &agrave; Bar sur Aube&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2112013&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200346&quot;,
+                &quot;nom&quot;: &quot;DUNES DE L&#039;AUTHIE&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 12
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200347&quot;,
+                &quot;nom&quot;: &quot;Baie de Somme&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 6
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200348&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200349&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200350&quot;,
+                &quot;nom&quot;: &quot;Larris de Grouches-Luchuel&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200352&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200354&quot;,
+                &quot;nom&quot;: &quot;MOYENNE VALLEE DE LA SOMME&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 6
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200355&quot;,
+                &quot;nom&quot;: &quot;Marais communal de la Chauss&eacute;e-Tirancourt&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200356&quot;,
+                &quot;nom&quot;: &quot;Quartier Saint-Leu, Etang Saint-Pierre, Hortillonnages&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 7
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200357&quot;,
+                &quot;nom&quot;: &quot;Suzanne - Ensemble form&eacute; par le village, le ch&acirc;teau et son parc&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200359&quot;,
+                &quot;nom&quot;: &quot;Etang de Saint-Ladre&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200369&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 9
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200371&quot;,
+                &quot;nom&quot;: &quot;Larris et tourbi&egrave;res de Saint-Pierre-es-Champs&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200372&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200376&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200377&quot;,
+                &quot;nom&quot;: &quot;For&ecirc;t domaniale de Hez-Froidmont&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 4
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200378&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200379&quot;,
+                &quot;nom&quot;: &quot;Vall&eacute;e de la Nonette&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200380&quot;,
+                &quot;nom&quot;: &quot;Oise-Pays de France&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200392&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 5
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200395&quot;,
+                &quot;nom&quot;: &quot;Marais de Comport&eacute;&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200396&quot;,
+                &quot;nom&quot;: &quot;Amas de roches d&eacute;nomm&eacute; la Hott&eacute;e Gargantua&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200398&quot;,
+                &quot;nom&quot;: &quot;For&ecirc;t de Retz&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 5
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2200566&quot;,
+                &quot;nom&quot;: &quot;Vall&eacute;e de la Nonette&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2210026&quot;,
+                &quot;nom&quot;: &quot;Marais d&#039;Isle&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2210068&quot;,
+                &quot;nom&quot;: &quot;ESTUAIRES PICARDS : BAIES DE SOMME ET DAUTHIE&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2210104&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 9
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2212001&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 6
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2212002&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 12
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2212003&quot;,
+                &quot;nom&quot;: &quot;Baie de Somme&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 6
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2212005&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2212007&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 16
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300121&quot;,
+                &quot;nom&quot;: &quot;Boucles de la Seine normande&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300122&quot;,
+                &quot;nom&quot;: &quot;Mannevilles&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300123&quot;,
+                &quot;nom&quot;: &quot;Bords de Seine&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 10
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300124&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300128&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300131&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300132&quot;,
+                &quot;nom&quot;: &quot;Marais de Fesques&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 20
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300133&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 15
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300136&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 5
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300137&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 7
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300139&quot;,
+                &quot;nom&quot;: &quot;FALAISE D&#039;AMONT&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 9
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300147&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2300150&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2302002&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2302005&quot;,
+                &quot;nom&quot;: &quot;Abbaye de Jumi&egrave;ges&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2302006&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2310044&quot;,
+                &quot;nom&quot;: &quot;Site inscrit des abords du Pont de Tancarville&quot;,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 8
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2310045&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;ZPS&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2400518&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 2
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2400520&quot;,
+                &quot;nom&quot;: &quot;Le Patouillet&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 12
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2400521&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 3
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2400524&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 5
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2400526&quot;,
+                &quot;nom&quot;: null,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 1
+            },
+            {
+                &quot;sitecode&quot;: &quot;FR2400528&quot;,
+                &quot;nom&quot;: &quot;GREVE DE MAREAU&quot;,
+                &quot;type_site&quot;: &quot;SIC&quot;,
+                &quot;nb_communes_abc&quot;: 17
+            }
+        ],
+        &quot;total&quot;: 749,
+        &quot;page&quot;: 1,
+        &quot;par_page&quot;: 100,
+        &quot;pages&quot;: 8,
+        &quot;versions&quot;: {
+            &quot;znieff&quot;: &quot;extraction ZNIEFF INPN 2025 (ZIP de secours)&quot;,
+            &quot;aires&quot;: &quot;Inventaire des aires prot&eacute;g&eacute;es APA-INPN &mdash; extraction juillet 2025&quot;,
+            &quot;natura&quot;: &quot;Base Natura 2000 &mdash; d&eacute;cembre 2024&quot;
+        },
+        &quot;attribution&quot;: {
+            &quot;source&quot;: &quot;Inventaire national du patrimoine naturel (INPN) &mdash; Mus&eacute;um national d&#039;Histoire naturelle&quot;,
+            &quot;url&quot;: &quot;https://inpn.mnhn.fr&quot;,
+            &quot;licences&quot;: &quot;https://inpn.mnhn.fr/legal&quot;,
+            &quot;credit&quot;: &quot;D&#039;apr&egrave;s l&#039;inventaire national du patrimoine naturel (INPN), Mus&eacute;um national d&#039;Histoire naturelle. Esp&egrave;ces confidentielles non diffus&eacute;es.&quot;
+        }
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-patrimoine-natura" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-patrimoine-natura"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-patrimoine-natura"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-patrimoine-natura" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-patrimoine-natura">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-patrimoine-natura" data-method="GET"
+      data-path="api/v1/patrimoine/natura"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-patrimoine-natura', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-patrimoine-natura"
+                    onclick="tryItOut('GETapi-v1-patrimoine-natura');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-patrimoine-natura"
+                    onclick="cancelTryOut('GETapi-v1-patrimoine-natura');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-patrimoine-natura"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/patrimoine/natura</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-patrimoine-natura"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-patrimoine-natura"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-v1-patrimoine-natura"
+               value="1"
+               data-component="query">
+    <br>
+<p>Page demandée (bornée par le service). Example: <code>1</code></p>
+            </div>
+                </form>
+
+                    <h2 id="patrimoine-inpn-GETapi-v1-patrimoine-natura--sitecode-">Fiche Natura 2000 : habitats et espèces de la directive recensés
+sur le site, DOCOB, communes ABC concernées. 404 si le site ne
+touche aucune commune ABC.</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-patrimoine-natura--sitecode-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://observatoire-abc.fr/api/v1/patrimoine/natura/FR5310086" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://observatoire-abc.fr/api/v1/patrimoine/natura/FR5310086"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-patrimoine-natura--sitecode-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: max-age=3600, public
+content-type: application/json
+x-ratelimit-limit: 60
+x-ratelimit-remaining: 59
+access-control-allow-origin: *
+access-control-expose-headers: ETag, Cache-Control
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: {
+        &quot;sitecode&quot;: &quot;FR5310086&quot;,
+        &quot;nom&quot;: &quot;Golfe du Morbihan&quot;,
+        &quot;type_site&quot;: &quot;ZPS&quot;,
+        &quot;pdf_local&quot;: &quot;/docob/FR5310086.pdf&quot;,
+        &quot;docob&quot;: [
+            {
+                &quot;titre&quot;: &quot;Docob Golfe du Morbihan&quot;,
+                &quot;lien&quot;: &quot;http://natura2000.mnhn.fr/uploads/doc/PRODBIOTOP/1504_N2_02102013_PG_Docob_GOLFE56_app.pdf&quot;
+            }
+        ],
+        &quot;communes&quot;: [
+            {
+                &quot;code&quot;: &quot;56003&quot;,
+                &quot;libelle&quot;: &quot;Arradon&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56005&quot;,
+                &quot;libelle&quot;: &quot;Arzon&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56008&quot;,
+                &quot;libelle&quot;: &quot;Baden&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56084&quot;,
+                &quot;libelle&quot;: &quot;Le H&eacute;zo&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56088&quot;,
+                &quot;libelle&quot;: &quot;&Icirc;le-d&#039;Arz&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56106&quot;,
+                &quot;libelle&quot;: &quot;Larmor-Baden&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56116&quot;,
+                &quot;libelle&quot;: &quot;Locmariaquer&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56205&quot;,
+                &quot;libelle&quot;: &quot;Saint-Armel&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56233&quot;,
+                &quot;libelle&quot;: &quot;Saint-Philibert&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56240&quot;,
+                &quot;libelle&quot;: &quot;Sarzeau&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56243&quot;,
+                &quot;libelle&quot;: &quot;S&eacute;n&eacute;&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56251&quot;,
+                &quot;libelle&quot;: &quot;Theix-Noyalo&quot;
+            },
+            {
+                &quot;code&quot;: &quot;56260&quot;,
+                &quot;libelle&quot;: &quot;Vannes&quot;
+            }
+        ],
+        &quot;nb_communes_total&quot;: 13,
+        &quot;habitats&quot;: [],
+        &quot;especes&quot;: [
+            {
+                &quot;code_n2000&quot;: &quot;A294&quot;,
+                &quot;nom_scientifique&quot;: &quot;Acrocephalus paludicola&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Phragmite aquatique&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A168&quot;,
+                &quot;nom_scientifique&quot;: &quot;Actitis hypoleucos&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Chevalier guignette&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A200&quot;,
+                &quot;nom_scientifique&quot;: &quot;Alca torda&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Petit Pingouin, Pingouin torda&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A229&quot;,
+                &quot;nom_scientifique&quot;: &quot;Alcedo atthis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Martin-p&ecirc;cheur d&#039;Europe&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A054&quot;,
+                &quot;nom_scientifique&quot;: &quot;Anas acuta&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Canard pilet&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A052&quot;,
+                &quot;nom_scientifique&quot;: &quot;Anas crecca&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Sarcelle d&#039;hiver&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A053&quot;,
+                &quot;nom_scientifique&quot;: &quot;Anas platyrhynchos&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Canard colvert&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A043&quot;,
+                &quot;nom_scientifique&quot;: &quot;Anser anser&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Oie cendr&eacute;e&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A773&quot;,
+                &quot;nom_scientifique&quot;: &quot;Ardea alba&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Grande Aigrette&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A028&quot;,
+                &quot;nom_scientifique&quot;: &quot;Ardea cinerea&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;H&eacute;ron cendr&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A169&quot;,
+                &quot;nom_scientifique&quot;: &quot;Arenaria interpres&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Tournepierre &agrave; collier&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A059&quot;,
+                &quot;nom_scientifique&quot;: &quot;Aythya ferina&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Fuligule milouin&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A061&quot;,
+                &quot;nom_scientifique&quot;: &quot;Aythya fuligula&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Fuligule morillon&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A062&quot;,
+                &quot;nom_scientifique&quot;: &quot;Aythya marila&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Fuligule milouinan&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A046&quot;,
+                &quot;nom_scientifique&quot;: &quot;Branta bernicla&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Bernache cravant&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A045&quot;,
+                &quot;nom_scientifique&quot;: &quot;Branta leucopsis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Bernache nonnette&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A025&quot;,
+                &quot;nom_scientifique&quot;: &quot;Bubulcus ibis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;H&eacute;ron garde-boeufs&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A067&quot;,
+                &quot;nom_scientifique&quot;: &quot;Bucephala clangula&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Garrot &agrave; &oelig;il d&#039;or&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A144&quot;,
+                &quot;nom_scientifique&quot;: &quot;Calidris alba&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;B&eacute;casseau sanderling&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A149&quot;,
+                &quot;nom_scientifique&quot;: &quot;Calidris alpina&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;B&eacute;casseau variable&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A143&quot;,
+                &quot;nom_scientifique&quot;: &quot;Calidris canutus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;B&eacute;casseau maub&egrave;che&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A861&quot;,
+                &quot;nom_scientifique&quot;: &quot;Calidris pugnax&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Combattant vari&eacute;, Chevalier combattant&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A137&quot;,
+                &quot;nom_scientifique&quot;: &quot;Charadrius hiaticula&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Grand Gravelot&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A734&quot;,
+                &quot;nom_scientifique&quot;: &quot;Chlidonias hybrida&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Guifette moustac&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A197&quot;,
+                &quot;nom_scientifique&quot;: &quot;Chlidonias niger&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Guifette noire&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A081&quot;,
+                &quot;nom_scientifique&quot;: &quot;Circus aeruginosus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Busard des roseaux&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A064&quot;,
+                &quot;nom_scientifique&quot;: &quot;Clangula hyemalis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Harelde de Miquelon, Harelde bor&eacute;ale&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A480&quot;,
+                &quot;nom_scientifique&quot;: &quot;Cyanecula svecica&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Gorgebleue &agrave; miroir&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A036&quot;,
+                &quot;nom_scientifique&quot;: &quot;Cygnus olor&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Cygne tubercul&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A026&quot;,
+                &quot;nom_scientifique&quot;: &quot;Egretta garzetta&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Aigrette garzette&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A103&quot;,
+                &quot;nom_scientifique&quot;: &quot;Falco peregrinus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Faucon p&egrave;lerin&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A125&quot;,
+                &quot;nom_scientifique&quot;: &quot;Fulica atra&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Foulque macroule&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A153&quot;,
+                &quot;nom_scientifique&quot;: &quot;Gallinago gallinago&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;B&eacute;cassine des marais&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A123&quot;,
+                &quot;nom_scientifique&quot;: &quot;Gallinula chloropus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Poule-d&#039;eau, Gallinule poule-d&#039;eau&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A002&quot;,
+                &quot;nom_scientifique&quot;: &quot;Gavia arctica&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Plongeon arctique&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A003&quot;,
+                &quot;nom_scientifique&quot;: &quot;Gavia immer&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Plongeon imbrin&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A001&quot;,
+                &quot;nom_scientifique&quot;: &quot;Gavia stellata&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Plongeon catmarin&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A130&quot;,
+                &quot;nom_scientifique&quot;: &quot;Haematopus ostralegus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Hu&icirc;trier pie&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A131&quot;,
+                &quot;nom_scientifique&quot;: &quot;Himantopus himantopus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;&Eacute;chasse blanche&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A014&quot;,
+                &quot;nom_scientifique&quot;: &quot;Hydrobates pelagicus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;P&eacute;trel temp&ecirc;te, Oc&eacute;anite temp&ecirc;te&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A184&quot;,
+                &quot;nom_scientifique&quot;: &quot;Larus argentatus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Go&eacute;land argent&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A182&quot;,
+                &quot;nom_scientifique&quot;: &quot;Larus canus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Go&eacute;land cendr&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A183&quot;,
+                &quot;nom_scientifique&quot;: &quot;Larus fuscus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Go&eacute;land brun&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A187&quot;,
+                &quot;nom_scientifique&quot;: &quot;Larus marinus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Go&eacute;land marin&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A176&quot;,
+                &quot;nom_scientifique&quot;: &quot;Larus melanocephalus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Mouette m&eacute;lanoc&eacute;phale&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A604&quot;,
+                &quot;nom_scientifique&quot;: &quot;Larus michahellis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Go&eacute;land leucoph&eacute;e&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A179&quot;,
+                &quot;nom_scientifique&quot;: &quot;Larus ridibundus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Mouette rieuse&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A157&quot;,
+                &quot;nom_scientifique&quot;: &quot;Limosa lapponica&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Barge rousse&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A156&quot;,
+                &quot;nom_scientifique&quot;: &quot;Limosa limosa&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Barge &agrave; queue noire&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A855&quot;,
+                &quot;nom_scientifique&quot;: &quot;Mareca penelope&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Canard siffleur&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A889&quot;,
+                &quot;nom_scientifique&quot;: &quot;Mareca strepera&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Canard chipeau&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A066&quot;,
+                &quot;nom_scientifique&quot;: &quot;Melanitta fusca&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Macreuse brune&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A069&quot;,
+                &quot;nom_scientifique&quot;: &quot;Mergus serrator&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Harle hupp&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A160&quot;,
+                &quot;nom_scientifique&quot;: &quot;Numenius arquata&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Courlis cendr&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A158&quot;,
+                &quot;nom_scientifique&quot;: &quot;Numenius phaeopus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Courlis corlieu&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A094&quot;,
+                &quot;nom_scientifique&quot;: &quot;Pandion haliaetus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Balbuzard p&ecirc;cheur&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A018&quot;,
+                &quot;nom_scientifique&quot;: &quot;Phalacrocorax aristotelis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Cormoran hupp&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A017&quot;,
+                &quot;nom_scientifique&quot;: &quot;Phalacrocorax carbo&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Grand Cormoran&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A034&quot;,
+                &quot;nom_scientifique&quot;: &quot;Platalea leucorodia&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Spatule blanche&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A140&quot;,
+                &quot;nom_scientifique&quot;: &quot;Pluvialis apricaria&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Pluvier dor&eacute;&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A141&quot;,
+                &quot;nom_scientifique&quot;: &quot;Pluvialis squatarola&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Pluvier argent&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A007&quot;,
+                &quot;nom_scientifique&quot;: &quot;Podiceps auritus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Gr&egrave;be esclavon&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A005&quot;,
+                &quot;nom_scientifique&quot;: &quot;Podiceps cristatus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Gr&egrave;be hupp&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A008&quot;,
+                &quot;nom_scientifique&quot;: &quot;Podiceps nigricollis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Gr&egrave;be &agrave; cou noir&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A118&quot;,
+                &quot;nom_scientifique&quot;: &quot;Rallus aquaticus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;R&acirc;le d&#039;eau&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A132&quot;,
+                &quot;nom_scientifique&quot;: &quot;Recurvirostra avosetta&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Avocette &eacute;l&eacute;gante&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A063&quot;,
+                &quot;nom_scientifique&quot;: &quot;Somateria mollissima&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Eider &agrave; duvet&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A857&quot;,
+                &quot;nom_scientifique&quot;: &quot;Spatula clypeata&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Canard souchet&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A856&quot;,
+                &quot;nom_scientifique&quot;: &quot;Spatula querquedula&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Sarcelle d&#039;&eacute;t&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A192&quot;,
+                &quot;nom_scientifique&quot;: &quot;Sterna dougallii&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Sterne de Dougall&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A193&quot;,
+                &quot;nom_scientifique&quot;: &quot;Sterna hirundo&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Sterne pierregarin&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A004&quot;,
+                &quot;nom_scientifique&quot;: &quot;Tachybaptus ruficollis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Gr&egrave;be castagneux&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A048&quot;,
+                &quot;nom_scientifique&quot;: &quot;Tadorna tadorna&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Tadorne de Belon&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A863&quot;,
+                &quot;nom_scientifique&quot;: &quot;Thalasseus sandvicensis&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Sterne caugek&quot;,
+                &quot;annexe_ii&quot;: true,
+                &quot;annexe_1&quot;: true,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A161&quot;,
+                &quot;nom_scientifique&quot;: &quot;Tringa erythropus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Chevalier arlequin&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A164&quot;,
+                &quot;nom_scientifique&quot;: &quot;Tringa nebularia&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Chevalier aboyeur&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A165&quot;,
+                &quot;nom_scientifique&quot;: &quot;Tringa ochropus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Chevalier culblanc&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A162&quot;,
+                &quot;nom_scientifique&quot;: &quot;Tringa totanus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Chevalier gambette&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A199&quot;,
+                &quot;nom_scientifique&quot;: &quot;Uria aalge&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Guillemot de Tro&iuml;l&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c&quot;
+            },
+            {
+                &quot;code_n2000&quot;: &quot;A142&quot;,
+                &quot;nom_scientifique&quot;: &quot;Vanellus vanellus&quot;,
+                &quot;nom_vernaculaire&quot;: &quot;Vanneau hupp&eacute;&quot;,
+                &quot;annexe_ii&quot;: false,
+                &quot;annexe_1&quot;: false,
+                &quot;prioritaire&quot;: false,
+                &quot;presences&quot;: &quot;c,r,w&quot;
+            }
+        ],
+        &quot;versions&quot;: {
+            &quot;znieff&quot;: &quot;extraction ZNIEFF INPN 2025 (ZIP de secours)&quot;,
+            &quot;aires&quot;: &quot;Inventaire des aires prot&eacute;g&eacute;es APA-INPN &mdash; extraction juillet 2025&quot;,
+            &quot;natura&quot;: &quot;Base Natura 2000 &mdash; d&eacute;cembre 2024&quot;
+        },
+        &quot;attribution&quot;: {
+            &quot;source&quot;: &quot;Inventaire national du patrimoine naturel (INPN) &mdash; Mus&eacute;um national d&#039;Histoire naturelle&quot;,
+            &quot;url&quot;: &quot;https://inpn.mnhn.fr&quot;,
+            &quot;licences&quot;: &quot;https://inpn.mnhn.fr/legal&quot;,
+            &quot;credit&quot;: &quot;D&#039;apr&egrave;s l&#039;inventaire national du patrimoine naturel (INPN), Mus&eacute;um national d&#039;Histoire naturelle. Esp&egrave;ces confidentielles non diffus&eacute;es.&quot;
+        }
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-patrimoine-natura--sitecode-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-patrimoine-natura--sitecode-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-patrimoine-natura--sitecode-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-patrimoine-natura--sitecode-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-patrimoine-natura--sitecode-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-patrimoine-natura--sitecode-" data-method="GET"
+      data-path="api/v1/patrimoine/natura/{sitecode}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-patrimoine-natura--sitecode-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-patrimoine-natura--sitecode-"
+                    onclick="tryItOut('GETapi-v1-patrimoine-natura--sitecode-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-patrimoine-natura--sitecode-"
+                    onclick="cancelTryOut('GETapi-v1-patrimoine-natura--sitecode-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-patrimoine-natura--sitecode-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/patrimoine/natura/{sitecode}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-patrimoine-natura--sitecode-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-patrimoine-natura--sitecode-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>sitecode</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="sitecode"                data-endpoint="GETapi-v1-patrimoine-natura--sitecode-"
+               value="FR5310086"
+               data-component="url">
+    <br>
+<p>Code du site (ex. FR8212001). Example: <code>FR5310086</code></p>
+            </div>
+                    </form>
+
                 <h1 id="projets">Projets</h1>
 
     
@@ -724,7 +4065,7 @@ Format GeoJSON avec <code>format=geojson</code> ou <code>Accept: application/geo
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"statut\": \"inconnu\",
+    \"statut\": \"en_cours\",
     \"annee\": 1,
     \"code_insee\": \"T8GOX$\\/i\",
     \"departement\": \"b\",
@@ -732,7 +4073,7 @@ Format GeoJSON avec <code>format=geojson</code> ou <code>Accept: application/geo
     \"porteur\": \"i\",
     \"bbox\": \"8,sssssss-20:.492,ssssss-1,ssss9\",
     \"per_page\": 3,
-    \"format\": \"json\"
+    \"format\": \"geojson\"
 }"
 </code></pre></div>
 
@@ -748,7 +4089,7 @@ const headers = {
 };
 
 let body = {
-    "statut": "inconnu",
+    "statut": "en_cours",
     "annee": 1,
     "code_insee": "T8GOX$\/i",
     "departement": "b",
@@ -756,7 +4097,7 @@ let body = {
     "porteur": "i",
     "bbox": "8,sssssss-20:.492,ssssss-1,ssss9",
     "per_page": 3,
-    "format": "json"
+    "format": "geojson"
 };
 
 fetch(url, {
@@ -878,10 +4219,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="statut"                data-endpoint="GETapi-v1-projets"
-               value="inconnu"
+               value="en_cours"
                data-component="body">
     <br>
-<p>Example: <code>inconnu</code></p>
+<p>Example: <code>en_cours</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>a_venir</code></li> <li><code>en_cours</code></li> <li><code>termine</code></li> <li><code>inconnu</code></li></ul>
         </div>
@@ -976,10 +4317,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="format"                data-endpoint="GETapi-v1-projets"
-               value="json"
+               value="geojson"
                data-component="body">
     <br>
-<p>Example: <code>json</code></p>
+<p>Example: <code>geojson</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>json</code></li> <li><code>geojson</code></li></ul>
         </div>
@@ -1325,8 +4666,8 @@ fetch(url, {
             <summary style="cursor: pointer;">
                 <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
             </summary>
-            <pre><code class="language-http">content-type: application/json
-cache-control: max-age=3600, public
+            <pre><code class="language-http">cache-control: max-age=3600, public
+content-type: application/json
 x-ratelimit-limit: 60
 x-ratelimit-remaining: 59
 access-control-allow-origin: *
@@ -1356,21 +4697,21 @@ access-control-expose-headers: ETag, Cache-Control
             },
             {
                 &quot;statut&quot;: &quot;termine&quot;,
-                &quot;n&quot;: 718
+                &quot;n&quot;: 717
             }
         ],
-        &quot;countProjets&quot;: 1209,
-        &quot;countCommunes&quot;: 4924,
+        &quot;countProjets&quot;: 1208,
+        &quot;countCommunes&quot;: 4925,
         &quot;countPotentiellementTermines&quot;: 237,
         &quot;countPotentiellementEnCours&quot;: 81,
         &quot;countDonnees2022&quot;: 38,
         &quot;countEstimes&quot;: 246,
         &quot;countVerifies&quot;: 7,
-        &quot;countAnomalies&quot;: 2,
+        &quot;countAnomalies&quot;: 0,
         &quot;countNonLocalises&quot;: 0,
         &quot;countContributionsEnAttente&quot;: 0,
         &quot;licence&quot;: &quot;Etalab-2.0&quot;,
-        &quot;derniere_mise_a_jour&quot;: &quot;2026-10-26T15:03:34.000000Z&quot;
+        &quot;derniere_mise_a_jour&quot;: &quot;2026-10-28T10:46:08.000000Z&quot;
     }
 }</code>
  </pre>

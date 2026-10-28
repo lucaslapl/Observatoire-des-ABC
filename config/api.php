@@ -41,6 +41,20 @@ return [
     'throttle_per_minute' => 60,
 
     /*
+    | Attribution INPN/MNHN portée par chaque réponse « patrimoine
+    | écologique » (ZNIEFF, Natura 2000, aires protégées) : ces faits
+    | bruts restent sous les licences de l'INPN, pas sous la Licence
+    | Ouverte des données propres de l'Observatoire. Même mention que
+    | sur le site (fiches et page Méthodologie).
+    */
+    'inpn' => [
+        'source' => "Inventaire national du patrimoine naturel (INPN) — Muséum national d'Histoire naturelle",
+        'url' => 'https://inpn.mnhn.fr',
+        'licences' => 'https://inpn.mnhn.fr/legal',
+        'credit' => "D'après l'inventaire national du patrimoine naturel (INPN), Muséum national d'Histoire naturelle. Espèces confidentielles non diffusées.",
+    ],
+
+    /*
     | Libellés de provenance exposés par enregistrement, par identifiant
     | de source (colonne `projets.source`).
     */

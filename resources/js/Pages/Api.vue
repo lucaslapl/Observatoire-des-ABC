@@ -11,6 +11,11 @@ const endpoints = [
     { m: 'GET', p: '/api/v1/regions/{code}', d: 'Synthèse d\'une région (slug, code INSEE ou libellé).' },
     { m: 'GET', p: '/api/v1/journal', d: 'Journal public d\'audit : vérifications, contributions validées, fusions — dans le même ordre que sur le site.' },
     { m: 'GET', p: '/api/v1/stats', d: 'Compteurs globaux : projets, communes, vérifications, anomalies.' },
+    { m: 'GET', p: '/api/v1/communes/{code_insee}/patrimoine', d: 'Patrimoine écologique INPN de la commune : ZNIEFF, sites Natura 2000 et aires protégées, avec attribution MNHN.' },
+    { m: 'GET', p: '/api/v1/patrimoine/znieff', d: 'Liste des ZNIEFF touchant au moins une commune ABC (100 par page).' },
+    { m: 'GET', p: '/api/v1/patrimoine/znieff/{id_national}', d: 'Fiche ZNIEFF : intérêt, communes ABC concernées, espèces déterminantes (hors confidentielles).' },
+    { m: 'GET', p: '/api/v1/patrimoine/natura', d: 'Liste des sites Natura 2000 touchant au moins une commune ABC (100 par page).' },
+    { m: 'GET', p: '/api/v1/patrimoine/natura/{sitecode}', d: 'Fiche Natura 2000 : habitats, espèces de la directive, DOCOB, communes ABC concernées.' },
 ];
 
 const today = new Intl.DateTimeFormat('fr-FR').format(new Date());
@@ -29,7 +34,7 @@ function copyCredit() {
     <Layout>
         <Seo
             title="API publique et réutilisation des données"
-            description="API publique v1 de l'Observatoire des ABC en lecture seule : projets, communes, départements, régions, journal d'audit et statistiques, sous Licence Ouverte 2.0 (Etalab). Documentation, crédit attendu et conditions d'utilisation."
+            description="API publique v1 de l'Observatoire des ABC en lecture seule : projets, communes, départements, régions, journal d'audit, statistiques et patrimoine écologique INPN (ZNIEFF, Natura 2000, aires protégées) avec attribution MNHN. Documentation, crédit attendu et conditions d'utilisation."
         />
         <div class="container py-4 doc-content" style="max-width: 760px;">
             <h1 class="h3 mb-4">API publique &amp; conditions d'utilisation</h1>
@@ -97,6 +102,13 @@ function copyCredit() {
                 Les corrections des contributeurs sont intégrées aux données publiées sous cette même
                 licence : chaque proposition l'accepte explicitement (case du formulaire de correction,
                 acceptation enregistrée), avec un crédit collectif — jamais nominatif.
+            </p>
+            <p>
+                <strong>Patrimoine INPN</strong> : les endpoints <code>/api/v1/communes/{code_insee}/patrimoine</code>
+                et <code>/api/v1/patrimoine/…</code> exposent des faits bruts de l'INPN, qui ne sont
+                <em>pas</em> couverts par la Licence Ouverte de l'Observatoire : chaque réponse porte son
+                <code>attribution</code> (Muséum national d'Histoire naturelle, licences de l'INPN) et la
+                version de référence des bases utilisées. Les espèces confidentielles ne sont jamais diffusées.
             </p>
 
             <h2>Absence de garantie</h2>

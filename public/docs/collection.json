@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "API publique v1 \u2014 Observatoire des ABC",
-        "_postman_id": "54ecd98e-cd7f-4408-9272-af568eb5af20",
+        "_postman_id": "fb99d203-bf17-4a94-a371-2f3be2c3f0f7",
         "description": "API publique en lecture seule de l'Observatoire des ABC : projets ABC, communes, d\u00e9partements, r\u00e9gions, journal d'audit et statistiques. Donn\u00e9es sous Licence Ouverte 2.0 (Etalab). Acc\u00e8s ouvert sans cl\u00e9, 60 requ\u00eates\/min par IP.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -49,7 +49,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"format\":\"geojson\"}"
+                            "raw": "{\"format\":\"json\"}"
                         },
                         "description": "",
                         "auth": {
@@ -228,7 +228,351 @@
                                 }
                             ],
                             "code": 200,
-                            "body": "{\"data\":[{\"date\":\"2026-10-22 14:32:01\",\"label\":\"Dates resynchronis\\u00e9es\",\"detail\":\"depuis 2026\",\"auteur\":\"Synchronisation automatique\",\"commune\":\"Vitr\\u00e9\",\"projet_nom\":\"Atlas de la Biodiversit\\u00e9 Communale\",\"projet_slug\":\"atlas-de-la-biodiversite-communale\",\"projet_id\":\"atlas-de-la-biodiversite-communale-commune-de-vitre-2025\"}],\"meta\":{\"per_page\":1,\"next_cursor\":\"eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"prev_cursor\":null,\"next_page_url\":\"https:\\\/\\\/observatoire-abc.fr\\\/api\\\/v1\\\/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yMiAxNDozMjowMSIsImlkIjoyODAsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"licence\":\"Etalab-2.0\"}}",
+                            "body": "{\"data\":[{\"date\":\"2026-10-28 11:38:13\",\"label\":\"Projet retir\\u00e9 de la carte\",\"detail\":null,\"auteur\":\"un administrateur\",\"commune\":null,\"projet_nom\":\"ABC d'Amb\\u00e9rieu-en-Bugey\",\"projet_slug\":null,\"projet_id\":\"abc-d-amberieu-en-bugey-amberieu-en-bugey-2014\"}],\"meta\":{\"per_page\":1,\"next_cursor\":\"eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yOCAxMTozODoxMyIsImlkIjoyODMsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"prev_cursor\":null,\"next_page_url\":\"https:\\\/\\\/observatoire-abc.fr\\\/api\\\/v1\\\/journal?cursor=eyJjcmVhdGVkX2F0IjoiMjAyNi0xMC0yOCAxMTozODoxMyIsImlkIjoyODMsIl9wb2ludHNUb05leHRJdGVtcyI6dHJ1ZX0\",\"licence\":\"Etalab-2.0\"}}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Patrimoine INPN",
+            "description": "",
+            "item": [
+                {
+                    "name": "Patrimoine \u00e9cologique d'une commune : ZNIEFF, sites Natura 2000\net aires prot\u00e9g\u00e9es la touchant, faits bruts INPN avec attribution\nMNHN et version de r\u00e9f\u00e9rence de chaque base.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/communes\/:code\/patrimoine",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/communes\/:code\/patrimoine",
+                            "variable": [
+                                {
+                                    "id": "code",
+                                    "key": "code",
+                                    "value": "12045",
+                                    "description": "Code INSEE de la commune (ex. 35282)."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 200,
+                            "body": "{\"data\":{\"present\":true,\"versions\":{\"znieff\":\"extraction ZNIEFF INPN 2025 (ZIP de secours)\",\"aires\":\"Inventaire des aires prot\\u00e9g\\u00e9es APA-INPN \\u2014 extraction juillet 2025\",\"natura\":\"Base Natura 2000 \\u2014 d\\u00e9cembre 2024\"},\"znieff\":[{\"id\":23652,\"id_national\":\"730011386\",\"nom\":\"Pentes du Viaur \\u00e0 Centr\\u00e8s\",\"ty_zone\":1,\"surface_ha\":1148.29,\"nb_especes_determinantes\":10},{\"id\":23199,\"id_national\":\"730030564\",\"nom\":\"Rivi\\u00e8re du Viaur\",\"ty_zone\":1,\"surface_ha\":697.66,\"nb_especes_determinantes\":64},{\"id\":23432,\"id_national\":\"730010131\",\"nom\":\"Vall\\u00e9e du Viaur et ses affluents\",\"ty_zone\":2,\"surface_ha\":27586.93,\"nb_especes_determinantes\":165}],\"natura\":[{\"sitecode\":\"FR7301631\",\"nom\":\"Cours de la Garonne, de l'Aveyron, du Viaur et du Tarn\",\"type_site\":\"SIC\",\"nb_habitats\":17,\"nb_especes\":24}],\"aires\":[],\"attribution\":{\"source\":\"Inventaire national du patrimoine naturel (INPN) \\u2014 Mus\\u00e9um national d'Histoire naturelle\",\"url\":\"https:\\\/\\\/inpn.mnhn.fr\",\"licences\":\"https:\\\/\\\/inpn.mnhn.fr\\\/legal\",\"credit\":\"D'apr\\u00e8s l'inventaire national du patrimoine naturel (INPN), Mus\\u00e9um national d'Histoire naturelle. Esp\\u00e8ces confidentielles non diffus\\u00e9es.\"}}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Liste pagin\u00e9e des ZNIEFF \u00e9ligibles (touchant au moins une commune\nayant un ABC), 100 par page.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/patrimoine\/znieff",
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "Page demand\u00e9e (born\u00e9e par le service).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/patrimoine\/znieff?page=1"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 200,
+                            "body": "{\"data\":{\"items\":[{\"id_national\":\"030030036\",\"nom\":\"Abattis et montagne Cottica\",\"ty_zone\":2,\"surface_ha\":23895.57,\"nb_communes_abc\":1},{\"id_national\":\"530006026\",\"nom\":\"ABER ILDUT\",\"ty_zone\":1,\"surface_ha\":122.85,\"nb_communes_abc\":4},{\"id_national\":\"530030190\",\"nom\":\"ABER WRAC\\u2019H (ancien nom : ABER VRAC\\u2019H)\",\"ty_zone\":1,\"surface_ha\":326.27,\"nb_communes_abc\":1},{\"id_national\":\"820032328\",\"nom\":\"Abords de l'Etang Vidrieux et du Puy Money\",\"ty_zone\":1,\"surface_ha\":46.96,\"nb_communes_abc\":1},{\"id_national\":\"730010670\",\"nom\":\"Adour et milieux annexes\",\"ty_zone\":2,\"surface_ha\":3634.16,\"nb_communes_abc\":9},{\"id_national\":\"520006683\",\"nom\":\"AERODROME DE LA FLECHE-THOREE-LES-PINS\",\"ty_zone\":1,\"surface_ha\":189.51,\"nb_communes_abc\":1},{\"id_national\":\"910030009\",\"nom\":\"A\\u00e9roport de Montpellier-Fr\\u00e9jorgues\",\"ty_zone\":1,\"surface_ha\":161.46,\"nb_communes_abc\":1},{\"id_national\":\"820030184\",\"nom\":\"A\\u00e9roport de Valence-Chabeuil\",\"ty_zone\":1,\"surface_ha\":130.76,\"nb_communes_abc\":2},{\"id_national\":\"410030336\",\"nom\":\"AFFLUENT DE LA MORTAGNE A MORTAGNE\",\"ty_zone\":1,\"surface_ha\":31.14,\"nb_communes_abc\":1},{\"id_national\":\"410030331\",\"nom\":\"AFFLUENT DU SAINT-OGER A DEYVILLERS\",\"ty_zone\":1,\"surface_ha\":27.85,\"nb_communes_abc\":3},{\"id_national\":\"820031383\",\"nom\":\"Affluents de la Turdine\",\"ty_zone\":1,\"surface_ha\":892.47,\"nb_communes_abc\":1},{\"id_national\":\"430020424\",\"nom\":\"A GALEVEU\",\"ty_zone\":1,\"surface_ha\":16.35,\"nb_communes_abc\":1},{\"id_national\":\"940031087\",\"nom\":\"AGROSYST\\u00c8ME D\\u2019AFA APIETTO\",\"ty_zone\":1,\"surface_ha\":330.85,\"nb_communes_abc\":3},{\"id_national\":\"730030158\",\"nom\":\"Agrosyst\\u00e8me de Berthol\\u00e8ne\",\"ty_zone\":1,\"surface_ha\":1489.97,\"nb_communes_abc\":2},{\"id_national\":\"730030095\",\"nom\":\"Agrosyst\\u00e8me de Grioudas\",\"ty_zone\":1,\"surface_ha\":335.38,\"nb_communes_abc\":1},{\"id_national\":\"940013183\",\"nom\":\"AGROSYSTEME DE SAINT JEAN\",\"ty_zone\":1,\"surface_ha\":85.08,\"nb_communes_abc\":1},{\"id_national\":\"940013182\",\"nom\":\"AGROSYSTEME DE ST-JULIEN\",\"ty_zone\":1,\"surface_ha\":72.28,\"nb_communes_abc\":1},{\"id_national\":\"940013186\",\"nom\":\"AJACCIO-ST ANTOINE-MONT SALARIO-SCUDO\",\"ty_zone\":1,\"surface_ha\":889.33,\"nb_communes_abc\":1},{\"id_national\":\"430002264\",\"nom\":\"\\u00c0 LA DRUGNE\",\"ty_zone\":1,\"surface_ha\":44.69,\"nb_communes_abc\":1},{\"id_national\":\"430020512\",\"nom\":\"\\u00c0 LA TOURBI\\u00c8RE\",\"ty_zone\":1,\"surface_ha\":9.82,\"nb_communes_abc\":1},{\"id_national\":\"520016228\",\"nom\":\"ALENTOURS DU VAL\",\"ty_zone\":1,\"surface_ha\":6.7,\"nb_communes_abc\":1},{\"id_national\":\"420030067\",\"nom\":\"Alignements de saules t\\u00eatards de Kolbsheim\",\"ty_zone\":1,\"surface_ha\":18.36,\"nb_communes_abc\":1},{\"id_national\":\"830020421\",\"nom\":\"ALLIER PONT DE MIREFLEURS - DALLET\",\"ty_zone\":1,\"surface_ha\":831.46,\"nb_communes_abc\":3},{\"id_national\":\"820031758\",\"nom\":\"Alpages du Mont Br\\u00e9quin\",\"ty_zone\":1,\"surface_ha\":1543.56,\"nb_communes_abc\":1},{\"id_national\":\"820030569\",\"nom\":\"Alpages et pr\\u00e9bois du S\\u00e9n\\u00e9pi\",\"ty_zone\":1,\"surface_ha\":1904.34,\"nb_communes_abc\":2},{\"id_national\":\"820031569\",\"nom\":\"Alpages, rochers et tourbi\\u00e8re de la Dent d\\u2019Oche\",\"ty_zone\":1,\"surface_ha\":1439.92,\"nb_communes_abc\":2},{\"id_national\":\"430020423\",\"nom\":\"A MONTAIN\",\"ty_zone\":1,\"surface_ha\":27.88,\"nb_communes_abc\":1},{\"id_national\":\"410030475\",\"nom\":\"ANASTOMOSE DE LA MOSELLE A IGNEY\",\"ty_zone\":1,\"surface_ha\":165.63,\"nb_communes_abc\":4},{\"id_national\":\"420030378\",\"nom\":\"Ancien carreau minier \\u00e0 Ungersheim\",\"ty_zone\":1,\"surface_ha\":11.48,\"nb_communes_abc\":1},{\"id_national\":\"520520002\",\"nom\":\"ANCIEN COURS DE LA BAISSE\",\"ty_zone\":1,\"surface_ha\":274.32,\"nb_communes_abc\":2},{\"id_national\":\"110020328\",\"nom\":\"ANCIEN HIPPODROME DE LA CROIX DAUPHINE\",\"ty_zone\":1,\"surface_ha\":8.37,\"nb_communes_abc\":1},{\"id_national\":\"420014522\",\"nom\":\"Ancien lit majeur du Rhin de Strasbourg \\u00e0 Lauterbourg\",\"ty_zone\":2,\"surface_ha\":13331.82,\"nb_communes_abc\":6},{\"id_national\":\"420014529\",\"nom\":\"Ancien lit majeur du Rhin de Village-Neuf \\u00e0 Strasbourg\",\"ty_zone\":2,\"surface_ha\":22900.36,\"nb_communes_abc\":12},{\"id_national\":\"930020167\",\"nom\":\"ANCIEN MARAIS DE SAINT-GABRIEL\",\"ty_zone\":1,\"surface_ha\":11.09,\"nb_communes_abc\":1},{\"id_national\":\"520015236\",\"nom\":\"ANCIENNE ARDOISIERE DE SAINT AIGNAN\",\"ty_zone\":1,\"surface_ha\":18.21,\"nb_communes_abc\":1},{\"id_national\":\"410001923\",\"nom\":\"ANCIENNE CARRIERE A REMBERCOURT-SUR-MAD\",\"ty_zone\":1,\"surface_ha\":2.63,\"nb_communes_abc\":1},{\"id_national\":\"730030431\",\"nom\":\"Ancienne carri\\u00e8re de Saint-Cricq\",\"ty_zone\":1,\"surface_ha\":38.63,\"nb_communes_abc\":2},{\"id_national\":\"820000422\",\"nom\":\"Ancienne carri\\u00e8re de Saint Martin\",\"ty_zone\":1,\"surface_ha\":18.78,\"nb_communes_abc\":1},{\"id_national\":\"940030371\",\"nom\":\"ANCIENNE CARRIERE RD 14, BORD TAVIGNANO\",\"ty_zone\":1,\"surface_ha\":0.1,\"nb_communes_abc\":1},{\"id_national\":\"110120055\",\"nom\":\"ANCIENNE GLAISIERE DES LIBEZIERES\",\"ty_zone\":1,\"surface_ha\":3.6,\"nb_communes_abc\":1},{\"id_national\":\"720030024\",\"nom\":\"ANCIENNE GRAVIERE DU MARQUIS\",\"ty_zone\":1,\"surface_ha\":1.72,\"nb_communes_abc\":1},{\"id_national\":\"820032423\",\"nom\":\"Ancienne mine de la Soulagette\",\"ty_zone\":1,\"surface_ha\":3.46,\"nb_communes_abc\":1},{\"id_national\":\"820032422\",\"nom\":\"Ancienne mine du Mas\",\"ty_zone\":1,\"surface_ha\":3.87,\"nb_communes_abc\":1},{\"id_national\":\"110001451\",\"nom\":\"ANCIENNE SABLIERE DE PAINCOURT\",\"ty_zone\":1,\"surface_ha\":0.74,\"nb_communes_abc\":1},{\"id_national\":\"110030034\",\"nom\":\"ANCIENNE SABLIERE DU BOIS BIQUET\",\"ty_zone\":1,\"surface_ha\":0.63,\"nb_communes_abc\":1},{\"id_national\":\"520220066\",\"nom\":\"ANCIENNES ARDOISIERES D'ANGERS-TRELAZE\",\"ty_zone\":2,\"surface_ha\":147.73,\"nb_communes_abc\":2},{\"id_national\":\"520016253\",\"nom\":\"ANCIENNES CARRIERES DE LA JASLERIE\",\"ty_zone\":1,\"surface_ha\":21.57,\"nb_communes_abc\":1},{\"id_national\":\"210020243\",\"nom\":\"ANCIENNES CARRIERES DE LA MALADIERE ET DU COTEAU GERARD ENTRE CHAUMONT ET CHOIGNES\",\"ty_zone\":1,\"surface_ha\":2.95,\"nb_communes_abc\":1},{\"id_national\":\"520616274\",\"nom\":\"ANCIENNES CARRIERES DE MAUVES-SUR-LOIRE\",\"ty_zone\":1,\"surface_ha\":1.09,\"nb_communes_abc\":1},{\"id_national\":\"110020267\",\"nom\":\"ANCIENNES CARRIERES DU VOSSERY\",\"ty_zone\":1,\"surface_ha\":2.57,\"nb_communes_abc\":1},{\"id_national\":\"210013049\",\"nom\":\"ANCIENNES CARRIERES ENTRE BOSSANCOURT, ECLANCE ET ARSONVAL\",\"ty_zone\":1,\"surface_ha\":335.64,\"nb_communes_abc\":3},{\"id_national\":\"520030115\",\"nom\":\"ANCIENNES FORGES DE TRIGNAC\",\"ty_zone\":1,\"surface_ha\":1.42,\"nb_communes_abc\":1},{\"id_national\":\"940030410\",\"nom\":\"ANCIENNES MINES DE CASTIFAO\",\"ty_zone\":1,\"surface_ha\":299.87,\"nb_communes_abc\":1},{\"id_national\":\"940030425\",\"nom\":\"ANCIENNES MINES DE FRANCONE ET DEFILE DU LANCONE\",\"ty_zone\":1,\"surface_ha\":478.88,\"nb_communes_abc\":1},{\"id_national\":\"940030405\",\"nom\":\"ANCIENNES MINES DE LOZARI\",\"ty_zone\":1,\"surface_ha\":1.41,\"nb_communes_abc\":1},{\"id_national\":\"250030132\",\"nom\":\"ANCIENNES MINES DE SAINT-REMY-SUR-ORNE\",\"ty_zone\":1,\"surface_ha\":59.77,\"nb_communes_abc\":1},{\"id_national\":\"01M000014\",\"nom\":\"Anse \\u00e0 la Barque\",\"ty_zone\":1,\"surface_ha\":10.67,\"nb_communes_abc\":2},{\"id_national\":\"010000022\",\"nom\":\"Anse \\u00e0 la Barque et bassin versant Morne Bellevue\",\"ty_zone\":1,\"surface_ha\":81.27,\"nb_communes_abc\":2},{\"id_national\":\"010000030\",\"nom\":\"Anse \\u00e0 la Barque - rivi\\u00e8re\",\"ty_zone\":1,\"surface_ha\":84.15,\"nb_communes_abc\":2},{\"id_national\":\"010000029\",\"nom\":\"Anse \\u00e0 l'Eau\",\"ty_zone\":1,\"surface_ha\":260.39,\"nb_communes_abc\":1},{\"id_national\":\"93M000022\",\"nom\":\"ANSE DE CARTEAU\",\"ty_zone\":1,\"surface_ha\":1002.69,\"nb_communes_abc\":1},{\"id_national\":\"530014341\",\"nom\":\"ANSE DE GAREAU\",\"ty_zone\":1,\"surface_ha\":97.61,\"nb_communes_abc\":2},{\"id_national\":\"530030187\",\"nom\":\"ANSE DE KEROULLE ET RIVIERE DU FAOU\",\"ty_zone\":1,\"surface_ha\":400.86,\"nb_communes_abc\":1},{\"id_national\":\"01M000007\",\"nom\":\"Anse de la Gu\\u00e9rite \\u00e0 Anse du Canal\",\"ty_zone\":1,\"surface_ha\":497.03,\"nb_communes_abc\":2},{\"id_national\":\"540003309\",\"nom\":\"ANSE DE L'AIGUILLON, MARAIS DE CHARRON\",\"ty_zone\":1,\"surface_ha\":5290.42,\"nb_communes_abc\":4},{\"id_national\":\"530014342\",\"nom\":\"ANSE DE LA RICHARDAIS\",\"ty_zone\":1,\"surface_ha\":89.51,\"nb_communes_abc\":2},{\"id_national\":\"940014119\",\"nom\":\"ANSE DE MINACCIA\",\"ty_zone\":1,\"surface_ha\":8.15,\"nb_communes_abc\":1},{\"id_national\":\"530006456\",\"nom\":\"ANSE DE PENFOUL\",\"ty_zone\":1,\"surface_ha\":116.23,\"nb_communes_abc\":2},{\"id_national\":\"530014343\",\"nom\":\"ANSE DE PLEUDIHEN\",\"ty_zone\":1,\"surface_ha\":204.99,\"nb_communes_abc\":2},{\"id_national\":\"530015667\",\"nom\":\"ANSE DE QUELISOY\",\"ty_zone\":1,\"surface_ha\":52.67,\"nb_communes_abc\":2},{\"id_national\":\"530002406\",\"nom\":\"ANSE DE SAINT-BRIAC-SUR-MER\",\"ty_zone\":1,\"surface_ha\":151.52,\"nb_communes_abc\":2},{\"id_national\":\"010030034\",\"nom\":\"Anse du Bord de Mer au Frais \\\/ Grand Nord\",\"ty_zone\":1,\"surface_ha\":59.22,\"nb_communes_abc\":1},{\"id_national\":\"530005995\",\"nom\":\"ANSE DU LEDANO DANS L'ESTUAIRE DU TRIEUX\",\"ty_zone\":1,\"surface_ha\":249.13,\"nb_communes_abc\":2},{\"id_national\":\"530008376\",\"nom\":\"ANSE DU VERGER\",\"ty_zone\":1,\"surface_ha\":62.64,\"nb_communes_abc\":1},{\"id_national\":\"530030007\",\"nom\":\"ANSE ET RIVES DU VINCIN\",\"ty_zone\":1,\"surface_ha\":107.92,\"nb_communes_abc\":2},{\"id_national\":\"020030012\",\"nom\":\"Anse L\\u00e9vrier - Anse Couleuvre Plateau Cocoyer\",\"ty_zone\":1,\"surface_ha\":187,\"nb_communes_abc\":1},{\"id_national\":\"23M000000\",\"nom\":\"Antifer - Etretat Porte d'Aval\",\"ty_zone\":1,\"surface_ha\":137.68,\"nb_communes_abc\":2},{\"id_national\":\"110001429\",\"nom\":\"AQUEDUC SOUTERRAIN DE LA VO\\u00dbTE\",\"ty_zone\":1,\"surface_ha\":1.1,\"nb_communes_abc\":1},{\"id_national\":\"930012458\",\"nom\":\"ARCHIPEL DE RIOU\",\"ty_zone\":1,\"surface_ha\":166.8,\"nb_communes_abc\":1},{\"id_national\":\"53M000006\",\"nom\":\"ARCHIPEL DES 7 ILES\",\"ty_zone\":2,\"surface_ha\":910,\"nb_communes_abc\":1},{\"id_national\":\"930020291\",\"nom\":\"ARCHIPEL DES EMBIEZ\",\"ty_zone\":2,\"surface_ha\":104.68,\"nb_communes_abc\":1},{\"id_national\":\"930012457\",\"nom\":\"ARCHIPEL DU FRIOUL, \\u00ceLES D'ENDOUME\",\"ty_zone\":2,\"surface_ha\":198.11,\"nb_communes_abc\":1},{\"id_national\":\"410010375\",\"nom\":\"ARC MOSELLAN\",\"ty_zone\":2,\"surface_ha\":22480.28,\"nb_communes_abc\":1},{\"id_national\":\"520030070\",\"nom\":\"ARDENAY\",\"ty_zone\":1,\"surface_ha\":0.67,\"nb_communes_abc\":1},{\"id_national\":\"730012030\",\"nom\":\"Arize et affluents en aval de Cadarcet\",\"ty_zone\":1,\"surface_ha\":379.97,\"nb_communes_abc\":2},{\"id_national\":\"910011834\",\"nom\":\"Arri\\u00e8re-dunes de l'Espiguette\",\"ty_zone\":1,\"surface_ha\":59.9,\"nb_communes_abc\":1},{\"id_national\":\"260014851\",\"nom\":\"ARROUX, DREE ET TERNIN\",\"ty_zone\":2,\"surface_ha\":5450.66,\"nb_communes_abc\":1},{\"id_national\":\"830007459\",\"nom\":\"ARTENSE\",\"ty_zone\":2,\"surface_ha\":33300.99,\"nb_communes_abc\":3},{\"id_national\":\"520030033\",\"nom\":\"\\u00e0 supprimer AC\",\"ty_zone\":1,\"surface_ha\":0.01,\"nb_communes_abc\":1},{\"id_national\":\"520030055\",\"nom\":\"\\u00e0 supprimer AC\",\"ty_zone\":1,\"surface_ha\":0.01,\"nb_communes_abc\":1},{\"id_national\":\"240009769\",\"nom\":\"AULNAIE DE LA FONTAINE DES RAIS (FORET DOMANIALE DE SAINT-PALAIS)\",\"ty_zone\":1,\"surface_ha\":1.12,\"nb_communes_abc\":1},{\"id_national\":\"110001390\",\"nom\":\"AULNAIE DU MOULIN NEUF A FRECAMBEAU\",\"ty_zone\":1,\"surface_ha\":19.13,\"nb_communes_abc\":3},{\"id_national\":\"240030854\",\"nom\":\"AULNAIE-FRENAIE DE L'ALLEE DES RIOUX (FORET DOMANIALE D'ALLOGNY)\",\"ty_zone\":1,\"surface_ha\":103.57,\"nb_communes_abc\":1},{\"id_national\":\"240009669\",\"nom\":\"AULNAIE-FRENAIE DE MALITOURNE\",\"ty_zone\":1,\"surface_ha\":15.21,\"nb_communes_abc\":1},{\"id_national\":\"240030741\",\"nom\":\"AULNAIE MARECAGEUSE DU PARC\",\"ty_zone\":1,\"surface_ha\":14.17,\"nb_communes_abc\":1},{\"id_national\":\"240030422\",\"nom\":\"AULNAIES-FRENAIES DE LA FONTAINE DES VERRIERS ET DE LA FONTAINE SOUS TERRE (FORET DOMANIALE DE SAINT-PALAIS)\",\"ty_zone\":1,\"surface_ha\":81.7,\"nb_communes_abc\":1},{\"id_national\":\"240009773\",\"nom\":\"AULNAIE TOURBEUSE DE LA RACLERIE\",\"ty_zone\":1,\"surface_ha\":10.37,\"nb_communes_abc\":1},{\"id_national\":\"430020511\",\"nom\":\"AUX PIERRES ET EN FOURADON\",\"ty_zone\":1,\"surface_ha\":19.13,\"nb_communes_abc\":1},{\"id_national\":\"430002227\",\"nom\":\"AUX VOU\\u00c8TES ET SUR LES PIERRAILLES\",\"ty_zone\":1,\"surface_ha\":74.12,\"nb_communes_abc\":2},{\"id_national\":\"730030456\",\"nom\":\"Aval de l'Arget et affluents (vall\\u00e9e de la Barguill\\u00e8re)\",\"ty_zone\":1,\"surface_ha\":71.49,\"nb_communes_abc\":1}],\"total\":5414,\"page\":1,\"par_page\":100,\"pages\":55,\"versions\":{\"znieff\":\"extraction ZNIEFF INPN 2025 (ZIP de secours)\",\"aires\":\"Inventaire des aires prot\\u00e9g\\u00e9es APA-INPN \\u2014 extraction juillet 2025\",\"natura\":\"Base Natura 2000 \\u2014 d\\u00e9cembre 2024\"},\"attribution\":{\"source\":\"Inventaire national du patrimoine naturel (INPN) \\u2014 Mus\\u00e9um national d'Histoire naturelle\",\"url\":\"https:\\\/\\\/inpn.mnhn.fr\",\"licences\":\"https:\\\/\\\/inpn.mnhn.fr\\\/legal\",\"credit\":\"D'apr\\u00e8s l'inventaire national du patrimoine naturel (INPN), Mus\\u00e9um national d'Histoire naturelle. Esp\\u00e8ces confidentielles non diffus\\u00e9es.\"}}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Fiche ZNIEFF : int\u00e9r\u00eat \u00e9cologique, communes ABC concern\u00e9es,\nesp\u00e8ces d\u00e9terminantes (hors confidentielles), parent et enfants.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/patrimoine\/znieff\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/patrimoine\/znieff\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "730010131",
+                                    "description": "Identifiant national ZNIEFF (ex. 240009732)."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "404 si la zone ne touche aucune commune ABC.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 200,
+                            "body": "{\"data\":{\"id_national\":\"730010131\",\"nom\":\"Vall\\u00e9e du Viaur et ses affluents\",\"ty_zone\":2,\"surface_ha\":27586.93,\"altitude_min\":147,\"altitude_max\":1109,\"texte_interet\":null,\"texte_delimitation\":\"<p>La ZNIEFF est compos\\u00e9e de la vall\\u00e9e du Viaur et de ses affluents. Le bassin versant du Viaur recouvre 61 communes aveyronnaises, 11 communes tarnaises et une commune du Tarn-et-Garonne, soit au total 73 communes. \\u00c0 Tanus, le Viaur sort du d\\u00e9partement de l\\u2019Aveyron pour servir, durant une bonne partie de son cours, de limite entre les d\\u00e9partements du Tarn et de l\\u2019Aveyron. Quelques secteurs dans sa partie aval sont enti\\u00e8rement inclus dans le d\\u00e9partement du Tarn. Le Viaur, affluent rive gauche de l\\u2019Aveyron, prend sa source au sud du puech del Pal sur la commune de V\\u00e9zins-du-L\\u00e9v\\u00e9zou, \\u00e0 une altitude de 1 090 m. Il serpente d\\u2019est en ouest \\u00e0 travers deux grandes r\\u00e9gions naturelles que sont le L\\u00e9v\\u00e9zou et le S\\u00e9gala. Apr\\u00e8s un parcours de 163 km, il conflue avec l\\u2019Aveyron au niveau de Saint-Martin-Lagu\\u00e9pie (d\\u00e9partement du Tarn) et Lagu\\u00e9pie (d\\u00e9partement du Tarn-et-Garonne) \\u00e0 une altitude de 150 m. La ZNIEFF abrite une flore et une faune remarquables et diversifi\\u00e9es.<\\\/p>\",\"texte_bilan\":null,\"communes\":[{\"code\":\"12029\",\"libelle\":\"Bor-et-Bar\"},{\"code\":\"12032\",\"libelle\":\"Boussac\"},{\"code\":\"12041\",\"libelle\":\"Caban\\u00e8s\"},{\"code\":\"12043\",\"libelle\":\"Calmont\"},{\"code\":\"12045\",\"libelle\":\"Camboulazet\"},{\"code\":\"12046\",\"libelle\":\"Camjac\"},{\"code\":\"12056\",\"libelle\":\"Baraqueville\"},{\"code\":\"12057\",\"libelle\":\"Cassagnes-B\\u00e9gonh\\u00e8s\"},{\"code\":\"12059\",\"libelle\":\"Castanet\"},{\"code\":\"12060\",\"libelle\":\"Castelmary\"},{\"code\":\"12065\",\"libelle\":\"Centr\\u00e8s\"},{\"code\":\"12085\",\"libelle\":\"Crespin\"},{\"code\":\"12113\",\"libelle\":\"Gramond\"},{\"code\":\"12135\",\"libelle\":\"Lunac\"},{\"code\":\"12137\",\"libelle\":\"Manhac\"},{\"code\":\"12144\",\"libelle\":\"Meljac\"},{\"code\":\"12169\",\"libelle\":\"Naucelle\"},{\"code\":\"12189\",\"libelle\":\"Pradinas\"},{\"code\":\"12194\",\"libelle\":\"Quins\"},{\"code\":\"12210\",\"libelle\":\"Saint-Andr\\u00e9-de-Najac\"},{\"code\":\"12234\",\"libelle\":\"Sainte-Juliette-sur-Viaur\"},{\"code\":\"12235\",\"libelle\":\"Saint-Just-sur-Viaur\"},{\"code\":\"12262\",\"libelle\":\"Sauveterre-de-Rouergue\"},{\"code\":\"12276\",\"libelle\":\"Tauriac-de-Naucelle\"},{\"code\":\"81110\",\"libelle\":\"Jouqueviel\"},{\"code\":\"81168\",\"libelle\":\"Mirandol-Bourgnounac\"},{\"code\":\"81180\",\"libelle\":\"Montirat\"},{\"code\":\"81201\",\"libelle\":\"Pampelonne\"},{\"code\":\"81245\",\"libelle\":\"Saint-Christophe\"},{\"code\":\"81292\",\"libelle\":\"Tanus\"},{\"code\":\"81302\",\"libelle\":\"Tr\\u00e9ban\"}],\"nb_communes_total\":56,\"groupes_especes\":[{\"groupe\":\"Amphibiens\",\"noms\":[\"Epidalea calamita (Laurenti, 1768)\",\"Rana dalmatina Fitzinger in Bonaparte, 1838\",\"Salamandra salamandra (Linnaeus, 1758)\",\"Triturus marmoratus (Latreille, 1800)\"],\"n\":4},{\"groupe\":\"Ascomyc\\u00e8tes\",\"noms\":[\"Ascotremella faginea (Peck) Seaver\",\"Caloscypha fulgens (Pers. ex Fr.) Boudier\",\"Scutellinia scutellata (L. ex Fr.) Lambotte\"],\"n\":3},{\"groupe\":\"Basidiomyc\\u00e8tes\",\"noms\":[\"Agaricus comtulus Fr.\",\"Albatrellus pes-caprae (Pers. : Fr.) Pouzar\",\"Arrhenia spathulata (Fr. : Fr.) Redhead\",\"Aureoboletus gentilis (Qu\\u00e9let) Pouzar\",\"Boletus aemilii Barbier\",\"Boletus impolitus Fr.\",\"Boletus regius Krombholz\",\"Bovista paludosa L\\u00e9veill\\u00e9\",\"Clavulinopsis fusiformis (Sow. : Fr.) Corner\",\"Clitocybe fritilliformis (Lasch) Gillet\",\"Clitocybe trulliformis (Fr. : Fr.) Qu\\u00e9let\",\"Cortinarius balteatocumatilis R. Henry ex P.D. Orton\",\"Cortinarius balteatus (Fr.) Fr.\",\"Cortinarius glaucopus (J.C. Sch. : Fr.) Fr.\",\"Cortinarius humicola (Qu\\u00e9let) R. Maire\",\"Cortinarius lividoviolaceus R. Henry ex R. Henry\",\"Cortinarius pseudosulphureus Henry ex Orton\",\"Cortinarius turmalis Fr.\",\"Cystoderma granulosum (Batsch : Fr.) Fayod\",\"Entoloma asprellum (Fr. : Fr.) Fayod\",\"Entoloma icterinum (Fr. : Fr.) Moser\",\"Entoloma mougeotii (Fr.) Hesler\",\"Galerina paludosa (Fr.) K\\u00fchner\",\"Galerina sphagnorum (Pers. : Fr.) K\\u00fchner\",\"Gomphus clavatus (Pers. : Fr.) S.F. Gray\",\"Hericium erinaceum (Bulliard ex Fr.) Pers.\",\"Hohenbuehelia tremula (J.C. Sch. : Fr.) Thorn & Barron\",\"Hydnellum concrescens (Pers.) Banker\",\"Hygrocybe insipida (J.E. Lange ex Lundell) Moser\",\"Hygrocybe lepida Arnolds\",\"Hygrophorus marzuolus (Fr. : Fr.) Bresadola\",\"Hygrophorus mesotephrus Berk. & Br.\",\"Hygrophorus pseudodiscoideus var. formosus Bon\",\"Lactarius pergamenus (Swartz : Fr.) Fr.\",\"Omphalina pyxidata (Bull. : Fr.) Qu\\u00e9let\",\"Omphalina sphagnicola (Berk.) Moser\",\"Panellus ringens (Fr. : Fr.) Romagn.\",\"Pholiota henningsii (Bresadola) P.D. Orton\",\"Pholiota lubrica (Pers. : Fr.) Singer\",\"Phylloporus pelletieri (L\\u00e9veill\\u00e9) Qu\\u00e9let\",\"Pleurotus dryinus (Pers. : Fr.) Kummer\",\"Pleurotus ostreatus (Jacq. : Fr.) Kummer\",\"Ramaria apiculata (Fr. : Fr.) Donk\",\"Ramaria aurea (J.C. Sch.) Qu\\u00e9let\",\"Ramaria flava (J.C. Sch. : Fr.) Qu\\u00e9let\",\"Ramaria formosa (Pers. : Fr.) Qu\\u00e9let\",\"Rhodocybe mundula (Lasch : Fr.) Singer\",\"Russula barlae Qu\\u00e9let\",\"Russula cicatricata Romagn. ex Bon\",\"Russula melliolens Qu\\u00e9let\",\"Russula silvestris (Singer) Reumaux\",\"Russula sororia (Fr.) Romell\",\"Sarcodontia setosa (Pers.) Donk\",\"Spongipellis pachyodon (Pers. : Fr.) Kotlaba & Pouzar\",\"Strobilomyces floccopus (Vahl : Fr.) P. Karsten\",\"Tephrocybe osmophora (E.-J. Gilbert) Bon\",\"Tricholoma joachimii Bon & Riva\"],\"n\":57},{\"groupe\":\"Bryophytes\",\"noms\":[\"Fissidens exilis Hedw.\",\"Sphagnum capillifolium (Ehrh.) Hedw.\",\"Sphagnum papillosum Lindb.\"],\"n\":3},{\"groupe\":\"Col\\u00e9opt\\u00e8res\",\"noms\":[\"Ampedus praeustus (Fabricius, 1792)\",\"Prostomis mandibularis (Fabricius, 1801)\"],\"n\":2},{\"groupe\":\"Crustac\\u00e9s\",\"noms\":[\"Austropotamobius pallipes (Lereboullet, 1858)\"],\"n\":1},{\"groupe\":\"Mammif\\u00e8res\",\"noms\":[\"Lutra lutra (Linnaeus, 1758)\",\"Martes martes (Linnaeus, 1758)\",\"Mustela erminea Linnaeus, 1758\",\"Mustela putorius Linnaeus, 1758\"],\"n\":4},{\"groupe\":\"Oiseaux\",\"noms\":[\"Anthus pratensis (Linnaeus, 1758)\",\"Athene noctua (Scopoli, 1769)\",\"Bubo bubo (Linnaeus, 1758)\",\"Circaetus gallicus (Gmelin, 1788)\",\"Circus cyaneus (Linnaeus, 1758)\",\"Dendrocopos medius (Linnaeus, 1758)\",\"Falco peregrinus Tunstall, 1771\",\"Lanius collurio Linnaeus, 1758\",\"Lanius excubitor Linnaeus, 1758\",\"Lanius senator Linnaeus, 1758\",\"Lullula arborea (Linnaeus, 1758)\",\"Milvus milvus (Linnaeus, 1758)\",\"Nycticorax nycticorax (Linnaeus, 1758)\",\"Saxicola rubetra (Linnaeus, 1758)\",\"Streptopelia turtur (Linnaeus, 1758)\",\"Tachybaptus ruficollis (Pallas, 1764)\",\"Upupa epops Linnaeus, 1758\"],\"n\":17},{\"groupe\":\"Phan\\u00e9rogames\",\"noms\":[\"Aconitum lycoctonum L., 1753\",\"Adoxa moschatellina L., 1753\",\"Allium ericetorum Thore, 1803\",\"Arnica montana var. montana L., 1753\",\"Asarina procumbens Mill., 1768\",\"Carex binervis Sm., 1800\",\"Carex echinata Murray, 1770\",\"Carex lasiocarpa Ehrh., 1784\",\"Carex pulicaris L., 1753\",\"Carex rostrata Stokes, 1787\",\"Carex umbrosa Host, 1801\",\"Carex viridula subsp. brachyrrhyncha (Celak.) B.Schmid, 1983\",\"Carex viridula var. elatior (Schltdl.) Crins, 1989\",\"Carlina acanthifolia subsp. cynara (Pourr. ex DC.) Arcang., 1882\",\"Cirsium rivulare (Jacq.) All., 1789\",\"Crocus nudiflorus Sm., 1798\",\"Cytisus oromediterraneus Rivas Mart. & al., 1984\",\"Dactylorhiza incarnata subsp. incarnata (L.) So\\u00f3, 1962\",\"Dianthus deltoides subsp. deltoides L., 1753\",\"Drosera rotundifolia L., 1753\",\"Epipactis palustris (L.) Crantz, 1769\",\"Eriophorum latifolium Hoppe, 1800\",\"Eriophorum polystachion L., 1753\",\"Euphorbia angulata Jacq., 1789\",\"Festuca rivularis Boiss., 1838\",\"Gentiana pneumonanthe L., 1753\",\"Gentianella campestris (L.) B\\u00f6rner, 1912\",\"Hypericum elodes L., 1759\",\"Impatiens noli-tangere L., 1753\",\"Isolepis setacea (L.) R.Br., 1810\",\"Juncus alpinoarticulatus Chaix, 1785\",\"Leucanthemum subglaucum De Laramb., 1861\",\"Lobelia urens L., 1753\",\"Menyanthes trifoliata L., 1753\",\"Narcissus poeticus subsp. poeticus L., 1753\",\"Narthecium ossifragum (L.) Huds., 1762\",\"Pedicularis palustris L., 1753\",\"Phyteuma gallicum R.Schulz, 1904\",\"Polygonatum multiflorum (L.) All., 1785\",\"Polygonum bistorta L.\",\"Potamogeton polygonifolius Pourr., 1788\",\"Potentilla palustris (L.) Scop., 1771\",\"Quercus pyrenaica Willd., 1805\",\"Ranunculus aconitifolius L., 1753\",\"Ranunculus hederaceus L., 1753\",\"Rhynchospora alba (L.) Vahl, 1805\",\"Rumex longifolius DC., 1815\",\"Sanguisorba officinalis L., 1753\",\"Schoenus nigricans L., 1753\",\"Scilla lilio-hyacinthus L., 1753\",\"Serratula tinctoria subsp. monticola (Boreau) Berher, 1887\",\"Sibthorpia europaea L., 1753\",\"Simethis mattiazzii (Vand.) G.L\\u00f3pez & Jarvis, 1984\",\"Trichophorum cespitosum (L.) Hartm., 1849\",\"Ulex minor Roth, 1797\",\"Utricularia minor L., 1753\",\"Valeriana dioica L., 1753\",\"Veratrum album L., 1753\"],\"n\":58},{\"groupe\":\"Poissons\",\"noms\":[\"Anguilla anguilla (Linnaeus, 1758)\",\"Barbatula Linck, 1790\",\"Esox lucius Linnaeus, 1758\",\"Gobio Cuvier, 1816\",\"Lampetra planeri (Bloch, 1784)\",\"Leuciscus burdigalensis Valenciennes, 1844\",\"Parachondrostoma toxostoma (Vallot, 1837)\",\"Phoxinus phoxinus (Linnaeus, 1758)\",\"Scardinius erythrophthalmus (Linnaeus, 1758)\",\"Tinca tinca (Linnaeus, 1758)\"],\"n\":10},{\"groupe\":\"Pt\\u00e9ridophytes\",\"noms\":[\"Asplenium foreziense Legrand, 1885\",\"Asplenium obovatum subsp. billotii (F.W.Schultz) O.Bol\\u00f2s, Vigo, Massales & Ninot, 1990\",\"Equisetum fluviatile L., 1753\",\"Osmunda regalis L., 1753\"],\"n\":4},{\"groupe\":\"Reptiles\",\"noms\":[\"Podarcis liolepis (Boulenger, 1905)\",\"Zootoca vivipara (Lichtenstein, 1823)\"],\"n\":2}],\"parent\":null,\"enfants\":[],\"versions\":{\"znieff\":\"extraction ZNIEFF INPN 2025 (ZIP de secours)\",\"aires\":\"Inventaire des aires prot\\u00e9g\\u00e9es APA-INPN \\u2014 extraction juillet 2025\",\"natura\":\"Base Natura 2000 \\u2014 d\\u00e9cembre 2024\"},\"attribution\":{\"source\":\"Inventaire national du patrimoine naturel (INPN) \\u2014 Mus\\u00e9um national d'Histoire naturelle\",\"url\":\"https:\\\/\\\/inpn.mnhn.fr\",\"licences\":\"https:\\\/\\\/inpn.mnhn.fr\\\/legal\",\"credit\":\"D'apr\\u00e8s l'inventaire national du patrimoine naturel (INPN), Mus\\u00e9um national d'Histoire naturelle. Esp\\u00e8ces confidentielles non diffus\\u00e9es.\"}}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Liste pagin\u00e9e des sites Natura 2000 \u00e9ligibles (touchant au moins\nune commune ayant un ABC), 100 par page.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/patrimoine\/natura",
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "Page demand\u00e9e (born\u00e9e par le service).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/patrimoine\/natura?page=1"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 200,
+                            "body": "{\"data\":{\"items\":[{\"sitecode\":\"FR1100795\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":7},{\"sitecode\":\"FR1100796\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR1100797\",\"nom\":\"Bois de la brume et mare de Tornibus\",\"type_site\":\"SIC\",\"nb_communes_abc\":3},{\"sitecode\":\"FR1100801\",\"nom\":\"Marais d'Episy\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR1100803\",\"nom\":\"Haute vall\\u00e9e de Chevreuse\",\"type_site\":\"SIC\",\"nb_communes_abc\":6},{\"sitecode\":\"FR1100805\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR1100819\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR1102005\",\"nom\":\"Rives du Loing\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR1102013\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR1102015\",\"nom\":\"Vexin fran\\u00e7ais\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR1110025\",\"nom\":\"ETANG DE SAINT QUENTIN\",\"type_site\":\"ZPS\",\"nb_communes_abc\":2},{\"sitecode\":\"FR1110102\",\"nom\":\"MARAIS DITTEVILLE ET DE FONTENAY LE VICOMTE\",\"type_site\":\"ZPS\",\"nb_communes_abc\":2},{\"sitecode\":\"FR1110795\",\"nom\":\"For\\u00eat de protection\",\"type_site\":\"ZPS\",\"nb_communes_abc\":7},{\"sitecode\":\"FR1112003\",\"nom\":\"Charmentray - Trilbardou\",\"type_site\":\"ZPS\",\"nb_communes_abc\":3},{\"sitecode\":\"FR1112011\",\"nom\":\"Massif de Rambouillet\",\"type_site\":\"ZPS\",\"nb_communes_abc\":17},{\"sitecode\":\"FR1112012\",\"nom\":\"Boucle de Guerne\",\"type_site\":\"ZPS\",\"nb_communes_abc\":10},{\"sitecode\":\"FR1112013\",\"nom\":\"Alisiers du plateau d'Avron (APB)\",\"type_site\":\"ZPS\",\"nb_communes_abc\":6},{\"sitecode\":\"FR2100253\",\"nom\":\"Etangs de la Champagne humide\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100256\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100258\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100263\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100271\",\"nom\":\"Montagne de Reims\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2100275\",\"nom\":\"Marais du plateau de Langres\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100276\",\"nom\":\"Chalmessin\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100281\",\"nom\":\"Marais de Villech\\u00e9tif\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100284\",\"nom\":\"Montagne de Reims\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100295\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":3},{\"sitecode\":\"FR2100305\",\"nom\":\"Etangs de la Champagne humide\",\"type_site\":\"SIC\",\"nb_communes_abc\":6},{\"sitecode\":\"FR2100310\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":4},{\"sitecode\":\"FR2100311\",\"nom\":\"Etangs de la Champagne humide\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2100312\",\"nom\":\"Montagne de Reims\",\"type_site\":\"SIC\",\"nb_communes_abc\":12},{\"sitecode\":\"FR2100315\",\"nom\":\"Etangs de la Champagne humide\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100332\",\"nom\":\"Etang de la Horre\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2100334\",\"nom\":\"LAC DU DER ET ETANGS LATERAUX\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2100339\",\"nom\":\"Anciennes carri\\u00e8res souterraines\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2102001\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2102003\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2110001\",\"nom\":\"For\\u00eat d'Orient\",\"type_site\":\"ZPS\",\"nb_communes_abc\":11},{\"sitecode\":\"FR2110002\",\"nom\":\"Le Der Chantecoq et les \\u00e9tangs d'Outines et d'Arrigny\",\"type_site\":\"ZPS\",\"nb_communes_abc\":3},{\"sitecode\":\"FR2110091\",\"nom\":\"Etang de la Horre\",\"type_site\":\"ZPS\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2112001\",\"nom\":\"Etangs de la Champagne humide\",\"type_site\":\"ZPS\",\"nb_communes_abc\":4},{\"sitecode\":\"FR2112002\",\"nom\":\"Lac du Der-Chantecoq et \\u00e9tangs d'Outines et d'Arrigny\",\"type_site\":\"ZPS\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2112010\",\"nom\":\"rives de l'Aube \\u00e0 Bar sur Aube\",\"type_site\":\"ZPS\",\"nb_communes_abc\":4},{\"sitecode\":\"FR2112013\",\"nom\":null,\"type_site\":\"ZPS\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200346\",\"nom\":\"DUNES DE L'AUTHIE\",\"type_site\":\"SIC\",\"nb_communes_abc\":12},{\"sitecode\":\"FR2200347\",\"nom\":\"Baie de Somme\",\"type_site\":\"SIC\",\"nb_communes_abc\":6},{\"sitecode\":\"FR2200348\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200349\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2200350\",\"nom\":\"Larris de Grouches-Luchuel\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2200352\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200354\",\"nom\":\"MOYENNE VALLEE DE LA SOMME\",\"type_site\":\"SIC\",\"nb_communes_abc\":6},{\"sitecode\":\"FR2200355\",\"nom\":\"Marais communal de la Chauss\\u00e9e-Tirancourt\",\"type_site\":\"SIC\",\"nb_communes_abc\":4},{\"sitecode\":\"FR2200356\",\"nom\":\"Quartier Saint-Leu, Etang Saint-Pierre, Hortillonnages\",\"type_site\":\"SIC\",\"nb_communes_abc\":7},{\"sitecode\":\"FR2200357\",\"nom\":\"Suzanne - Ensemble form\\u00e9 par le village, le ch\\u00e2teau et son parc\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2200359\",\"nom\":\"Etang de Saint-Ladre\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200369\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":9},{\"sitecode\":\"FR2200371\",\"nom\":\"Larris et tourbi\\u00e8res de Saint-Pierre-es-Champs\",\"type_site\":\"SIC\",\"nb_communes_abc\":3},{\"sitecode\":\"FR2200372\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":4},{\"sitecode\":\"FR2200376\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200377\",\"nom\":\"For\\u00eat domaniale de Hez-Froidmont\",\"type_site\":\"SIC\",\"nb_communes_abc\":4},{\"sitecode\":\"FR2200378\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200379\",\"nom\":\"Vall\\u00e9e de la Nonette\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200380\",\"nom\":\"Oise-Pays de France\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2200392\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":5},{\"sitecode\":\"FR2200395\",\"nom\":\"Marais de Comport\\u00e9\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200396\",\"nom\":\"Amas de roches d\\u00e9nomm\\u00e9 la Hott\\u00e9e Gargantua\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2200398\",\"nom\":\"For\\u00eat de Retz\",\"type_site\":\"SIC\",\"nb_communes_abc\":5},{\"sitecode\":\"FR2200566\",\"nom\":\"Vall\\u00e9e de la Nonette\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2210026\",\"nom\":\"Marais d'Isle\",\"type_site\":\"ZPS\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2210068\",\"nom\":\"ESTUAIRES PICARDS : BAIES DE SOMME ET DAUTHIE\",\"type_site\":\"ZPS\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2210104\",\"nom\":null,\"type_site\":\"ZPS\",\"nb_communes_abc\":9},{\"sitecode\":\"FR2212001\",\"nom\":null,\"type_site\":\"ZPS\",\"nb_communes_abc\":6},{\"sitecode\":\"FR2212002\",\"nom\":null,\"type_site\":\"ZPS\",\"nb_communes_abc\":12},{\"sitecode\":\"FR2212003\",\"nom\":\"Baie de Somme\",\"type_site\":\"ZPS\",\"nb_communes_abc\":6},{\"sitecode\":\"FR2212005\",\"nom\":null,\"type_site\":\"ZPS\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2212007\",\"nom\":null,\"type_site\":\"ZPS\",\"nb_communes_abc\":16},{\"sitecode\":\"FR2300121\",\"nom\":\"Boucles de la Seine normande\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2300122\",\"nom\":\"Mannevilles\",\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2300123\",\"nom\":\"Bords de Seine\",\"type_site\":\"SIC\",\"nb_communes_abc\":10},{\"sitecode\":\"FR2300124\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2300128\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2300131\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":3},{\"sitecode\":\"FR2300132\",\"nom\":\"Marais de Fesques\",\"type_site\":\"SIC\",\"nb_communes_abc\":20},{\"sitecode\":\"FR2300133\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":15},{\"sitecode\":\"FR2300136\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":5},{\"sitecode\":\"FR2300137\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":7},{\"sitecode\":\"FR2300139\",\"nom\":\"FALAISE D'AMONT\",\"type_site\":\"SIC\",\"nb_communes_abc\":9},{\"sitecode\":\"FR2300147\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2300150\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2302002\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2302005\",\"nom\":\"Abbaye de Jumi\\u00e8ges\",\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2302006\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2310044\",\"nom\":\"Site inscrit des abords du Pont de Tancarville\",\"type_site\":\"ZPS\",\"nb_communes_abc\":8},{\"sitecode\":\"FR2310045\",\"nom\":null,\"type_site\":\"ZPS\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2400518\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":2},{\"sitecode\":\"FR2400520\",\"nom\":\"Le Patouillet\",\"type_site\":\"SIC\",\"nb_communes_abc\":12},{\"sitecode\":\"FR2400521\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":3},{\"sitecode\":\"FR2400524\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":5},{\"sitecode\":\"FR2400526\",\"nom\":null,\"type_site\":\"SIC\",\"nb_communes_abc\":1},{\"sitecode\":\"FR2400528\",\"nom\":\"GREVE DE MAREAU\",\"type_site\":\"SIC\",\"nb_communes_abc\":17}],\"total\":749,\"page\":1,\"par_page\":100,\"pages\":8,\"versions\":{\"znieff\":\"extraction ZNIEFF INPN 2025 (ZIP de secours)\",\"aires\":\"Inventaire des aires prot\\u00e9g\\u00e9es APA-INPN \\u2014 extraction juillet 2025\",\"natura\":\"Base Natura 2000 \\u2014 d\\u00e9cembre 2024\"},\"attribution\":{\"source\":\"Inventaire national du patrimoine naturel (INPN) \\u2014 Mus\\u00e9um national d'Histoire naturelle\",\"url\":\"https:\\\/\\\/inpn.mnhn.fr\",\"licences\":\"https:\\\/\\\/inpn.mnhn.fr\\\/legal\",\"credit\":\"D'apr\\u00e8s l'inventaire national du patrimoine naturel (INPN), Mus\\u00e9um national d'Histoire naturelle. Esp\\u00e8ces confidentielles non diffus\\u00e9es.\"}}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Fiche Natura 2000 : habitats et esp\u00e8ces de la directive recens\u00e9s\nsur le site, DOCOB, communes ABC concern\u00e9es. 404 si le site ne\ntouche aucune commune ABC.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/patrimoine\/natura\/:sitecode",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/patrimoine\/natura\/:sitecode",
+                            "variable": [
+                                {
+                                    "id": "sitecode",
+                                    "key": "sitecode",
+                                    "value": "FR5310086",
+                                    "description": "Code du site (ex. FR8212001)."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "59"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "*"
+                                },
+                                {
+                                    "key": "access-control-expose-headers",
+                                    "value": "ETag, Cache-Control"
+                                }
+                            ],
+                            "code": 200,
+                            "body": "{\"data\":{\"sitecode\":\"FR5310086\",\"nom\":\"Golfe du Morbihan\",\"type_site\":\"ZPS\",\"pdf_local\":\"\\\/docob\\\/FR5310086.pdf\",\"docob\":[{\"titre\":\"Docob Golfe du Morbihan\",\"lien\":\"http:\\\/\\\/natura2000.mnhn.fr\\\/uploads\\\/doc\\\/PRODBIOTOP\\\/1504_N2_02102013_PG_Docob_GOLFE56_app.pdf\"}],\"communes\":[{\"code\":\"56003\",\"libelle\":\"Arradon\"},{\"code\":\"56005\",\"libelle\":\"Arzon\"},{\"code\":\"56008\",\"libelle\":\"Baden\"},{\"code\":\"56084\",\"libelle\":\"Le H\\u00e9zo\"},{\"code\":\"56088\",\"libelle\":\"\\u00cele-d'Arz\"},{\"code\":\"56106\",\"libelle\":\"Larmor-Baden\"},{\"code\":\"56116\",\"libelle\":\"Locmariaquer\"},{\"code\":\"56205\",\"libelle\":\"Saint-Armel\"},{\"code\":\"56233\",\"libelle\":\"Saint-Philibert\"},{\"code\":\"56240\",\"libelle\":\"Sarzeau\"},{\"code\":\"56243\",\"libelle\":\"S\\u00e9n\\u00e9\"},{\"code\":\"56251\",\"libelle\":\"Theix-Noyalo\"},{\"code\":\"56260\",\"libelle\":\"Vannes\"}],\"nb_communes_total\":13,\"habitats\":[],\"especes\":[{\"code_n2000\":\"A294\",\"nom_scientifique\":\"Acrocephalus paludicola\",\"nom_vernaculaire\":\"Phragmite aquatique\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c\"},{\"code_n2000\":\"A168\",\"nom_scientifique\":\"Actitis hypoleucos\",\"nom_vernaculaire\":\"Chevalier guignette\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A200\",\"nom_scientifique\":\"Alca torda\",\"nom_vernaculaire\":\"Petit Pingouin, Pingouin torda\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c\"},{\"code_n2000\":\"A229\",\"nom_scientifique\":\"Alcedo atthis\",\"nom_vernaculaire\":\"Martin-p\\u00eacheur d'Europe\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"r,w\"},{\"code_n2000\":\"A054\",\"nom_scientifique\":\"Anas acuta\",\"nom_vernaculaire\":\"Canard pilet\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A052\",\"nom_scientifique\":\"Anas crecca\",\"nom_vernaculaire\":\"Sarcelle d'hiver\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"r,w\"},{\"code_n2000\":\"A053\",\"nom_scientifique\":\"Anas platyrhynchos\",\"nom_vernaculaire\":\"Canard colvert\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A043\",\"nom_scientifique\":\"Anser anser\",\"nom_vernaculaire\":\"Oie cendr\\u00e9e\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A773\",\"nom_scientifique\":\"Ardea alba\",\"nom_vernaculaire\":\"Grande Aigrette\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A028\",\"nom_scientifique\":\"Ardea cinerea\",\"nom_vernaculaire\":\"H\\u00e9ron cendr\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"r,w\"},{\"code_n2000\":\"A169\",\"nom_scientifique\":\"Arenaria interpres\",\"nom_vernaculaire\":\"Tournepierre \\u00e0 collier\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A059\",\"nom_scientifique\":\"Aythya ferina\",\"nom_vernaculaire\":\"Fuligule milouin\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A061\",\"nom_scientifique\":\"Aythya fuligula\",\"nom_vernaculaire\":\"Fuligule morillon\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A062\",\"nom_scientifique\":\"Aythya marila\",\"nom_vernaculaire\":\"Fuligule milouinan\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A046\",\"nom_scientifique\":\"Branta bernicla\",\"nom_vernaculaire\":\"Bernache cravant\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A045\",\"nom_scientifique\":\"Branta leucopsis\",\"nom_vernaculaire\":\"Bernache nonnette\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A025\",\"nom_scientifique\":\"Bubulcus ibis\",\"nom_vernaculaire\":\"H\\u00e9ron garde-boeufs\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A067\",\"nom_scientifique\":\"Bucephala clangula\",\"nom_vernaculaire\":\"Garrot \\u00e0 \\u0153il d'or\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A144\",\"nom_scientifique\":\"Calidris alba\",\"nom_vernaculaire\":\"B\\u00e9casseau sanderling\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A149\",\"nom_scientifique\":\"Calidris alpina\",\"nom_vernaculaire\":\"B\\u00e9casseau variable\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A143\",\"nom_scientifique\":\"Calidris canutus\",\"nom_vernaculaire\":\"B\\u00e9casseau maub\\u00e8che\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A861\",\"nom_scientifique\":\"Calidris pugnax\",\"nom_vernaculaire\":\"Combattant vari\\u00e9, Chevalier combattant\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A137\",\"nom_scientifique\":\"Charadrius hiaticula\",\"nom_vernaculaire\":\"Grand Gravelot\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A734\",\"nom_scientifique\":\"Chlidonias hybrida\",\"nom_vernaculaire\":\"Guifette moustac\",\"annexe_ii\":false,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c\"},{\"code_n2000\":\"A197\",\"nom_scientifique\":\"Chlidonias niger\",\"nom_vernaculaire\":\"Guifette noire\",\"annexe_ii\":false,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c\"},{\"code_n2000\":\"A081\",\"nom_scientifique\":\"Circus aeruginosus\",\"nom_vernaculaire\":\"Busard des roseaux\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A064\",\"nom_scientifique\":\"Clangula hyemalis\",\"nom_vernaculaire\":\"Harelde de Miquelon, Harelde bor\\u00e9ale\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A480\",\"nom_scientifique\":\"Cyanecula svecica\",\"nom_vernaculaire\":\"Gorgebleue \\u00e0 miroir\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"r\"},{\"code_n2000\":\"A036\",\"nom_scientifique\":\"Cygnus olor\",\"nom_vernaculaire\":\"Cygne tubercul\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"r,w\"},{\"code_n2000\":\"A026\",\"nom_scientifique\":\"Egretta garzetta\",\"nom_vernaculaire\":\"Aigrette garzette\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A103\",\"nom_scientifique\":\"Falco peregrinus\",\"nom_vernaculaire\":\"Faucon p\\u00e8lerin\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A125\",\"nom_scientifique\":\"Fulica atra\",\"nom_vernaculaire\":\"Foulque macroule\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"r,w\"},{\"code_n2000\":\"A153\",\"nom_scientifique\":\"Gallinago gallinago\",\"nom_vernaculaire\":\"B\\u00e9cassine des marais\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A123\",\"nom_scientifique\":\"Gallinula chloropus\",\"nom_vernaculaire\":\"Poule-d'eau, Gallinule poule-d'eau\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A002\",\"nom_scientifique\":\"Gavia arctica\",\"nom_vernaculaire\":\"Plongeon arctique\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A003\",\"nom_scientifique\":\"Gavia immer\",\"nom_vernaculaire\":\"Plongeon imbrin\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A001\",\"nom_scientifique\":\"Gavia stellata\",\"nom_vernaculaire\":\"Plongeon catmarin\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A130\",\"nom_scientifique\":\"Haematopus ostralegus\",\"nom_vernaculaire\":\"Hu\\u00eetrier pie\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A131\",\"nom_scientifique\":\"Himantopus himantopus\",\"nom_vernaculaire\":\"\\u00c9chasse blanche\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,r\"},{\"code_n2000\":\"A014\",\"nom_scientifique\":\"Hydrobates pelagicus\",\"nom_vernaculaire\":\"P\\u00e9trel temp\\u00eate, Oc\\u00e9anite temp\\u00eate\",\"annexe_ii\":false,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c\"},{\"code_n2000\":\"A184\",\"nom_scientifique\":\"Larus argentatus\",\"nom_vernaculaire\":\"Go\\u00e9land argent\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A182\",\"nom_scientifique\":\"Larus canus\",\"nom_vernaculaire\":\"Go\\u00e9land cendr\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A183\",\"nom_scientifique\":\"Larus fuscus\",\"nom_vernaculaire\":\"Go\\u00e9land brun\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A187\",\"nom_scientifique\":\"Larus marinus\",\"nom_vernaculaire\":\"Go\\u00e9land marin\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A176\",\"nom_scientifique\":\"Larus melanocephalus\",\"nom_vernaculaire\":\"Mouette m\\u00e9lanoc\\u00e9phale\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A604\",\"nom_scientifique\":\"Larus michahellis\",\"nom_vernaculaire\":\"Go\\u00e9land leucoph\\u00e9e\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A179\",\"nom_scientifique\":\"Larus ridibundus\",\"nom_vernaculaire\":\"Mouette rieuse\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A157\",\"nom_scientifique\":\"Limosa lapponica\",\"nom_vernaculaire\":\"Barge rousse\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A156\",\"nom_scientifique\":\"Limosa limosa\",\"nom_vernaculaire\":\"Barge \\u00e0 queue noire\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A855\",\"nom_scientifique\":\"Mareca penelope\",\"nom_vernaculaire\":\"Canard siffleur\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A889\",\"nom_scientifique\":\"Mareca strepera\",\"nom_vernaculaire\":\"Canard chipeau\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A066\",\"nom_scientifique\":\"Melanitta fusca\",\"nom_vernaculaire\":\"Macreuse brune\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A069\",\"nom_scientifique\":\"Mergus serrator\",\"nom_vernaculaire\":\"Harle hupp\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A160\",\"nom_scientifique\":\"Numenius arquata\",\"nom_vernaculaire\":\"Courlis cendr\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A158\",\"nom_scientifique\":\"Numenius phaeopus\",\"nom_vernaculaire\":\"Courlis corlieu\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A094\",\"nom_scientifique\":\"Pandion haliaetus\",\"nom_vernaculaire\":\"Balbuzard p\\u00eacheur\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A018\",\"nom_scientifique\":\"Phalacrocorax aristotelis\",\"nom_vernaculaire\":\"Cormoran hupp\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"r\"},{\"code_n2000\":\"A017\",\"nom_scientifique\":\"Phalacrocorax carbo\",\"nom_vernaculaire\":\"Grand Cormoran\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A034\",\"nom_scientifique\":\"Platalea leucorodia\",\"nom_vernaculaire\":\"Spatule blanche\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A140\",\"nom_scientifique\":\"Pluvialis apricaria\",\"nom_vernaculaire\":\"Pluvier dor\\u00e9\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A141\",\"nom_scientifique\":\"Pluvialis squatarola\",\"nom_vernaculaire\":\"Pluvier argent\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A007\",\"nom_scientifique\":\"Podiceps auritus\",\"nom_vernaculaire\":\"Gr\\u00e8be esclavon\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A005\",\"nom_scientifique\":\"Podiceps cristatus\",\"nom_vernaculaire\":\"Gr\\u00e8be hupp\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A008\",\"nom_scientifique\":\"Podiceps nigricollis\",\"nom_vernaculaire\":\"Gr\\u00e8be \\u00e0 cou noir\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A118\",\"nom_scientifique\":\"Rallus aquaticus\",\"nom_vernaculaire\":\"R\\u00e2le d'eau\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A132\",\"nom_scientifique\":\"Recurvirostra avosetta\",\"nom_vernaculaire\":\"Avocette \\u00e9l\\u00e9gante\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A063\",\"nom_scientifique\":\"Somateria mollissima\",\"nom_vernaculaire\":\"Eider \\u00e0 duvet\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"r,w\"},{\"code_n2000\":\"A857\",\"nom_scientifique\":\"Spatula clypeata\",\"nom_vernaculaire\":\"Canard souchet\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A856\",\"nom_scientifique\":\"Spatula querquedula\",\"nom_vernaculaire\":\"Sarcelle d'\\u00e9t\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"r\"},{\"code_n2000\":\"A192\",\"nom_scientifique\":\"Sterna dougallii\",\"nom_vernaculaire\":\"Sterne de Dougall\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c\"},{\"code_n2000\":\"A193\",\"nom_scientifique\":\"Sterna hirundo\",\"nom_vernaculaire\":\"Sterne pierregarin\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,r\"},{\"code_n2000\":\"A004\",\"nom_scientifique\":\"Tachybaptus ruficollis\",\"nom_vernaculaire\":\"Gr\\u00e8be castagneux\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"r,w\"},{\"code_n2000\":\"A048\",\"nom_scientifique\":\"Tadorna tadorna\",\"nom_vernaculaire\":\"Tadorne de Belon\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A863\",\"nom_scientifique\":\"Thalasseus sandvicensis\",\"nom_vernaculaire\":\"Sterne caugek\",\"annexe_ii\":true,\"annexe_1\":true,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A161\",\"nom_scientifique\":\"Tringa erythropus\",\"nom_vernaculaire\":\"Chevalier arlequin\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A164\",\"nom_scientifique\":\"Tringa nebularia\",\"nom_vernaculaire\":\"Chevalier aboyeur\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,w\"},{\"code_n2000\":\"A165\",\"nom_scientifique\":\"Tringa ochropus\",\"nom_vernaculaire\":\"Chevalier culblanc\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"w\"},{\"code_n2000\":\"A162\",\"nom_scientifique\":\"Tringa totanus\",\"nom_vernaculaire\":\"Chevalier gambette\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,r,w\"},{\"code_n2000\":\"A199\",\"nom_scientifique\":\"Uria aalge\",\"nom_vernaculaire\":\"Guillemot de Tro\\u00efl\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c\"},{\"code_n2000\":\"A142\",\"nom_scientifique\":\"Vanellus vanellus\",\"nom_vernaculaire\":\"Vanneau hupp\\u00e9\",\"annexe_ii\":false,\"annexe_1\":false,\"prioritaire\":false,\"presences\":\"c,r,w\"}],\"versions\":{\"znieff\":\"extraction ZNIEFF INPN 2025 (ZIP de secours)\",\"aires\":\"Inventaire des aires prot\\u00e9g\\u00e9es APA-INPN \\u2014 extraction juillet 2025\",\"natura\":\"Base Natura 2000 \\u2014 d\\u00e9cembre 2024\"},\"attribution\":{\"source\":\"Inventaire national du patrimoine naturel (INPN) \\u2014 Mus\\u00e9um national d'Histoire naturelle\",\"url\":\"https:\\\/\\\/inpn.mnhn.fr\",\"licences\":\"https:\\\/\\\/inpn.mnhn.fr\\\/legal\",\"credit\":\"D'apr\\u00e8s l'inventaire national du patrimoine naturel (INPN), Mus\\u00e9um national d'Histoire naturelle. Esp\\u00e8ces confidentielles non diffus\\u00e9es.\"}}}",
                             "name": ""
                         }
                     ]
@@ -261,7 +605,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"statut\":\"inconnu\",\"annee\":1,\"code_insee\":\"T8GOX$\\\/i\",\"departement\":\"b\",\"region\":\"m\",\"porteur\":\"i\",\"bbox\":\"8,sssssss-20:.492,ssssss-1,ssss9\",\"per_page\":3,\"format\":\"json\"}"
+                            "raw": "{\"statut\":\"en_cours\",\"annee\":1,\"code_insee\":\"T8GOX$\\\/i\",\"departement\":\"b\",\"region\":\"m\",\"porteur\":\"i\",\"bbox\":\"8,sssssss-20:.492,ssssss-1,ssss9\",\"per_page\":3,\"format\":\"geojson\"}"
                         },
                         "description": "Pagin\u00e9e par curseur (`meta.next_cursor` \/ `meta.next_page_url`).\nFiltres : `statut` (a_venir, en_cours, termine, inconnu \u2014 statut\naffich\u00e9, le verdict de v\u00e9rification prime), `annee` (ann\u00e9e de\nd\u00e9but), `code_insee`, `departement` (ex. 56, 2a, 972), `region`\n(slug, code INSEE ou libell\u00e9), `porteur` (recherche partielle),\n`bbox` (`lon_min,lat_min,lon_max,lat_max`, WGS84).\nFormat GeoJSON avec `format=geojson` ou `Accept: application\/geo+json`.",
                         "auth": {
@@ -480,12 +824,12 @@
                         {
                             "header": [
                                 {
-                                    "key": "content-type",
-                                    "value": "application\/json"
-                                },
-                                {
                                     "key": "cache-control",
                                     "value": "max-age=3600, public"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
                                 },
                                 {
                                     "key": "x-ratelimit-limit",
@@ -505,7 +849,7 @@
                                 }
                             ],
                             "code": 200,
-                            "body": "{\"data\":{\"sources\":{\"data.gouv\":\"2026-07-09\",\"wayback\":\"2022-12-06\",\"fondsvert-p113-2024\":\"2025-07-31\",\"fondsvert-p113-2025\":\"2026-06-22\"},\"stats\":[{\"statut\":\"a_venir\",\"n\":161},{\"statut\":\"en_cours\",\"n\":329},{\"statut\":\"inconnu\",\"n\":1},{\"statut\":\"termine\",\"n\":718}],\"countProjets\":1209,\"countCommunes\":4924,\"countPotentiellementTermines\":237,\"countPotentiellementEnCours\":81,\"countDonnees2022\":38,\"countEstimes\":246,\"countVerifies\":7,\"countAnomalies\":2,\"countNonLocalises\":0,\"countContributionsEnAttente\":0,\"licence\":\"Etalab-2.0\",\"derniere_mise_a_jour\":\"2026-10-26T15:03:34.000000Z\"}}",
+                            "body": "{\"data\":{\"sources\":{\"data.gouv\":\"2026-07-09\",\"wayback\":\"2022-12-06\",\"fondsvert-p113-2024\":\"2025-07-31\",\"fondsvert-p113-2025\":\"2026-06-22\"},\"stats\":[{\"statut\":\"a_venir\",\"n\":161},{\"statut\":\"en_cours\",\"n\":329},{\"statut\":\"inconnu\",\"n\":1},{\"statut\":\"termine\",\"n\":717}],\"countProjets\":1208,\"countCommunes\":4925,\"countPotentiellementTermines\":237,\"countPotentiellementEnCours\":81,\"countDonnees2022\":38,\"countEstimes\":246,\"countVerifies\":7,\"countAnomalies\":0,\"countNonLocalises\":0,\"countContributionsEnAttente\":0,\"licence\":\"Etalab-2.0\",\"derniere_mise_a_jour\":\"2026-10-28T10:46:08.000000Z\"}}",
                             "name": ""
                         }
                     ]

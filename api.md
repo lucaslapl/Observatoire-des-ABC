@@ -22,6 +22,19 @@ limites d'usage, versionnement).
 | `GET /api/v1/regions/{code}` | Synthèse d'une région (slug, code INSEE ou libellé). |
 | `GET /api/v1/journal` | Journal public d'audit (mêmes entrées et même ordre que l'historique des fiches), contributions créditées collectivement. |
 | `GET /api/v1/stats` | Compteurs globaux (mêmes chiffres que `/api/meta`). |
+| `GET /api/v1/communes/{code_insee}/patrimoine` | Patrimoine écologique INPN de la commune : ZNIEFF, sites Natura 2000 et aires protégées (faits bruts, espèces confidentielles jamais diffusées). |
+| `GET /api/v1/patrimoine/znieff` | Liste paginée des ZNIEFF touchant au moins une commune ABC (100/page). |
+| `GET /api/v1/patrimoine/znieff/{id_national}` | Fiche ZNIEFF : intérêt, communes ABC, espèces déterminantes (hors confidentielles), parent/enfants. |
+| `GET /api/v1/patrimoine/natura` | Liste paginée des sites Natura 2000 touchant au moins une commune ABC (100/page). |
+| `GET /api/v1/patrimoine/natura/{sitecode}` | Fiche Natura 2000 : habitats, espèces de la directive, DOCOB, communes ABC. |
+
+**Patrimoine INPN — attribution spéciale** : ces endpoints exposent des
+faits bruts de l'INPN, **pas couverts par la Licence Ouverte** de
+l'Observatoire. Chaque réponse porte son bloc `attribution` (MNHN,
+licences de l'INPN, mention de crédit) et la `versions` de référence de
+chaque base ; les réutilisateurs doivent créditer l'INPN/MNHN comme sur
+le site. Même périmètre éditorial que le site : uniquement les zonages
+touchant au moins une commune ABC.
 
 Formats : **JSON** par défaut ; **GeoJSON** pour `/projets` et `/communes`
 via `?format=geojson` ou `Accept: application/geo+json` (négociation). La

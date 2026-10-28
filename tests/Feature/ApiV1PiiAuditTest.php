@@ -107,6 +107,9 @@ class ApiV1PiiAuditTest extends TestCase
             ['/api/v1/regions/bretagne'],
             ['/api/v1/journal'],
             ['/api/v1/stats'],
+            ['/api/v1/communes/56260/patrimoine'],
+            ['/api/v1/patrimoine/znieff'],
+            ['/api/v1/patrimoine/natura'],
         ];
     }
 
