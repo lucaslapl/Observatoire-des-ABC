@@ -106,9 +106,21 @@ const jsonLd = computed(() => [
                     Espèces ayant justifié l'inscription de la zone à l'inventaire ZNIEFF (hors espèces
                     confidentielles, jamais affichées).
                 </p>
-                <div v-for="g in z.groupes_especes" :key="g.groupe" class="mb-2">
-                    <h3 class="h6 mb-1"><span class="badge text-bg-success">{{ g.n }}</span> {{ g.groupe }}</h3>
-                    <p class="small ps-2">{{ g.noms.join(' · ') }}</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle small">
+                        <tbody>
+                            <template v-for="g in z.groupes_especes" :key="g.groupe">
+                                <tr>
+                                    <th colspan="2" class="table-light">
+                                        {{ g.groupe }} <span class="badge text-bg-success">{{ g.n }}</span>
+                                    </th>
+                                </tr>
+                                <tr v-for="nom in g.noms" :key="nom">
+                                    <td class="ps-4">{{ nom }}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
