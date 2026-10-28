@@ -202,8 +202,14 @@ class PatrimoineFicheService
             $phrase = 'Il mentionne également '.$this->nb(count($especes)).' espèce'.$this->pl(count($especes))
                 .' des directives';
             if ($nbOiseaux > 0) {
-                // Pluriel irrégulier : « oiseaux », pas « oiseaus ».
-                $phrase .= ', dont '.$this->nb($nbOiseaux).($nbOiseaux > 1 ? ' oiseaux' : ' oiseau');
+                // Pluriel irrégulier : « oiseaux », pas « oiseaus ». Sur une
+                // ZPS, toutes les espèces listées sont des oiseaux : la
+                // tournure « dont N oiseaux » serait redondante.
+                if ($nbOiseaux === count($especes)) {
+                    $phrase .= $nbOiseaux > 1 ? ', toutes oiseaux' : ', un oiseau';
+                } else {
+                    $phrase .= ', dont '.$this->nb($nbOiseaux).($nbOiseaux > 1 ? ' oiseaux' : ' oiseau');
+                }
             }
             if ($nbPrioritaires > 0) {
                 $phrase .= ($nbOiseaux > 0 ? ' et ' : ', dont ').$this->nb($nbPrioritaires)

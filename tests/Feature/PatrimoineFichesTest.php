@@ -189,6 +189,27 @@ class PatrimoineFichesTest extends TestCase
         $this->assertStringNotContainsString('oiseaus', $chapeau);
     }
 
+    public function test_chapeau_natura_site_toutes_oiseaux(): void
+    {
+        // ZPS où toutes les espèces sont des oiseaux : pas de tournure
+        // redondante « dont N oiseaux » sur N espèces.
+        DB::table('inpn_natura_sites')->insert([
+            ['sitecode' => 'FR2272002', 'nom' => 'ZPS OISEAUX', 'type_site' => 'ZPS'],
+        ]);
+        DB::table('inpn_natura_communes')->insert([
+            ['sitecode' => 'FR2272002', 'code_commune' => self::CODE],
+        ]);
+        DB::table('inpn_natura_especes')->insert([
+            ['sitecode' => 'FR2272002', 'code_n2000' => 'A090', 'nom_scientifique' => 'Ciconia ciconia', 'nom_vernaculaire' => 'Cigogne blanche', 'annexe_1' => true, 'annexe_ii' => false, 'prioritaire' => false],
+            ['sitecode' => 'FR2272002', 'code_n2000' => 'A091', 'nom_scientifique' => 'Ciconia nigra', 'nom_vernaculaire' => 'Cigogne noire', 'annexe_1' => true, 'annexe_ii' => false, 'prioritaire' => false],
+        ]);
+
+        $chapeau = $this->getJson('/api/v1/patrimoine/natura/FR2272002')->json('data.chapeau');
+
+        $this->assertStringContainsString('2 espèces des directives, toutes oiseaux', $chapeau);
+        $this->assertStringNotContainsString('dont 2 oiseaux', $chapeau);
+    }
+
     public function test_fiche_natura_eligible(): void
     {
         $this->get('/patrimoine/natura/FR8212001')->assertOk()->assertInertia(
