@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
 import Breadcrumbs from '../Components/Breadcrumbs.vue';
@@ -16,6 +17,21 @@ const site = computed(() => page.props.site || {});
 const user = computed(() => page.props.auth?.user || null);
 // Membre dont l'email est vérifié : peut envoyer une suggestion via /verify.
 const peutSuggerer = computed(() => !!user.value?.email_verifie);
+// Admin : la fiche offre la suppression directe, utile pour un projet sans
+// point sur la carte (communes non géocodées) où le popup est le seul accès.
+const estAdmin = computed(() => Array.isArray(user.value?.roles) && user.value.roles.includes('admin'));
+
+async function supprimerProjet() {
+    if (!window.confirm(`Supprimer le projet « ${props.projet.nom} » (${props.projet.id}) ?\nSa fiche (communes, vérifications, contributions) sera supprimée ET exclue du prochain collect.`)) return;
+    const motif = window.prompt("Motif (optionnel, pour le journal d'audit) :");
+    try {
+        await axios.delete(`/api/admin/projets/${encodeURIComponent(props.projet.id)}`, { data: { motif: motif || null } });
+        router.visit('/');
+    } catch (err) {
+        const msg = err.response?.data?.error ?? (err.response?.status === 401 ? 'Connexion admin requise.' : err.message);
+        window.alert('Erreur lors de la suppression : ' + msg);
+    }
+}
 
 const crumbs = computed(() => {
     const list = [];
@@ -170,6 +186,15 @@ onBeforeUnmount(() => {
                 <small v-if="!projet.statut_verifie" class="text-muted">d'après la source originale</small>
                 <small v-else class="text-muted">statut vérifié manuellement</small>
                 <span class="badge text-bg-light">{{ projet.source_label }}</span>
+                <button
+                    v-if="estAdmin"
+                    type="button"
+                    class="btn btn-outline-danger btn-sm ms-auto"
+                    title="Supprimer ce projet et l'exclure du prochain collect"
+                    @click="supprimerProjet"
+                >
+                    <i class="bi bi-trash" aria-hidden="true"></i> Supprimer ce projet
+                </button>
             </div>
 
             <div class="row g-4">
