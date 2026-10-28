@@ -117,6 +117,37 @@ class SeoLandingPagesTest extends TestCase
         $this->get('/commune/99999')->assertNotFound();
     }
 
+    /**
+     * Certaines sources laissent la colonne `departement` vide (ex. Louviers
+     * 27375) : le code doit se dériver du préfixe INSEE et le libellé venir
+     * du référentiel — le titre de la fiche n'est plus « ABC Louviers () ».
+     */
+    public function test_commune_sans_colonne_departement_retrouve_le_code_insee(): void
+    {
+        $projet = Projet::create([
+            'id' => 'abc-louviers',
+            'nom' => 'ABC Louviers',
+            'statut' => 'en_cours',
+            'source' => 'data.gouv',
+        ]);
+        Commune::create([
+            'projet_id' => $projet->id,
+            'code_geographique' => '27375',
+            'libelle_geographique' => 'Louviers',
+            'region' => 'Normandie',
+            'anomalie' => false,
+        ]);
+
+        $this->get('/commune/27375')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->component('Commune')
+                ->where('commune.libelle', 'Louviers')
+                ->where('commune.departement.code', '27')
+                ->where('commune.departement.label', 'Eure')
+                ->where('commune.region.label', 'Normandie')
+                ->has('commune.projets', 1)
+        );
+    }
+
     public function test_departement_page_returns_projects(): void
     {
         $this->seedData();
@@ -219,6 +250,9 @@ class SeoLandingPagesTest extends TestCase
         $this->get('/robots.txt')
             ->assertOk()
             ->assertSee('Disallow: /api/')
+            // La worklist publique /verify est indexée (transparence) :
+            // seul le /verify-email de vérification de compte reste bloqué.
+            ->assertDontSee("Disallow: /verify\n", false)
             ->assertSee('Sitemap:')
             ->assertHeader('Cache-Control', 'max-age=3600, public');
     }
@@ -271,6 +305,8 @@ class SeoLandingPagesTest extends TestCase
             ->assertSee('/abc/'.$projet->slug)
             ->assertSee('/commune/56001')
             ->assertSee('/departement/56')
+            // Worklist publique de vérification : indexée et dans le sitemap.
+            ->assertSee('/verify</loc>', false)
             ->assertSee('/region/bretagne')
             ->assertSee('/actualites')
             ->assertSee('/contact')

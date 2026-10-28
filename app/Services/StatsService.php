@@ -14,7 +14,10 @@ use Illuminate\Support\Str;
  */
 class StatsService
 {
-    public function __construct(private RegionService $regions) {}
+    public function __construct(
+        private RegionService $regions,
+        private DepartementService $departements,
+    ) {}
 
     public function meta(): array
     {
@@ -104,7 +107,10 @@ class StatsService
             ->get()
             ->map(fn ($d) => [
                 'code' => mb_strtolower((string) $d->departement),
-                'label' => $d->libelle ?: (string) $d->departement,
+                // Libellé canonique du référentiel : les libellés des
+                // sources varient (« Rhône » / « Rhone »).
+                'label' => $this->departements->label($d->departement)
+                    ?: ($d->libelle ?: (string) $d->departement),
                 'n' => (int) $d->n,
             ])
             ->values()

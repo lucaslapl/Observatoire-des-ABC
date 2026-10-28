@@ -183,6 +183,87 @@ class ProjetsListeTest extends TestCase
         );
     }
 
+    public function test_filtre_region_rattrape_les_libelles_deaccentues(): void
+    {
+        // La source stocke parfois le libellé sans accents : le filtre par
+        // slug canonique doit le rattraper, et l'item affiche le libellé
+        // canonique (« Auvergne-Rhone-Alpes » → « Auvergne-Rhône-Alpes »).
+        $this->projet('abc-ara', 'ABC Auvergne', [], [
+            ['code_geographique' => '69001', 'libelle_geographique' => 'Rhône', 'region' => 'Auvergne-Rhone-Alpes'],
+        ]);
+
+        $this->get('/abc?region=auvergne-rhone-alpes')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('liste.total', 1)
+                ->where('liste.items.0.id', 'abc-ara')
+                ->where('liste.items.0.region_label', 'Auvergne-Rhône-Alpes')
+        );
+    }
+
+    public function test_filtre_departement_rattrape_les_lignes_sans_colonne(): void
+    {
+        // Colonnes `departement`/`libelle_departement` vides (ex. Louviers
+        // 27375) : le filtre 27 doit matcher via le préfixe INSEE.
+        $this->projet('abc-louviers', 'ABC Louviers', [], [
+            ['code_geographique' => '27375', 'libelle_geographique' => 'Louviers'],
+        ]);
+        $this->projet('abc-autre', 'ABC Autre', [], [
+            ['code_geographique' => '35001', 'libelle_geographique' => 'Rennes', 'departement' => '35'],
+        ]);
+
+        $this->get('/abc?departement=27')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('liste.total', 1)->where('liste.items.0.id', 'abc-louviers')
+        );
+    }
+
+    public function test_facette_departements_dedupliquee_par_code(): void
+    {
+        // Deux libellés pour le même code selon la source (« Rhone » /
+        // « Rhône ») : une seule entrée, libellé canonique du référentiel.
+        $this->projet('abc-rhone-a', 'ABC Rhone A', [], [
+            ['code_geographique' => '69001', 'libelle_geographique' => 'Alpha',
+                'departement' => '69', 'libelle_departement' => 'Rhone'],
+        ]);
+        $this->projet('abc-rhone-b', 'ABC Rhone B', [], [
+            ['code_geographique' => '69002', 'libelle_geographique' => 'Beta',
+                'departement' => '69', 'libelle_departement' => 'Rhône'],
+        ]);
+
+        $this->get('/abc')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->has('liste.filtres.departements', 1)
+                ->where('liste.filtres.departements.0.code', '69')
+                ->where('liste.filtres.departements.0.label', 'Rhône')
+        );
+    }
+
+    public function test_les_noms_sont_nettoyes_pour_laffichage(): void
+    {
+        // Guillemets CSV résiduels + porteur concaténé au nom par la source
+        // (séparé par des espaces multiples dans le brut).
+        $porteur = "COMMUNAUTE DE COMMUNES RIVES DE L'AIN PAYS DU CERDON";
+        $this->projet(
+            'abc-cerdon',
+            "ABC Ain-Cerdon  {$porteur}",
+            ['structure_porteuse' => "  {$porteur}  "]
+        );
+        $this->projet(
+            'abc-somme',
+            'ABC "Vallée de la Somme, de l\'Ancre et de l\'Hallue"',
+            ['structure_porteuse' => '"CC VAL DE SOMME"']
+        );
+
+        $this->get('/abc')->assertOk()->assertInertia(
+            // Tri par nom brut : le guillemet résiduel place « ABC "Vallée… »
+            // avant « ABC Ain-Cerdon… » (0x22 < 'a').
+            fn (Assert $page) => $page->has('liste.items', 2)
+                ->where('liste.items.0.id', 'abc-somme')
+                ->where('liste.items.0.nom', "ABC Vallée de la Somme, de l'Ancre et de l'Hallue")
+                ->where('liste.items.0.structure_porteuse', 'CC VAL DE SOMME')
+                ->where('liste.items.1.id', 'abc-cerdon')
+                ->where('liste.items.1.nom', 'ABC Ain-Cerdon')
+                ->where('liste.items.1.structure_porteuse', $porteur)
+        );
+    }
+
     public function test_filtres_patrimoine_espece_habitat_et_aires(): void
     {
         $this->projet('abc-patrimoine', 'ABC Patrimoine', [], [

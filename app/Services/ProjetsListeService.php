@@ -66,6 +66,8 @@ class ProjetsListeService
 
     public function __construct(
         private RegionService $regions,
+        private DepartementService $departements,
+        private NomService $noms,
         private StatusService $status,
     ) {}
 
@@ -129,6 +131,9 @@ class ProjetsListeService
             ->selectRaw('(SELECT c.libelle_departement FROM communes c'
                 .' WHERE c.projet_id = projets.id AND c.anomalie = FALSE'
                 .' AND c.libelle_departement IS NOT NULL LIMIT 1) AS departement_label')
+            ->selectRaw('(SELECT c.departement FROM communes c'
+                .' WHERE c.projet_id = projets.id AND c.anomalie = FALSE'
+                .' AND c.departement IS NOT NULL LIMIT 1) AS departement_code')
             ->selectRaw('(SELECT c.region FROM communes c'
                 .' WHERE c.projet_id = projets.id AND c.anomalie = FALSE'
                 .' AND c.region IS NOT NULL LIMIT 1) AS region_raw');
@@ -158,8 +163,15 @@ class ProjetsListeService
         }
 
         if ($params['departement'] !== null) {
+            // Colonne `departement` ou, à défaut, préfixe du code INSEE :
+            // certaines lignes (ex. millésimes récents) n'ont pas la
+            // colonne renseignée mais appartiennent bien au département.
+            // Préfixe sur 3 caractères uniquement pour l'outre-mer (97x/98x).
+            $norm = Str::lower($params['departement']);
+            $len = preg_match('/^9[78]/', $norm) === 1 ? 3 : 2;
             $q->whereRaw('EXISTS (SELECT 1 FROM communes c WHERE c.projet_id = projets.id'
-                .' AND c.anomalie = FALSE AND LOWER(c.departement) = ?)', [Str::lower($params['departement'])]);
+                .' AND c.anomalie = FALSE AND (LOWER(COALESCE(c.departement, \'\')) = ?'
+                ." OR LOWER(SUBSTR(c.code_geographique, 1, {$len})) = ?))", [$norm, $norm]);
         }
 
         if ($params['source'] !== null) {
@@ -368,7 +380,9 @@ class ProjetsListeService
 
     /**
      * Valeurs brutes de communes.region correspondant au slug demandé
-     * (le libellé lui-même, ou les codes région de la configuration).
+     * (le libellé canonique, les codes région de la configuration, et les
+     * variantes brutes stockées en base — accents ou casse perdus par la
+     * source, ex. « Auvergne-Rhone-Alpes »).
      *
      * @return array<int, string>
      */
@@ -383,6 +397,11 @@ class ProjetsListeService
         foreach (config('regions') as $code => $libelle) {
             if ($libelle === $label) {
                 $valeurs[] = $code;
+            }
+        }
+        foreach (DB::table('communes')->whereNotNull('region')->distinct()->pluck('region') as $value) {
+            if ($this->regions->normalizeToLabel($value) === $label && ! in_array($value, $valeurs, true)) {
+                $valeurs[] = $value;
             }
         }
 
@@ -401,17 +420,26 @@ class ProjetsListeService
             ->mapWithKeys(fn (string $s) => [$s => LandingService::SOURCES[$s] ?? $s])
             ->all();
 
-        $departements = DB::table('communes')
+        // Une seule entrée par code, libellé canonique du référentiel :
+        // les libellés des sources varient (« Rhône » / « Rhone ») et
+        // créaient des doublons dans le filtre. Les codes couvrent aussi
+        // les lignes sans colonne `departement` (préfixe INSEE).
+        $libelles = DB::table('communes')
             ->where('anomalie', false)
             ->whereNotNull('departement')
-            ->distinct()
-            ->orderBy('libelle_departement')
-            ->get(['departement', 'libelle_departement'])
-            ->map(fn ($d) => [
-                'code' => mb_strtolower((string) $d->departement),
-                'label' => $d->libelle_departement ?: mb_strtoupper((string) $d->departement),
-            ])
-            ->all();
+            ->groupBy('departement')
+            ->selectRaw('LOWER(departement) AS code, MAX(libelle_departement) AS libelle')
+            ->get()
+            ->keyBy('code');
+
+        $departements = array_map(
+            fn (string $code) => [
+                'code' => $code,
+                'label' => $this->departements->label($code)
+                    ?? ($libelles->get($code)->libelle ?? mb_strtoupper($code)),
+            ],
+            $this->departements->codesPresents()
+        );
 
         return [
             'statuts' => array_map(
@@ -453,9 +481,9 @@ class ProjetsListeService
 
             $items[] = [
                 'id' => $r->id,
-                'nom' => $r->nom,
+                'nom' => $this->noms->projet($r->nom, $r->structure_porteuse),
                 'slug' => $r->slug,
-                'structure_porteuse' => $r->structure_porteuse,
+                'structure_porteuse' => $this->noms->structurePorteuse($r->structure_porteuse),
                 'statut' => $r->statut_affiche,
                 'statut_label' => $this->status->statutLabel((string) $r->statut_affiche),
                 'statut_verifie' => $statutVerifie,
@@ -471,7 +499,7 @@ class ProjetsListeService
                 'nb_aires' => (int) $r->nb_aires,
                 'nb_znieff' => (int) $r->nb_znieff,
                 'nb_natura' => (int) $r->nb_natura,
-                'departement_label' => $r->departement_label,
+                'departement_label' => $this->departements->label($r->departement_code) ?: $r->departement_label,
                 'region_label' => $this->regions->label($r->region_raw),
                 'communes' => $noms,
                 'nb_communes_suivantes' => max(0, (int) $r->nb_communes - count($noms)),

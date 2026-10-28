@@ -34,10 +34,38 @@ const crumbs = computed(() => {
 const statutClass = (s) =>
     ({ en_cours: 'badge-st-en_cours', a_venir: 'badge-st-a_venir', termine: 'badge-st-termine', inconnu: 'badge-st-inconnu' })[s] || 'badge-st-inconnu';
 
-const pageTitle = computed(() => `ABC ${c.value.libelle} (${c.value.departement?.code?.toUpperCase() || ''})`);
-const pageDescription = computed(() =>
-    `Découvrez les Atlas de la Biodiversité Communale (ABC) sur la commune de ${c.value.libelle}, département ${c.value.departement?.label || ''}${c.value.region?.label ? ', région ' + c.value.region.label : ''}. ${c.value.n_projets} projet(s) ABC recensé(s).`
-);
+/* Localisation : « département Eure (27) » quand tout est connu, forme
+   réduite sinon — les morceaux s'assemblent sans espace parasite avant
+   les virgules (cas « Louviers » sans code département en base). */
+const localisation = () => {
+    const d = c.value.departement;
+    if (d?.label && d?.code) return `département ${d.label} (${d.code.toUpperCase()})`;
+    if (d?.label) return `département ${d.label}`;
+    if (d?.code) return `département ${d.code.toUpperCase()}`;
+    return null;
+};
+
+const pageTitle = computed(() => {
+    const d = c.value.departement;
+    const pieces = [d?.code?.toUpperCase(), d?.label].filter(Boolean).join(', ');
+    return pieces ? `ABC à ${c.value.libelle} (${pieces})` : `ABC à ${c.value.libelle}`;
+});
+const pageDescription = computed(() => {
+    const morceaux = [`Découvrez les Atlas de la Biodiversité Communale (ABC) sur la commune de ${c.value.libelle}`];
+    const loc = localisation();
+    if (loc) morceaux.push(loc);
+    if (c.value.region?.label) morceaux.push(`région ${c.value.region.label}`);
+    return `${morceaux.join(', ')}. ${c.value.n_projets} projet(s) ABC recensé(s).`;
+});
+
+/* Phrase d'intro de la fiche, assemblée serveur de la même façon. */
+const entete = computed(() => {
+    const morceaux = [`Commune de ${c.value.libelle}`];
+    const loc = localisation();
+    if (loc) morceaux.push(loc);
+    if (c.value.region?.label) morceaux.push(`région ${c.value.region.label}`);
+    return `${morceaux.join(', ')}.`;
+});
 
 const jsonLd = computed(() => {
     const base = site.value.url || '';
@@ -59,7 +87,9 @@ const jsonLd = computed(() => {
         {
             '@context': 'https://schema.org',
             '@type': 'Place',
-            name: `${c.value.libelle} (${c.value.departement?.code || ''})`,
+            name: c.value.departement?.code
+                ? `${c.value.libelle} (${c.value.departement.code.toUpperCase()})`
+                : c.value.libelle,
             url: `${base}/commune/${c.value.code}`,
             address: {
                 '@type': 'PostalAddress',
@@ -78,11 +108,7 @@ const jsonLd = computed(() => {
         <div class="container py-4">
             <Breadcrumbs :items="crumbs" />
             <h1 class="h3 mb-2">Atlas de la Biodiversité Communale — {{ commune.libelle }}</h1>
-            <p class="text-muted">
-                Commune de {{ commune.libelle }}
-                <template v-if="commune.departement?.label">, département {{ commune.departement.label }}<template v-if="commune.departement.code"> ({{ commune.departement.code.toUpperCase() }})</template></template>
-                <template v-if="commune.region?.label">, région {{ commune.region.label }}</template>.
-            </p>
+            <p class="text-muted">{{ entete }}</p>
             <p v-if="commune.demographie" class="small text-muted">
                 {{ fmtNb(commune.demographie.population) }} habitants<template v-if="commune.demographie.surface_km2"> · {{ fmtNb(commune.demographie.surface_km2, 2) }} km²</template><template v-if="commune.demographie.densite"> · {{ fmtNb(commune.demographie.densite, 1) }} hab./km²</template> — population légale (recensement <a href="https://www.insee.fr" target="_blank" rel="noopener">INSEE</a>), superficie (IGN), via <a href="https://geo.api.gouv.fr" target="_blank" rel="noopener">geo.api.gouv.fr</a>.
             </p>

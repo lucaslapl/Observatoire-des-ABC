@@ -12,7 +12,9 @@ class LandingService
 {
     public function __construct(
         private RegionService $regions,
+        private DepartementService $departements,
         private StatusService $status,
+        private NomService $noms,
         private ChangelogService $changelog,
         private MarkdownService $markdown,
     ) {}
@@ -102,9 +104,9 @@ class LandingService
 
         return [
             'id' => $projet->id,
-            'nom' => $projet->nom,
+            'nom' => $this->noms->projet($projet->nom, $projet->structure_porteuse),
             'slug' => $projet->slug,
-            'structure_porteuse' => $projet->structure_porteuse,
+            'structure_porteuse' => $this->noms->structurePorteuse($projet->structure_porteuse),
             'type_de_structure_porteuse' => $projet->type_de_structure_porteuse,
             'annee_debut' => $projet->annee_debut,
             'annee_fin' => $projet->annee_fin,
@@ -160,8 +162,14 @@ class LandingService
         }
 
         $libelle = $this->firstNonEmpty($rows, 'libelle_geographique');
-        $departementCode = $this->firstNonEmpty($rows, 'departement');
-        $departementLabel = $this->firstNonEmpty($rows, 'libelle_departement');
+        // Code département : colonne `departement` si renseignée, sinon
+        // préfixe du code INSEE (certaines sources laissent la colonne
+        // vide — ex. Louviers 27375). Libellé : référentiel canonique
+        // d'abord, libellé de la source en secours.
+        $departementCode = $this->firstNonEmpty($rows, 'departement')
+            ?? $this->departements->codeDepuisInsee($code);
+        $departementLabel = $this->departements->label($departementCode)
+            ?? $this->firstNonEmpty($rows, 'libelle_departement');
         $regionLabel = $rows->map(fn ($c) => $this->regionLabel($c->region))->filter()->first();
 
         $epcis = Commune::query()
@@ -188,7 +196,7 @@ class LandingService
 
                 return [
                     'projet_id' => $first->projet_id,
-                    'nom' => $p?->nom,
+                    'nom' => $p ? $this->noms->projet($p->nom, $p->structure_porteuse) : null,
                     'slug' => $p?->slug,
                     'statut' => $statutAffiche,
                     'statut_label' => $p ? $this->statutLabel($statutAffiche) : null,
@@ -233,7 +241,8 @@ class LandingService
             abort(404);
         }
 
-        $label = $this->firstNonEmpty($rows, 'libelle_departement');
+        $label = $this->departements->label($norm)
+            ?? $this->firstNonEmpty($rows, 'libelle_departement');
         $regionLabels = $rows->map(fn ($c) => $this->regionLabel($c->region))->filter()->unique()->sort()->values();
 
         $communes = $rows
@@ -265,7 +274,7 @@ class LandingService
 
                 return [
                     'projet_id' => $first->projet_id,
-                    'nom' => $p?->nom,
+                    'nom' => $p ? $this->noms->projet($p->nom, $p->structure_porteuse) : null,
                     'slug' => $p?->slug,
                     'statut_label' => $p ? $this->statutLabel($statutAffiche) : null,
                     'statut' => $statutAffiche,
@@ -326,7 +335,9 @@ class LandingService
 
                 return [
                     'code' => $dept,
-                    'label' => $first->libelle_departement ?: ($dept ?: '—'),
+                    'label' => $this->departements->label($dept)
+                        ?: $first->libelle_departement
+                        ?: ($dept ?: '—'),
                     'n' => $cs->pluck('projet_id')->unique()->count(),
                 ];
             })
@@ -452,10 +463,11 @@ class LandingService
 
         $result = [];
         foreach ($voisins as $projetId => $voisin) {
+            $projetVoisin = $projets->get($projetId);
             $result[] = [
                 'projet_id' => $projetId,
-                'nom' => $projets->get($projetId)?->nom,
-                'slug' => $projets->get($projetId)?->slug,
+                'nom' => $projetVoisin ? $this->noms->projet($projetVoisin->nom) : null,
+                'slug' => $projetVoisin?->slug,
                 'commune' => $voisin['commune'],
                 'code' => $voisin['code'],
                 'distance_km' => round($voisin['distance_km'], 1),
@@ -489,10 +501,7 @@ class LandingService
             return mb_strtolower((string) $c->departement);
         }
 
-        $code = (string) $c->code_geographique;
-        $length = preg_match('/^9[7-8]/', $code) ? 3 : 2;
-
-        return mb_substr(strtolower($code), 0, $length) ?: null;
+        return $this->departements->codeDepuisInsee($c->code_geographique);
     }
 
     private function verdictLabel(string $etat): string
@@ -565,12 +574,13 @@ class LandingService
     private function communeListing(Commune $c, bool $includeProjet): array
     {
         $region = $this->regionLabel($c->region);
+        $dept = $this->departementOf($c);
 
         return [
             'code' => $c->code_geographique,
             'libelle' => $c->libelle_geographique ?: $c->code_geographique,
-            'departement_code' => $c->departement ? mb_strtolower((string) $c->departement) : null,
-            'departement_label' => $c->libelle_departement,
+            'departement_code' => $dept,
+            'departement_label' => $this->departements->label($dept) ?? $c->libelle_departement,
             'region_label' => $region,
             'region_slug' => $region ? $this->regions->slug($region) : null,
             'anomalie' => (bool) $c->anomalie,

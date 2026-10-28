@@ -40,7 +40,8 @@ Route::get('/robots.txt', fn () => response(
         'Disallow: /reset-password',
         'Disallow: /verification-email',
         'Disallow: /verify-email',
-        'Disallow: /verify',
+        // /verify (worklist publique de vérification) reste indexé :
+        // gage de transparence assumé sur la méthode de l'Observatoire.
         '',
         'Sitemap: '.url('/sitemap.xml'),
         '',

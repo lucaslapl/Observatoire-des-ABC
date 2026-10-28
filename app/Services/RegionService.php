@@ -13,15 +13,39 @@ class RegionService
             return null;
         }
         $regions = config('regions');
-        if (isset($regions[$code])) {
-            return $regions[$code];
+        $value = trim($code);
+        if (isset($regions[$value])) {
+            return $regions[$value];
         }
-        // Déjà un libellé ?
-        if (preg_match('/[a-zà-ÿ]/i', $code) && ! ctype_digit($code)) {
-            return $code;
+        if (ctype_digit($value)) {
+            return null;
         }
 
-        return null;
+        // Libellé de la source parfois déaccentué ou mal casé
+        // (« Auvergne-Rhone-Alpes ») : rattrage sur les libellés
+        // canoniques de la configuration, insensible aux accents et à
+        // la casse.
+        $cle = $this->fold($value);
+        foreach ($regions as $libelle) {
+            if ($this->fold($libelle) === $cle) {
+                return $libelle;
+            }
+        }
+
+        // Libellé hors référentiel (ex. Nouvelle-Calédonie) : conservé
+        // tel quel, pourvu qu'il contienne une lettre.
+        return preg_match('/\p{L}/u', $value) ? $value : null;
+    }
+
+    /**
+     * Clé de comparaison insensible aux accents, à la casse et aux
+     * variations tiret/espace (« Ile de France » ≡ « Île-de-France »).
+     */
+    private function fold(string $libelle): string
+    {
+        $ascii = Str::ascii(mb_strtolower(trim($libelle)));
+
+        return trim((string) preg_replace('/[-\s]+/u', '-', $ascii), '-');
     }
 
     public function slug(string $label): string

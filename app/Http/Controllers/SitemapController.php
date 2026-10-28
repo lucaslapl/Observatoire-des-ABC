@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DepartementService;
 use App\Services\RegionService;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
@@ -10,6 +11,8 @@ use Illuminate\Support\Str;
 
 class SitemapController extends Controller
 {
+    public function __construct(private DepartementService $departements) {}
+
     public function __invoke(RegionService $regions): Response
     {
         $xml = Cache::remember('abc:sitemap', now()->addHours(12), function () use ($regions) {
@@ -19,6 +22,9 @@ class SitemapController extends Controller
             $urls[] = $this->entry($base.'/', null, '1.0', 'daily');
             $urls[] = $this->entry($base.'/carte', null, '0.9', 'weekly');
             $urls[] = $this->entry($base.'/abc', null, '0.9', 'weekly');
+            // Worklist publique de vérification : indexée (transparence de
+            // la méthode), maintenue hors du Disallow de robots.txt.
+            $urls[] = $this->entry($base.'/verify', null, '0.4', 'daily');
             $urls[] = $this->entry($base.'/actualites', null, '0.6', 'weekly');
             $urls[] = $this->entry($base.'/contact', null, '0.5', 'monthly');
             $urls[] = $this->entry($base.'/a-propos', null, '0.3', 'yearly');
@@ -51,10 +57,10 @@ class SitemapController extends Controller
                 $urls[] = $this->entry($base.'/commune/'.$c->code_geographique, null, '0.6', 'monthly');
             }
 
-            // Départements (codes normalisés).
-            foreach (DB::table('communes')->where('anomalie', false)
-                ->whereNotNull('departement')->distinct()->get(['departement']) as $d) {
-                $code = mb_strtolower((string) $d->departement);
+            // Départements : codes normalisés, y compris ceux dont les
+            // lignes communes n'ont pas de colonne `departement` (le code
+            // est alors dérivé du préfixe INSEE).
+            foreach ($this->departements->codesPresents() as $code) {
                 $urls[] = $this->entry($base.'/departement/'.$code, null, '0.7', 'weekly');
             }
 
