@@ -18,6 +18,7 @@ class SsrWatchdogCommand extends Command
 
         if ($this->option('restart')) {
             $this->stopProcess();
+            $this->attendrePortLibre($url);
 
             return $this->startProcess();
         }
@@ -107,6 +108,14 @@ class SsrWatchdogCommand extends Command
     {
         $pidFile = storage_path('app/ssr.pid');
 
+        // Orphelins du bundle : un restart raté peut laisser un node ssr.js
+        // tenant le port (EADDRINUSE au relancement suivant, et le cron ne
+        // le détecte pas car l'orphelin répond au health-check). Le
+        // watchdog est le propriétaire exclusif du SSR : on tue tout
+        // processus du bundle, pas seulement le PID du fichier.
+        $bundle = base_path('bootstrap/ssr/ssr.js');
+        exec('pkill -f '.escapeshellarg($bundle).' 2>/dev/null || true');
+
         if (! is_file($pidFile)) {
             $this->warn('SSR : aucun fichier PID, rien à arrêter.');
 
@@ -120,5 +129,30 @@ class SsrWatchdogCommand extends Command
         }
 
         @unlink($pidFile);
+    }
+
+    /**
+     * Après le kill, le socket met un instant à être libéré (SIGTERM
+     * asynchrone) : relancer immédiatement provoque un EADDRINUSE. On
+     * attend jusqu'à 5 s que le port refuse les connexions ; si un
+     * processus l'occupe encore, on le signale — le health-check du
+     * cron relancera quand il sera libre.
+     */
+    private function attendrePortLibre(string $url): void
+    {
+        $parts = parse_url($url);
+        $host = $parts['host'] ?? '127.0.0.1';
+        $port = (int) ($parts['port'] ?? 13714);
+
+        for ($i = 0; $i < 50; $i++) {
+            $socket = @fsockopen($host, $port, $errno, $errstr, 0.2);
+            if ($socket === false) {
+                return; // connexion refusée : le port est libre
+            }
+            fclose($socket);
+            usleep(100_000);
+        }
+
+        $this->warn("SSR : le port {$host}:{$port} reste occupé après 5 s — un processus orphelin le retient (voir ss -ltnp | grep {$port}).");
     }
 }
