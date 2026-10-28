@@ -57,7 +57,7 @@ const jsonLd = computed(() => [
 <template>
     <Layout>
         <Seo :title="pageTitle" :description="pageDescription" :json-ld="jsonLd" />
-        <div class="container py-4">
+        <div class="container py-4 patrimoine-fiche">
             <Breadcrumbs :items="crumbs" />
             <h1 class="h3 mb-2">{{ s.nom || 'Site Natura 2000 ' + s.sitecode }}</h1>
             <p v-if="!s.nom" class="small text-muted">

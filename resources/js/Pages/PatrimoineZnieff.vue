@@ -47,7 +47,7 @@ const jsonLd = computed(() => [
 <template>
     <Layout>
         <Seo :title="pageTitle" :description="pageDescription" :json-ld="jsonLd" />
-        <div class="container py-4">
+        <div class="container py-4 patrimoine-fiche">
             <Breadcrumbs :items="crumbs" />
             <h1 class="h3 mb-2">{{ z.nom }}</h1>
             <p class="text-muted">
@@ -58,6 +58,14 @@ const jsonLd = computed(() => [
                     — incluse dans <Link class="text-decoration-none" :href="`/patrimoine/znieff/${z.parent.id_national}`">{{ z.parent.nom }}</Link>
                 </template>
             </p>
+
+            <div v-if="z.texte_delimitation || z.texte_bilan" class="card my-3 bg-body-tertiary border-0">
+                <div class="card-body">
+                    <h2 class="h6">Délimitation et bilan</h2>
+                    <div v-if="z.texte_delimitation" class="text-break"><h3 class="h6 mt-2">Délimitation</h3><div v-html="z.texte_delimitation"></div></div>
+                    <div v-if="z.texte_bilan" class="text-break mt-2"><h3 class="h6 mt-2">Bilan</h3><div v-html="z.texte_bilan"></div></div>
+                </div>
+            </div>
 
             <div v-if="z.texte_interet" class="my-3">
                 <h2 class="h6">Intérêt écologique</h2>
@@ -103,7 +111,7 @@ const jsonLd = computed(() => [
                 <h2 class="h6">Espèces déterminantes citées</h2>
                 <p class="small text-muted">
                     Espèces ayant justifié l'inscription de la zone à l'inventaire ZNIEFF (hors espèces
-                    confidentielles, jamais affichées).
+                    confidentielles).
                 </p>
                 <div class="table-responsive">
                     <table class="table table-sm table-striped align-middle small">
@@ -121,12 +129,6 @@ const jsonLd = computed(() => [
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            <div v-if="z.texte_delimitation || z.texte_bilan" class="my-3">
-                <h2 class="h6">Délimitation et bilan</h2>
-                <div v-if="z.texte_delimitation" class="small text-break"><h3 class="h6">Délimitation</h3><div v-html="z.texte_delimitation"></div></div>
-                <div v-if="z.texte_bilan" class="small text-break mt-2"><h3 class="h6">Bilan</h3><div v-html="z.texte_bilan"></div></div>
             </div>
 
             <p class="small text-muted mt-4">

@@ -37,3 +37,25 @@
 .badge-st-a_venir { background: #689f38; color: #fff; }
 .badge-st-termine { background: #8d6e63; color: #fff; }
 .badge-st-inconnu { background: #a8a29e; color: #fff; }
+
+/* Fiches patrimoine (ZNIEFF, Natura 2000) : titres de section détachés du
+ * corps de texte — vert sombre de la charte (comme le theme-color) et filet,
+ * pas seulement une taille de texte légèrement plus grande. */
+.patrimoine-fiche h2 {
+    font-weight: 700;
+    color: #14532d;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    margin: 1.75rem 0 0.75rem;
+}
+
+/* Le premier titre de chaque conteneur (page, carte) n'aspire pas de marge. */
+.patrimoine-fiche h2:first-of-type {
+    margin-top: 0;
+}
+
+/* Sous-titres (Délimitation, Bilan…) : même famille, plus discrets. */
+.patrimoine-fiche h3 {
+    font-weight: 600;
+    color: #2d6a4f;
+}
