@@ -54,7 +54,11 @@ const jsonLd = computed(() => [
         <Seo :title="pageTitle" :description="pageDescription" :json-ld="jsonLd" />
         <div class="container py-4">
             <Breadcrumbs :items="crumbs" />
-            <h1 class="h3 mb-2">{{ s.nom || 'Site Natura 2000' }}</h1>
+            <h1 class="h3 mb-2">{{ s.nom || 'Site Natura 2000 ' + s.sitecode }}</h1>
+            <p v-if="!s.nom" class="small text-muted">
+                Ce site est identifié par son code officiel : la base INPN utilisée (déc. 2024) ne publie
+                le nom que pour une partie des sites Natura 2000.
+            </p>
             <p class="text-muted">
                 <span class="badge text-bg-light">{{ typeLabel }}</span>
                 · code {{ s.sitecode }}

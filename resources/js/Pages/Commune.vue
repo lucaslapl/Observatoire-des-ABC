@@ -146,7 +146,7 @@ const jsonLd = computed(() => {
                             </thead>
                             <tbody>
                                 <tr v-for="s in patrimoine.natura" :key="s.sitecode">
-                                    <td><Link class="text-reset text-decoration-none" :href="`/patrimoine/natura/${s.sitecode}`" :title="`Fiche Natura 2000 ${s.nom || s.sitecode}`">{{ s.nom || 'Sans nom publié' }}</Link> <span class="text-muted">({{ s.sitecode }})</span></td>
+                                    <td><Link class="text-reset text-decoration-none" :href="`/patrimoine/natura/${s.sitecode}`" :title="`Fiche Natura 2000 ${s.nom || s.sitecode}`">{{ s.nom || 'Site ' + s.sitecode }}</Link> <span v-if="s.nom" class="text-muted">({{ s.sitecode }})</span></td>
                                     <td><span class="badge text-bg-light" :title="s.type_site === 'ZPS' ? 'Zone de protection spéciale (directive Oiseaux)' : 'Zone spéciale de conservation (directive Habitats)'">{{ s.type_site === 'ZPS' ? 'ZPS' : 'ZSC' }}</span></td>
                                     <td class="text-end">{{ s.nb_habitats || '—' }}</td>
                                     <td class="text-end">{{ s.nb_especes || '—' }}</td>

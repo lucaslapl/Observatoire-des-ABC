@@ -48,7 +48,7 @@ const pageUrl = (n) => (n === 1 ? '/patrimoine/natura' : `/patrimoine/natura?pag
                     </thead>
                     <tbody>
                         <tr v-for="s in listing.items" :key="s.sitecode">
-                            <td><Link class="text-reset text-decoration-none" :href="`/patrimoine/natura/${s.sitecode}`">{{ s.nom || 'Sans nom publié' }}</Link></td>
+                            <td><Link class="text-reset text-decoration-none" :href="`/patrimoine/natura/${s.sitecode}`">{{ s.nom || 'Site ' + s.sitecode }}</Link></td>
                             <td class="text-muted">{{ s.sitecode }}</td>
                             <td><span class="badge text-bg-light" :title="typeTitle(s.type_site)">{{ typeLabel(s.type_site) }}</span></td>
                             <td class="text-end">{{ s.nb_communes_abc }}</td>
