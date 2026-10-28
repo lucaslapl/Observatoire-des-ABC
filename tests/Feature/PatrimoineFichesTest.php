@@ -117,6 +117,16 @@ class PatrimoineFichesTest extends TestCase
                 ->where('znieff.groupes_especes.0.n', 2)
                 // <i>Espèce déterminante A</i> -> texte pur, sans balise
                 ->where('znieff.groupes_especes.0.noms.0', 'Espèce déterminante A')
+                // Chapeau factuel généré : type, surface, périmètre ABC,
+                // département et espèces déterminantes (anti thin content).
+                ->where(
+                    'znieff.chapeau',
+                    'La ZNIEFF de type 1 « BOIS DE LOUZAIE » (identifiant national 240009732) '
+                    .'est un secteur d\'intérêt biologique remarquable qui s\'étend sur 16 ha. '
+                    .'Elle recouvre 1 commune, dont 1 engagée dans un Atlas de la biodiversité '
+                    .'communale : Rives-du-Couesnon (département : Ille-et-Vilaine). '
+                    .'L\'inventaire national justifie ce classement par 2 espèces déterminantes.'
+                )
                 // date de référence de la base, affichée avec l'attribution
                 ->where('znieff.versions.znieff', 'extraction ZNIEFF INPN 2025')
         );
@@ -130,6 +140,19 @@ class PatrimoineFichesTest extends TestCase
     public function test_fiche_znieff_inconnue_absente(): void
     {
         $this->get('/patrimoine/znieff/999999999')->assertNotFound();
+    }
+
+    public function test_chapeau_unique_par_fiche(): void
+    {
+        // Deux ZNIEFF partageant la même commune ABC : les chapeaux générés
+        // depuis les faits de chaque fiche (type, surface, espèces) diffèrent.
+        $a = $this->getJson('/api/v1/patrimoine/znieff/240009732')->json('data.chapeau');
+        $b = $this->getJson('/api/v1/patrimoine/znieff/240009733')->json('data.chapeau');
+
+        $this->assertNotSame($a, $b);
+        $this->assertStringContainsString('Ille-et-Vilaine', $a);
+        $this->assertStringContainsString('16 ha', $a);
+        $this->assertStringContainsString('500 ha', $b);
     }
 
     public function test_fiche_natura_eligible(): void
@@ -153,6 +176,18 @@ class PatrimoineFichesTest extends TestCase
                 ->where('site.docob.0.titre', 'DOCOB 2012')
                 // DOCOB local détecté via le public_path éphémère du test
                 ->where('site.pdf_local', '/docob/FR8212001.pdf')
+                // Chapeau factuel généré : type de site, périmètre ABC,
+                // habitat recensé et espèces des directives (anti thin content).
+                ->where(
+                    'site.chapeau',
+                    'Le site Natura 2000 « DUNES DE L\'AUTHIE » (FR8212001) est une zone de '
+                    .'protection spéciale (directive « Oiseaux ») du réseau européen Natura 2000. '
+                    .'Il recouvre 1 commune, dont 1 engagée dans un Atlas de la biodiversité '
+                    .'communale : Rives-du-Couesnon (département : Ille-et-Vilaine). '
+                    .'Le formulaire standard de données recense 1 habitat d\'intérêt communautaire : '
+                    .'Dunes mobiles embryonnaires. Il mentionne également 2 espèces des directives, '
+                    .'dont 1 oiseau et 1 prioritaire.'
+                )
                 // date de référence de la base, affichée avec l'attribution
                 ->where('site.versions.natura', 'Base Natura 2000 — décembre 2024')
         );

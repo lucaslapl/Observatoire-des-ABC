@@ -36,9 +36,13 @@ const conLabel = (l) => ({ A: 'excellente', B: 'bonne', C: 'moyenne' })[l] || nu
 const evalLabel = (l) => ({ A: 'excellente', B: 'bonne', C: 'significative', D: 'non significative' })[l] || null;
 
 const pageTitle = computed(() => `Site Natura 2000 ${s.value.nom || s.value.sitecode} (${s.value.sitecode})`);
-const pageDescription = computed(() =>
-    `Site Natura 2000 ${typeLabel.value.split(' — ')[0]} « ${s.value.nom || s.value.sitecode} » : habitats et espèces de la directive Habitats, communes ABC concernées, d'après la base INPN.`
-);
+
+/* Coupe une description au dernier mot complet sous la limite, avec
+   ellipse (les meta descriptions sont tronquées vers ~155 caractères). */
+const tronque = (t, max = 155) =>
+    t.length <= max ? t : `${t.slice(0, max).replace(/\s+\S*$/, '')}…`;
+
+const pageDescription = computed(() => tronque(s.value.chapeau));
 
 const jsonLd = computed(() => [
     {
@@ -50,6 +54,12 @@ const jsonLd = computed(() => [
             { '@type': 'ListItem', position: 3, name: 'Sites Natura 2000', item: '/patrimoine/natura' },
             { '@type': 'ListItem', position: 4, name: s.value.nom || s.value.sitecode },
         ],
+    },
+    {
+        '@context': 'https://schema.org',
+        '@type': 'Place',
+        name: `Site Natura 2000 ${s.value.nom || s.value.sitecode}`,
+        description: s.value.chapeau,
     },
 ]);
 </script>
@@ -69,6 +79,8 @@ const jsonLd = computed(() => [
                 · code {{ s.sitecode }}
                 · réseau européen Natura 2000, directives « Habitats » et « Oiseaux »
             </p>
+
+            <p class="mb-3">{{ s.chapeau }}</p>
 
             <div v-if="s.pdf_local || s.docob.length" class="my-3">
                 <h2 class="h6">Document d'objectifs</h2>

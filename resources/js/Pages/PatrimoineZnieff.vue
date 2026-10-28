@@ -19,10 +19,13 @@ const crumbs = [
 
 const fmtNb = (v, decimales = 0) => Number(v).toLocaleString('fr-FR', { maximumFractionDigits: decimales });
 
+/* Coupe une description au dernier mot complet sous la limite, avec
+   ellipse (les meta descriptions sont tronquées vers ~155 caractères). */
+const tronque = (t, max = 155) =>
+    t.length <= max ? t : `${t.slice(0, max).replace(/\s+\S*$/, '')}…`;
+
 const pageTitle = computed(() => `ZNIEFF ${z.value.nom} (${z.value.id_national})`);
-const pageDescription = computed(() =>
-    `ZNIEFF de type ${z.value.ty_zone} « ${z.value.nom} » : intérêt écologique, communes ABC concernées et espèces déterminantes, d'après l'inventaire national de l'INPN.`
-);
+const pageDescription = computed(() => tronque(z.value.chapeau));
 
 const jsonLd = computed(() => [
     {
@@ -39,7 +42,7 @@ const jsonLd = computed(() => [
         '@context': 'https://schema.org',
         '@type': 'Place',
         name: `ZNIEFF ${z.value.nom}`,
-        description: z.value.texte_interet ? z.value.texte_interet.replace(/<[^>]+>/g, '').slice(0, 300) : undefined,
+        description: z.value.chapeau,
     },
 ]);
 </script>
@@ -58,6 +61,8 @@ const jsonLd = computed(() => [
                     — incluse dans <Link class="text-decoration-none" :href="`/patrimoine/znieff/${z.parent.id_national}`">{{ z.parent.nom }}</Link>
                 </template>
             </p>
+
+            <p class="mb-3">{{ z.chapeau }}</p>
 
             <div v-if="z.texte_delimitation || z.texte_bilan" class="card my-3 bg-body-tertiary border-0">
                 <div class="card-body">

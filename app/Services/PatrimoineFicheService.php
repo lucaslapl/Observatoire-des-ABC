@@ -19,6 +19,197 @@ class PatrimoineFicheService
 {
     private const PAR_PAGE = 100;
 
+    public function __construct(private DepartementService $departements) {}
+
+    /** Accord d'un mot selon un nombre (« commune(s) », « engagée(s) »). */
+    private function pl(int $n): string
+    {
+        return $n > 1 ? 's' : '';
+    }
+
+    /** Entier au format français (espace insécable pour les milliers). */
+    private function nb(int|float|null $v): string
+    {
+        return number_format((float) $v, 0, ',', "\u{00A0}");
+    }
+
+    /**
+     * Libellés des départements des communes ABC concernées, dérivés du
+     * préfixe INSEE (indépendant de la colonne `departement`, parfois vide).
+     *
+     * @param  Collection<int, string>  $codes
+     * @return array<int, string>
+     */
+    private function departements(Collection $codes): array
+    {
+        $labels = [];
+        foreach ($codes as $code) {
+            $dep = $this->departements->codeDepuisInsee($code);
+            if ($dep !== null) {
+                $labels[$dep] = $this->departements->label($dep);
+            }
+        }
+        ksort($labels);
+
+        return array_values(array_filter($labels, fn ($l) => $l !== null));
+    }
+
+    /**
+     * « X, Y et Z » pour 3 libellés au plus ; au-delà, les 3 premiers
+     * suivis du nombre des autres (« A, B, C et 12 autres »).
+     *
+     * @param  array<int, array{code: string, libelle: string}>  $communes
+     */
+    private function listeCommunesAbc(array $communes): string
+    {
+        $libelles = array_values(array_map(fn ($c) => $c['libelle'], $communes));
+        $n = count($libelles);
+
+        if ($n === 0) {
+            return '';
+        }
+        if ($n === 1) {
+            return $libelles[0];
+        }
+        if ($n === 2) {
+            return $libelles[0].' et '.$libelles[1];
+        }
+        if ($n === 3) {
+            return $libelles[0].', '.$libelles[1].' et '.$libelles[2];
+        }
+
+        return implode(', ', array_slice($libelles, 0, 3)).' et '.($n - 3).' autre'.$this->pl($n - 3);
+    }
+
+    /**
+     * Phrase de périmètre commune aux deux familles de fiches : communes
+     * totales, communes ABC et départements concernés.
+     *
+     * @param  array<int, array{code: string, libelle: string}>  $communesAbc
+     * @param  array<int, string>  $departs
+     */
+    private function phraseCommunes(string $sujet, array $communesAbc, int $nbCommunesTotal, array $departs): string
+    {
+        $nAbc = count($communesAbc);
+        $phrase = $sujet.' recouvre '
+            .$this->nb($nbCommunesTotal).' commune'.$this->pl($nbCommunesTotal)
+            .', dont '.$this->nb($nAbc).' engagée'.$this->pl($nAbc)
+            .' dans un Atlas de la biodiversité communale : '
+            .$this->listeCommunesAbc($communesAbc);
+
+        if ($departs !== []) {
+            $phrase .= ' ('.(count($departs) > 1 ? 'départements : ' : 'département : ')
+                .implode(', ', $departs).')';
+        }
+
+        return $phrase.'.';
+    }
+
+    /**
+     * Chapeau ZNIEFF généré à partir des seuls faits de la fiche. Les
+     * fiches sans ce texte se résumeraient à des tables, jugées « thin
+     * content » par les moteurs de recherche.
+     *
+     * @param  array<int, array{code: string, libelle: string}>  $communesAbc
+     * @param  array<int, array{groupe: string, noms: array<int, string>, n: int}>  $groupes
+     */
+    private function chapeauZnieff(object $zone, array $communesAbc, int $nbCommunesTotal, array $groupes): string
+    {
+        $typeTxt = (int) $zone->ty_zone === 1
+            ? 'un secteur d\'intérêt biologique remarquable'
+            : 'un grand ensemble naturel riche et peu modifié';
+
+        $phrases = ['La ZNIEFF de type '.(int) $zone->ty_zone.' « '.$zone->nom.' » (identifiant national '
+            .$zone->id_national.') est '.$typeTxt];
+
+        if ($zone->surface_ha !== null) {
+            $phrases[0] .= ' qui s\'étend sur '.$this->nb($zone->surface_ha).' ha';
+            if ($zone->altitude_min !== null && $zone->altitude_max !== null) {
+                $phrases[0] .= ', entre '.$this->nb($zone->altitude_min).' et '.$this->nb($zone->altitude_max).' m d\'altitude';
+            }
+        }
+        $phrases[0] .= '.';
+
+        $phrases[] = $this->phraseCommunes('Elle', $communesAbc, $nbCommunesTotal, $this->departements(collect(array_column($communesAbc, 'code'))));
+
+        $nbEspeces = array_sum(array_column($groupes, 'n'));
+        if ($nbEspeces > 0) {
+            $groupeTxt = [];
+            foreach ($groupes as $g) {
+                if ($g['groupe'] !== 'Autres') {
+                    $groupeTxt[] = $g['groupe'];
+                }
+            }
+            $phrase = 'L\'inventaire national justifie ce classement par '.$this->nb($nbEspeces)
+                .' espèce'.$this->pl($nbEspeces).' déterminante'.$this->pl($nbEspeces);
+            if ($groupeTxt !== []) {
+                $liste = array_map(fn (string $g) => 'les '.$g, array_slice($groupeTxt, 0, 3));
+                $dernier = array_pop($liste);
+                $phrase .= ', principalement chez '.implode(', ', $liste).(count($liste) > 0 ? ' et ' : '').$dernier;
+            }
+            $phrases[] = $phrase.'.';
+        }
+
+        return implode(' ', $phrases);
+    }
+
+    /**
+     * Chapeau Natura 2000 généré à partir des seuls faits du formulaire
+     * standard de données (habitats, espèces, périmètre).
+     *
+     * @param  array<int, array{code: string, libelle: string}>  $communesAbc
+     * @param  array<int, array<string, mixed>>  $habitats
+     * @param  array<int, array<string, mixed>>  $especes
+     */
+    private function chapeauNatura(object $site, array $communesAbc, int $nbCommunesTotal, array $habitats, array $especes): string
+    {
+        $typeTxt = $site->type_site === 'ZPS'
+            ? 'une zone de protection spéciale (directive « Oiseaux »)'
+            : 'une zone spéciale de conservation (directive « Habitats »)';
+        $nom = $site->nom !== null ? ' « '.$site->nom.' »' : '';
+
+        $phrases = ['Le site Natura 2000'.$nom.' ('.$site->sitecode.') est '.$typeTxt.' du réseau européen Natura 2000.'];
+
+        $phrases[] = $this->phraseCommunes('Il', $communesAbc, $nbCommunesTotal, $this->departements(collect(array_column($communesAbc, 'code'))));
+
+        if ($habitats !== []) {
+            $nbPrioritaires = count(array_filter($habitats, fn ($h) => $h['prioritaire'] === true));
+            $phrase = 'Le formulaire standard de données recense '.$this->nb(count($habitats))
+                .' habitat'.$this->pl(count($habitats)).' d\'intérêt communautaire';
+            if ($nbPrioritaires > 0) {
+                $phrase .= ', dont '.$this->nb($nbPrioritaires).' prioritaire'.$this->pl($nbPrioritaires);
+            }
+            $noms = array_values(array_filter(array_column($habitats, 'nom'), fn ($n) => $n !== null));
+            if ($noms !== []) {
+                if (count($noms) > 3) {
+                    $phrase .= ' — notamment '.implode(', ', array_slice($noms, 0, 3)).'…';
+                } elseif (count($noms) === 1) {
+                    $phrase .= ' : '.$noms[0];
+                } else {
+                    $phrase .= ' — '.implode(', ', array_slice($noms, 0, -1)).' et '.end($noms);
+                }
+            }
+            $phrases[] = $phrase.'.';
+        }
+
+        if ($especes !== []) {
+            $nbPrioritaires = count(array_filter($especes, fn ($e) => $e['prioritaire'] === true));
+            $nbOiseaux = count(array_filter($especes, fn ($e) => str_starts_with((string) $e['code_n2000'], 'A')));
+            $phrase = 'Il mentionne également '.$this->nb(count($especes)).' espèce'.$this->pl(count($especes))
+                .' des directives';
+            if ($nbOiseaux > 0) {
+                $phrase .= ', dont '.$this->nb($nbOiseaux).' oiseau'.$this->pl($nbOiseaux);
+            }
+            if ($nbPrioritaires > 0) {
+                $phrase .= ($nbOiseaux > 0 ? ' et ' : ', dont ').$this->nb($nbPrioritaires)
+                    .' prioritaire'.$this->pl($nbPrioritaires);
+            }
+            $phrases[] = $phrase.'.';
+        }
+
+        return implode(' ', $phrases);
+    }
+
     /**
      * Page d'accueil du patrimoine (/patrimoine) : volumes éligibles et
      * versions de référence des bases INPN.
@@ -138,6 +329,19 @@ class PatrimoineFicheService
             ->map(fn ($e) => ['id_national' => (string) $e->id_national, 'nom' => (string) $e->nom])
             ->all();
 
+        $communesAbc = $abcCommunes->map(fn ($code) => [
+            'code' => $code,
+            'libelle' => $labels[$code] ?? $code,
+        ])->values()->all();
+
+        $nbCommunesTotal = $communes->count();
+
+        $groupesPayload = array_map(
+            fn (string $g, array $noms) => ['groupe' => $g, 'noms' => $noms, 'n' => count($noms)],
+            array_keys($groupes),
+            array_values($groupes)
+        );
+
         return [
             'id_national' => (string) $zone->id_national,
             'nom' => (string) $zone->nom,
@@ -148,16 +352,10 @@ class PatrimoineFicheService
             'texte_interet' => $this->htmlInpn($zone->texte_interet),
             'texte_delimitation' => $this->htmlInpn($zone->texte_delimitation),
             'texte_bilan' => $this->htmlInpn($zone->texte_bilan),
-            'communes' => $abcCommunes->map(fn ($code) => [
-                'code' => $code,
-                'libelle' => $labels[$code] ?? $code,
-            ])->values()->all(),
-            'nb_communes_total' => $communes->count(),
-            'groupes_especes' => array_map(
-                fn (string $g, array $noms) => ['groupe' => $g, 'noms' => $noms, 'n' => count($noms)],
-                array_keys($groupes),
-                array_values($groupes)
-            ),
+            'chapeau' => $this->chapeauZnieff($zone, $communesAbc, $nbCommunesTotal, $groupesPayload),
+            'communes' => $communesAbc,
+            'nb_communes_total' => $nbCommunesTotal,
+            'groupes_especes' => $groupesPayload,
             'parent' => $parent,
             'enfants' => $enfants,
             'versions' => $this->versions(),
@@ -271,17 +469,22 @@ class PatrimoineFicheService
             ])
             ->all();
 
+        $communesAbc = $abcCommunes->map(fn ($code) => [
+            'code' => $code,
+            'libelle' => $labels[$code] ?? $code,
+        ])->values()->all();
+
+        $nbCommunesTotal = $communes->count();
+
         return [
             'sitecode' => (string) $site->sitecode,
             'nom' => $site->nom !== null ? (string) $site->nom : null,
             'type_site' => $site->type_site !== null ? (string) $site->type_site : null,
             'pdf_local' => is_file($pdf) ? '/docob/'.$sitecode.'.pdf' : null,
             'docob' => $docob,
-            'communes' => $abcCommunes->map(fn ($code) => [
-                'code' => $code,
-                'libelle' => $labels[$code] ?? $code,
-            ])->values()->all(),
-            'nb_communes_total' => $communes->count(),
+            'chapeau' => $this->chapeauNatura($site, $communesAbc, $nbCommunesTotal, $habitats, $especes),
+            'communes' => $communesAbc,
+            'nb_communes_total' => $nbCommunesTotal,
             'habitats' => $habitats,
             'especes' => $especes,
             'versions' => $this->versions(),
