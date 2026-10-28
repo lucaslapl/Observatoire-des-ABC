@@ -72,7 +72,7 @@ class PatrimoineFichesTest extends TestCase
             ['sitecode' => 'FR8212001', 'code_commune' => self::CODE],
         ]);
         DB::table('inpn_natura_habitats')->insert([
-            ['sitecode' => 'FR8212001', 'cd_ue' => '2110', 'representativite' => 'B', 'conservation' => 'C'],
+            ['sitecode' => 'FR8212001', 'cd_ue' => '2110', 'nom' => 'Dunes mobiles embryonnaires', 'prioritaire' => false, 'cd_hab' => '2682', 'representativite' => 'B', 'conservation' => 'B', 'evaluation_globale' => 'C'],
         ]);
         DB::table('inpn_natura_especes')->insert([
             // A### = oiseau (directive Oiseaux, annexe I)
@@ -140,6 +140,9 @@ class PatrimoineFichesTest extends TestCase
                 ->where('site.type_site', 'ZPS')
                 ->where('site.communes.0.libelle', 'Rives-du-Couesnon')
                 ->has('site.habitats', 1)
+                ->where('site.habitats.0.nom', 'Dunes mobiles embryonnaires')
+                ->where('site.habitats.0.conservation', 'B')
+                ->where('site.habitats.0.evaluation_globale', 'C')
                 ->has('site.especes', 2)
                 ->where('site.especes.0.nom_scientifique', 'Lutra lutra')
                 ->where('site.especes.0.annexe_ii', true)

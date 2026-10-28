@@ -102,7 +102,7 @@ class InpnImportTest extends TestCase
 
         $this->assertSame(2, $counts['sites']);
         $this->assertSame(2, $counts['communes']);
-        $this->assertSame(1, $counts['habitats']);
+        $this->assertSame(2, $counts['habitats']);
         $this->assertSame(2, $counts['especes']);
 
         $zps = $this->dbRow('inpn_natura_sites', ['sitecode' => 'FR8212001']);
@@ -121,11 +121,17 @@ class InpnImportTest extends TestCase
         $lien = $this->dbRow('inpn_natura_communes', ['sitecode' => 'FR8212001']);
         $this->assertEquals(32.2, (float) $lien->area_intersect);
 
-        // Habitat : date_supp exclu, champs FSD bruts
-        $hab = $this->dbRow('inpn_natura_habitats', ['sitecode' => 'FR8212001']);
-        $this->assertSame('2110', $hab->cd_ue);
-        $this->assertSame('B', $hab->representativite);
-        $this->assertSame('C', $hab->conservation);
+        // Habitats : date_supp exclu ; noms et prioritaire venus du
+        // référentiel de la directive (dhff_habitats)
+        $dunes = $this->dbRow('inpn_natura_habitats', ['sitecode' => 'FR8212001', 'cd_ue' => '2110']);
+        $this->assertSame('Dunes mobiles embryonnaires', $dunes->nom);
+        $this->assertFalse((bool) $dunes->prioritaire);
+        $this->assertSame('B', $dunes->representativite);
+        $this->assertSame('B', $dunes->conservation); // conserve (structure et fonctions)
+        $this->assertSame('C', $dunes->evaluation_globale); // champ global du FSD
+        $tourbieres = $this->dbRow('inpn_natura_habitats', ['sitecode' => 'FR8212001', 'cd_ue' => '7110']);
+        $this->assertSame('Tourbières hautes actives', $tourbieres->nom);
+        $this->assertTrue((bool) $tourbieres->prioritaire);
 
         // Oiseau (A###) : nom et annexe I venus du référentiel Oiseaux
         $oiseau = $this->dbRow('inpn_natura_especes', ['sitecode' => 'FR8212001', 'code_n2000' => 'A061']);
@@ -266,10 +272,16 @@ class InpnImportTest extends TestCase
             .'"FR1100795";"32142";"60504";"6890";;;"false";"2018-06-14";"5.00";"1.00";"C";"INSEEC32142";"txt"'."\n");
 
         file_put_contents($dir.'/habit1.csv.csv',
-            '"id_habit1";"sitecode";"cd_ue";"cd_hab";"cover";"represent";"global";"area";"date_supp"'."\n"
-            .'"64686";"FR8212001";"2110";"2682";"0.06";"B";"C";"0.80";'."\n"
-            .'"64687";"FR8212001";"9999";"9999";"1.00";"B";"C";"1.00";"2020-01-01"'."\n"
-            .'"64688";"FRXXXXXXX";"2110";"2682";"0.10";"B";"C";"0.10";'."\n");
+            '"id_habit1";"sitecode";"cd_ue";"cd_hab";"cover";"represent";"conserve";"global";"area";"date_supp"'."\n"
+            .'"64686";"FR8212001";"2110";"2682";"0.06";"B";"B";"C";"0.80";'."\n"
+            .'"64689";"FR8212001";"7110";"7110";"1.50";"A";"A";"B";"2.00";'."\n"
+            .'"64687";"FR8212001";"9999";"9999";"1.00";"B";"B";"C";"1.00";"2020-01-01"'."\n"
+            .'"64688";"FRXXXXXXX";"2110";"2682";"0.10";"B";"B";"C";"0.10";'."\n");
+
+        file_put_contents($dir.'/dhff_habitats.csv.csv',
+            '"cd_ue";"lb_habdh_fr";"hdname";"prioritaire"'."\n"
+            .'"2110";"Dunes mobiles embryonnaires";"Embryonic shifting dunes";"false"'."\n"
+            .'"7110";"Tourbières hautes actives";"Active raised bogs";"true"'."\n");
 
         file_put_contents($dir.'/species.csv.csv',
             '"id_species";"sitecode";"code_n2000";"cd_ref";"taxgroup";"annexe_ii";"type";"date_supp"'."\n"

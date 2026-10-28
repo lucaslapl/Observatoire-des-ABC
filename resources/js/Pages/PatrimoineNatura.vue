@@ -30,6 +30,12 @@ const presenceLabel = (p) =>
               .join(', ')
         : null;
 
+/* Notations du formulaire standard pour les habitats (annexe I de la
+   directive Habitats). Tooltips + légende affichée sous le tableau. */
+const repLabel = (l) => ({ A: 'excellente', B: 'bonne', C: 'significative', D: 'non significative' })[l] || null;
+const conLabel = (l) => ({ A: 'excellente', B: 'bonne', C: 'moyenne' })[l] || null;
+const evalLabel = (l) => ({ A: 'excellente', B: 'bonne', C: 'significative', D: 'non significative' })[l] || null;
+
 const pageTitle = computed(() => `Site Natura 2000 ${s.value.nom || s.value.sitecode} (${s.value.sitecode})`);
 const pageDescription = computed(() =>
     `Site Natura 2000 ${typeLabel.value.split(' — ')[0]} « ${s.value.nom || s.value.sitecode} » : habitats et espèces de la directive Habitats, communes ABC concernées, d'après la base INPN.`
@@ -106,22 +112,54 @@ const jsonLd = computed(() => [
 
             <div v-if="s.habitats.length" class="my-3">
                 <h2 class="h6">Habitats d'intérêt communautaire</h2>
-                <p class="small text-muted">Codes EUR de la directive Habitats, avec représentativité et état de conservation (formulaire standard de données).</p>
+                <p class="small text-muted">
+                    Habitats de l'annexe I de la directive Habitats recensés sur le site (formulaire standard de données).
+                </p>
                 <div class="table-responsive">
                     <table class="table table-sm table-striped align-middle small">
                         <thead>
-                            <tr><th>Code EUR</th><th>Corine</th><th>Représentativité</th><th>Conservation</th></tr>
+                            <tr>
+                                <th>Habitat</th>
+                                <th>Corine</th>
+                                <th>Représentativité</th>
+                                <th>Conservation</th>
+                                <th>Éval. globale</th>
+                            </tr>
                         </thead>
                         <tbody>
                             <tr v-for="h in s.habitats" :key="h.cd_ue + (h.cd_hab || '')">
-                                <td>{{ h.cd_ue }}</td>
+                                <td>
+                                    <span class="badge text-bg-light">{{ h.cd_ue }}</span>
+                                    <span v-if="h.prioritaire" class="badge text-bg-warning" title="Habitat prioritaire (directive Habitats)">prioritaire</span>
+                                    <span v-if="h.nom"> {{ h.nom }}</span>
+                                </td>
                                 <td class="text-muted">{{ h.cd_hab || '—' }}</td>
-                                <td>{{ h.representativite || '—' }}</td>
-                                <td>{{ h.conservation || '—' }}</td>
+                                <td>
+                                    <span v-if="h.representativite" class="badge text-bg-light" :title="`Représentativité ${repLabel(h.representativite)}`">{{ h.representativite }}</span>
+                                    <span v-else class="text-muted">—</span>
+                                </td>
+                                <td>
+                                    <span v-if="h.conservation" class="badge text-bg-light" :title="`Conservation (structure et fonctions) ${conLabel(h.conservation)}`">{{ h.conservation }}</span>
+                                    <span v-else class="text-muted">—</span>
+                                </td>
+                                <td>
+                                    <span v-if="h.evaluation_globale" class="badge text-bg-light" :title="`Évaluation globale ${evalLabel(h.evaluation_globale)}`">{{ h.evaluation_globale }}</span>
+                                    <span v-else class="text-muted">—</span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+                <p class="small text-muted mb-0">
+                    <strong>Lecture</strong> — <strong>Habitat</strong> : le code à quatre chiffres (ex. 2110) est le
+                    code EUR de l'annexe I de la directive Habitats, suivi du nom de l'habitat ; « prioritaire »
+                    signale un habitat prioritaire au sens de la directive. <strong>Corine</strong> : code de la
+                    classification européenne CORINE Biotopes (rattachement antérieur de l'habitat).
+                    <strong>Représentativité</strong> : A excellente, B bonne, C significative, D non significative.
+                    <strong>Conservation</strong> (structure et fonctions) : A excellente, B bonne, C moyenne.
+                    <strong>Évaluation globale</strong> du site pour cet habitat : A excellente, B bonne,
+                    C significative, D non significative.
+                </p>
             </div>
 
             <div v-if="s.especes.length" class="my-3">

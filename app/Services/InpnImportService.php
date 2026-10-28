@@ -369,6 +369,8 @@ class InpnImportService
         $this->requireFile($file);
         DB::table('inpn_natura_habitats')->delete();
 
+        $referentielHabitats = $this->dhffHabitats($dir);
+
         $count = 0;
         $chunk = [];
         $seen = []; // rares doublons dans la base INPN (~28) : première occurrence
@@ -386,14 +388,20 @@ class InpnImportService
                 continue;
             }
             $seen[$key] = true;
+            $refHab = $referentielHabitats[$rec['cd_ue'] ?? ''] ?? [];
             $chunk[] = [
                 'sitecode' => $sitecode,
                 'cd_ue' => $rec['cd_ue'] ?? '',
+                'nom' => $refHab['nom'] ?? null,
+                'prioritaire' => $refHab['prioritaire'] ?? false,
                 'cd_hab' => $this->nullIfEmpty($rec['cd_hab'] ?? null),
                 'cover' => $this->decimal($rec['cover'] ?? null),
                 'area' => $this->decimal($rec['area'] ?? null),
                 'representativite' => $this->char($rec['represent'] ?? null),
-                'conservation' => $this->char($rec['global'] ?? null),
+                // conserve = structure et fonctions (A/B/C) ; l'évaluation
+                // GLOBALE (champ « global ») est distincte.
+                'conservation' => $this->char($rec['conserve'] ?? null),
+                'evaluation_globale' => $this->char($rec['global'] ?? null),
             ];
             $count++;
             if (count($chunk) >= self::BATCH) {
@@ -515,6 +523,34 @@ class InpnImportService
                 'vern' => (string) ($rec['nom_vern'] ?? ''),
                 'annexe_ii' => (string) ($rec['annexe_ii'] ?? ''),
                 'prioritaire' => (string) ($rec['prioritaire'] ?? ''),
+            ];
+        }
+
+        return $ref;
+    }
+
+    /**
+     * Référentiel des habitats de la directive Habitats (dhff_habitats) :
+     * nom français (annexe I, code EUR) et caractère prioritaire.
+     *
+     * @return array<string, array{nom: string, prioritaire: bool}>
+     */
+    private function dhffHabitats(string $dir): array
+    {
+        $file = $dir.'/NATURA_BDD_122024/dhff_habitats.csv.csv';
+        if (! is_file($file)) {
+            return []; // fichier absent des extractions plus anciennes
+        }
+        $ref = [];
+        foreach ($this->csv->iterate($file) as $rec) {
+            $rec = $this->lower($rec);
+            $code = $rec['cd_ue'] ?? '';
+            if ($code === '' || isset($ref[$code])) {
+                continue;
+            }
+            $ref[$code] = [
+                'nom' => (string) ($rec['lb_habdh_fr'] ?? $rec['hdname'] ?? ''),
+                'prioritaire' => ($rec['prioritaire'] ?? '') === 'true',
             ];
         }
 

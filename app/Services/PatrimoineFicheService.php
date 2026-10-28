@@ -230,12 +230,15 @@ class PatrimoineFicheService
         $habitats = DB::table('inpn_natura_habitats')
             ->where('sitecode', $sitecode)
             ->orderBy('cd_ue')
-            ->get(['cd_ue', 'cd_hab', 'representativite', 'conservation'])
+            ->get(['cd_ue', 'nom', 'prioritaire', 'cd_hab', 'representativite', 'conservation', 'evaluation_globale'])
             ->map(fn ($h) => [
                 'cd_ue' => (string) $h->cd_ue,
+                'nom' => $h->nom !== null ? (string) $h->nom : null,
+                'prioritaire' => (bool) $h->prioritaire,
                 'cd_hab' => $h->cd_hab !== null ? (string) $h->cd_hab : null,
                 'representativite' => $h->representativite !== null ? (string) $h->representativite : null,
                 'conservation' => $h->conservation !== null ? (string) $h->conservation : null,
+                'evaluation_globale' => $h->evaluation_globale !== null ? (string) $h->evaluation_globale : null,
             ])
             ->all();
 
