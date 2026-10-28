@@ -61,7 +61,9 @@ const versionsTexte = computed(() => {
 
 /* Sections paginées côté serveur : la navigation d'une section conserve
    la page courante des deux autres dans l'URL (?znieff=&natura=&aires=,
-   un paramètre absent vaut page 1). */
+   un paramètre absent vaut page 1). Les liens portent preserve-scroll :
+   changer de page garde la position de défilement (les sections sont
+   longues, revenir en haut de page à chaque clic serait déroutant). */
 const SECTIONS = ['znieff', 'natura', 'aires'];
 
 const pageUrl = (section, n) => {
@@ -132,11 +134,11 @@ const libelleTotal = (section, singulier, pluriel) => {
                     <nav v-if="pat.znieff.pages > 1" aria-label="Pagination ZNIEFF">
                         <ul class="pagination pagination-sm">
                             <li class="page-item" :class="{ disabled: pat.znieff.page <= 1 }">
-                                <Link class="page-link" :href="pageUrl('znieff', pat.znieff.page - 1)" :aria-disabled="pat.znieff.page <= 1">Précédent</Link>
+                                <Link class="page-link" preserve-scroll :href="pageUrl('znieff', pat.znieff.page - 1)" :aria-disabled="pat.znieff.page <= 1">Précédent</Link>
                             </li>
                             <li class="page-item disabled"><span class="page-link">Page {{ pat.znieff.page }} / {{ pat.znieff.pages }}</span></li>
                             <li class="page-item" :class="{ disabled: pat.znieff.page >= pat.znieff.pages }">
-                                <Link class="page-link" :href="pageUrl('znieff', pat.znieff.page + 1)">Suivant</Link>
+                                <Link class="page-link" preserve-scroll :href="pageUrl('znieff', pat.znieff.page + 1)">Suivant</Link>
                             </li>
                         </ul>
                     </nav>
@@ -174,11 +176,11 @@ const libelleTotal = (section, singulier, pluriel) => {
                     <nav v-if="pat.natura.pages > 1" aria-label="Pagination sites Natura 2000">
                         <ul class="pagination pagination-sm">
                             <li class="page-item" :class="{ disabled: pat.natura.page <= 1 }">
-                                <Link class="page-link" :href="pageUrl('natura', pat.natura.page - 1)" :aria-disabled="pat.natura.page <= 1">Précédent</Link>
+                                <Link class="page-link" preserve-scroll :href="pageUrl('natura', pat.natura.page - 1)" :aria-disabled="pat.natura.page <= 1">Précédent</Link>
                             </li>
                             <li class="page-item disabled"><span class="page-link">Page {{ pat.natura.page }} / {{ pat.natura.pages }}</span></li>
                             <li class="page-item" :class="{ disabled: pat.natura.page >= pat.natura.pages }">
-                                <Link class="page-link" :href="pageUrl('natura', pat.natura.page + 1)">Suivant</Link>
+                                <Link class="page-link" preserve-scroll :href="pageUrl('natura', pat.natura.page + 1)">Suivant</Link>
                             </li>
                         </ul>
                     </nav>
@@ -220,11 +222,11 @@ const libelleTotal = (section, singulier, pluriel) => {
                     <nav v-if="pat.aires.pages > 1" aria-label="Pagination aires protégées">
                         <ul class="pagination pagination-sm">
                             <li class="page-item" :class="{ disabled: pat.aires.page <= 1 }">
-                                <Link class="page-link" :href="pageUrl('aires', pat.aires.page - 1)" :aria-disabled="pat.aires.page <= 1">Précédent</Link>
+                                <Link class="page-link" preserve-scroll :href="pageUrl('aires', pat.aires.page - 1)" :aria-disabled="pat.aires.page <= 1">Précédent</Link>
                             </li>
                             <li class="page-item disabled"><span class="page-link">Page {{ pat.aires.page }} / {{ pat.aires.pages }}</span></li>
                             <li class="page-item" :class="{ disabled: pat.aires.page >= pat.aires.pages }">
-                                <Link class="page-link" :href="pageUrl('aires', pat.aires.page + 1)">Suivant</Link>
+                                <Link class="page-link" preserve-scroll :href="pageUrl('aires', pat.aires.page + 1)">Suivant</Link>
                             </li>
                         </ul>
                     </nav>
