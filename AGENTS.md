@@ -56,6 +56,15 @@ En revanche, le bundle SSR doit continuer de compiler et de fonctionner en
 production — tout changement du front doit donc passer par un build complet
 (client + SSR) et, au déploiement, une relance de `ssr:watchdog`.
 
+**Piège SSR — `vue` épinglé en 3.5.43 (exact)** : Vue ≥ 3.5.44 sérialise
+`innerHTML` en SSR avec `String(...)` immédiat (vuejs/core #15769), alors
+qu'Inertia 2.x pousse le résultat *non attendu* de `renderToString()` dans
+cette prop : le corps rendu devient alors littéralement `[object Promise]`
+(flash visible à l'écran avant hydratation, SEO cassé). Correct en amont
+uniquement dans Inertia v3. Ne pas remonter `vue` au-delà de 3.5.43 sans
+migrer `@inertiajs/vue3` en v3, et vérifier le rendu avec `curl` sur le
+serveur SSR (`POST /render`) après tout bump de `vue`.
+
 Au premier démarrage, `docker/php/entrypoint.sh` fait tout seul : `composer
 install` (volume `abc_vendor`), `APP_KEY` si absente, `migrate`, `db:seed`
 (admin depuis `ADMIN_*` du `.env`), puis `abc:import-legacy` si la table
