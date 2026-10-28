@@ -188,7 +188,10 @@ class ProjetsListeTest extends TestCase
         $this->projet('abc-patrimoine', 'ABC Patrimoine', [], [
             ['code_geographique' => '35001', 'libelle_geographique' => 'Rennes'],
         ]);
-        $this->projet('abc-nu', 'ABC Sans Rien');
+        // Commune sans aucun zonage INPN : exclu par le filtre patrimoine.
+        $this->projet('abc-nu', 'ABC Sans Rien', [], [
+            ['code_geographique' => '44001', 'libelle_geographique' => 'Nude'],
+        ]);
         $this->patrimoine('35001');
 
         $this->get('/abc?espece=loutre')->assertOk()->assertInertia(
@@ -203,7 +206,16 @@ class ProjetsListeTest extends TestCase
             fn (Assert $page) => $page->where('liste.total', 1)->where('liste.items.0.id', 'abc-patrimoine')
         );
 
-        $this->get('/abc?aires_min=2')->assertOk()->assertInertia(
+        // Présence d'un zonage INPN sur le périmètre (filtre booléen).
+        $this->get('/abc?patrimoine=znieff')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('liste.total', 1)->where('liste.items.0.id', 'abc-patrimoine')
+        );
+
+        $this->get('/abc?patrimoine=natura')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('liste.total', 1)->where('liste.items.0.id', 'abc-patrimoine')
+        );
+
+        $this->get('/abc?patrimoine=aires')->assertOk()->assertInertia(
             fn (Assert $page) => $page->where('liste.total', 1)
                 ->where('liste.items.0.id', 'abc-patrimoine')
                 ->where('liste.items.0.nb_aires', 2)
@@ -211,9 +223,9 @@ class ProjetsListeTest extends TestCase
                 ->where('liste.items.0.nb_natura', 1)
         );
 
-        // Les deux aires touchent la même commune : le comptage déduplique.
-        $this->get('/abc?aires_min=3')->assertOk()->assertInertia(
-            fn (Assert $page) => $page->where('liste.total', 0)
+        // Valeur hors liste blanche : ignorée, pas d'erreur.
+        $this->get('/abc?patrimoine=inconnu')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('liste.total', 2)
         );
     }
 

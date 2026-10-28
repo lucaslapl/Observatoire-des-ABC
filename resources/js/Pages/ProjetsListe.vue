@@ -31,10 +31,19 @@ const champs = reactive({
     pop_max: props.liste.query.pop_max ?? '',
     surf_min: props.liste.query.surf_min ?? '',
     densite_min: props.liste.query.densite_min ?? '',
-    aires_min: props.liste.query.aires_min ?? '',
+    patrimoine: props.liste.query.patrimoine ?? '',
     espece: props.liste.query.espece ?? '',
     habitat: props.liste.query.habitat ?? '',
 });
+
+/* Paramètres réellement filtrants : sert à libeller le compteur de
+   résultats (« X ABC correspondent à vos critères » vs « au total »). */
+const CLES_FILTRES = ['q', 'statut', 'region', 'departement', 'source', 'ami_ofb', 'annee_min', 'annee_max',
+    'pop_min', 'pop_max', 'surf_min', 'densite_min', 'patrimoine', 'espece', 'habitat'];
+
+const filtresActifs = computed(() =>
+    CLES_FILTRES.some((cle) => props.liste.query[cle] !== null && props.liste.query[cle] !== '')
+);
 
 const appliquer = () => {
     const data = {};
@@ -103,7 +112,7 @@ const annee = (item) => {
             <Breadcrumbs :items="[{ label: 'Tous les ABC' }]" />
             <h1 class="h3 mb-2">Tous les ABC</h1>
             <p class="text-muted">
-                {{ liste.total.toLocaleString('fr-FR') }} Atlas de la Biodiversité Communale — passés, en cours et à venir.
+                Tous les Atlas de la Biodiversité Communale suivis par l'Observatoire — passés, en cours et à venir.
                 Recherchez par nom, commune ou structure porteuse, filtrez par statut, territoire, démographie ou patrimoine
                 écologique, et triez sur chaque colonne. Les critères restent dans l'URL : un résultat est partageable.
             </p>
@@ -168,9 +177,14 @@ const annee = (item) => {
                         <label class="form-label small mb-1" for="f-densite-min">Densité min (hab./km²)</label>
                         <input id="f-densite-min" v-model="champs.densite_min" type="number" min="0" step="0.1" class="form-control form-control-sm" inputmode="decimal" />
                     </div>
-                    <div class="col-6 col-lg-1">
-                        <label class="form-label small mb-1" for="f-aires-min">Aires protégées min</label>
-                        <input id="f-aires-min" v-model="champs.aires_min" type="number" min="0" class="form-control form-control-sm" inputmode="numeric" />
+                    <div class="col-6 col-lg-2">
+                        <label class="form-label small mb-1" for="f-patrimoine">Patrimoine écologique</label>
+                        <select id="f-patrimoine" v-model="champs.patrimoine" class="form-select form-select-sm">
+                            <option value="">Tous les ABC</option>
+                            <option value="znieff">Dans une ZNIEFF</option>
+                            <option value="natura">Dans un site Natura 2000</option>
+                            <option value="aires">Avec une aire protégée</option>
+                        </select>
                     </div>
                     <div class="col-12 col-lg-2">
                         <label class="form-label small mb-1" for="f-espece">Espèce (INPN)</label>
@@ -192,6 +206,12 @@ const annee = (item) => {
                     <button type="button" class="btn btn-outline-secondary btn-sm" @click="reinitialiser">Réinitialiser</button>
                 </div>
             </form>
+
+            <p class="fs-5 mb-3" aria-live="polite">
+                <strong>{{ fmtNb(liste.total) }}</strong> ABC
+                {{ filtresActifs ? (liste.total > 1 ? 'correspondent à vos critères' : 'correspond à vos critères') : 'au total' }}
+                <span v-if="liste.pages > 1" class="text-muted small">— page {{ liste.page }} sur {{ liste.pages }}</span>
+            </p>
 
             <p class="small text-muted">
                 Démographie : sommes des populations légales et superficies IGN des communes du périmètre (communes

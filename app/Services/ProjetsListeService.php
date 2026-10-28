@@ -197,8 +197,13 @@ class ProjetsListeService
         if ($params['densite_min'] !== null) {
             $q->whereRaw(self::SQL_DENSITE.' >= CAST(? AS REAL)', [$params['densite_min']]);
         }
-        if ($params['aires_min'] !== null) {
-            $q->whereRaw(self::SQL_NB_AIRES.' >= ?', [$params['aires_min']]);
+        if ($params['patrimoine'] !== null) {
+            $sql = match ($params['patrimoine']) {
+                'natura' => self::SQL_NB_NATURA,
+                'znieff' => self::SQL_NB_ZNIEFF,
+                default => self::SQL_NB_AIRES,
+            };
+            $q->whereRaw($sql.' > 0');
         }
 
         if ($params['espece'] !== null) {
@@ -341,7 +346,8 @@ class ProjetsListeService
                 ? (float) $query['surf_min'] : null,
             'densite_min' => isset($query['densite_min']) && is_numeric($query['densite_min']) && (float) $query['densite_min'] >= 0
                 ? (float) $query['densite_min'] : null,
-            'aires_min' => $entier('aires_min', 0, null),
+            'patrimoine' => isset($query['patrimoine']) && in_array($query['patrimoine'], ['znieff', 'natura', 'aires'], true)
+                ? $query['patrimoine'] : null,
             'espece' => $texte('espece'),
             'habitat' => $texte('habitat', 20),
             'tri' => $tri,
