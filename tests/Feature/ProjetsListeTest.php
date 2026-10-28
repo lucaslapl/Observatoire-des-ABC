@@ -243,6 +243,26 @@ class ProjetsListeTest extends TestCase
         );
     }
 
+    public function test_filtre_ami_ofb(): void
+    {
+        $this->projet('abc-ami', 'ABC Avec AMI', ['ami_ofb' => true]);
+        $this->projet('abc-sans-ami', 'ABC Sans AMI', ['ami_ofb' => false]);
+
+        $this->get('/abc?ami_ofb=1')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('liste.total', 1)->where('liste.items.0.id', 'abc-ami')
+                ->where('liste.items.0.ami_ofb', true)
+        );
+
+        $this->get('/abc?ami_ofb=0')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('liste.total', 1)->where('liste.items.0.id', 'abc-sans-ami')
+        );
+
+        // 'true' (sérialisation JS d'un booléen) : hors liste blanche, ignoré.
+        $this->get('/abc?ami_ofb=true')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('liste.total', 2)->where('liste.query.ami_ofb', null)
+        );
+    }
+
     public function test_tri_inconnu_retombe_sur_le_defaut(): void
     {
         $this->projet('abc-a', 'ABC Alpha');

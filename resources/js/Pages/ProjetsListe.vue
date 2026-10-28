@@ -24,7 +24,7 @@ const champs = reactive({
     region: props.liste.query.region ?? '',
     departement: props.liste.query.departement ?? '',
     source: props.liste.query.source ?? '',
-    ami_ofb: props.liste.query.ami_ofb ? '1' : '',
+    ami_ofb: props.liste.query.ami_ofb === true,
     annee_min: props.liste.query.annee_min ?? '',
     annee_max: props.liste.query.annee_max ?? '',
     pop_min: props.liste.query.pop_min ?? '',
@@ -48,6 +48,12 @@ const filtresActifs = computed(() =>
 const appliquer = () => {
     const data = {};
     for (const [cle, valeur] of Object.entries(champs)) {
+        // La checkbox AMI OFB est booléenne : on envoie explicitement
+        // '1'/'0' dans l'URL (le service ne reconnait pas true/false).
+        if (cle === 'ami_ofb') {
+            if (valeur) data[cle] = '1';
+            continue;
+        }
         if (valeur !== '' && valeur !== null && valeur !== undefined) data[cle] = valeur;
     }
     router.get('/abc', data, { preserveScroll: true });
@@ -196,7 +202,7 @@ const annee = (item) => {
                     </div>
                     <div class="col-6 col-lg-1">
                         <div class="form-check small mt-4">
-                            <input id="f-ami" v-model="champs.ami_ofb" class="form-check-input" type="checkbox" value="1" />
+                            <input id="f-ami" v-model="champs.ami_ofb" class="form-check-input" type="checkbox" />
                             <label class="form-check-label" for="f-ami">AMI OFB</label>
                         </div>
                     </div>
