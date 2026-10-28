@@ -155,6 +155,40 @@ class PatrimoineFichesTest extends TestCase
         $this->assertStringContainsString('500 ha', $b);
     }
 
+    public function test_chapeau_znieff_groupes_par_effectif_decroissant(): void
+    {
+        // 3 Flore contre 1 Oiseau : le groupe le plus fourni passe en
+        // tête du chapeau, même si le tableau les affiche par ordre
+        // alphabétique.
+        DB::table('inpn_znieff_especes')->insert([
+            ['znieff_id' => 100, 'cd_ref' => 10, 'groupe_taxo' => 'Flore', 'nom_cite' => 'Flore A', 'determinante' => true, 'confidentielle' => false],
+            ['znieff_id' => 100, 'cd_ref' => 11, 'groupe_taxo' => 'Flore', 'nom_cite' => 'Flore B', 'determinante' => true, 'confidentielle' => false],
+            ['znieff_id' => 100, 'cd_ref' => 12, 'groupe_taxo' => 'Flore', 'nom_cite' => 'Flore C', 'determinante' => true, 'confidentielle' => false],
+            ['znieff_id' => 100, 'cd_ref' => 13, 'groupe_taxo' => 'Oiseaux', 'nom_cite' => 'Oiseau A', 'determinante' => true, 'confidentielle' => false],
+        ]);
+
+        $chapeau = $this->getJson('/api/v1/patrimoine/znieff/240009732')->json('data.chapeau');
+
+        $this->assertStringContainsString(
+            'principalement chez les Flore et les Oiseaux',
+            $chapeau
+        );
+    }
+
+    public function test_chapeau_natura_pluriel_oiseaux(): void
+    {
+        // Pluriel irrégulier : 2 oiseaux doivent donner « oiseaux », pas
+        // « oiseaus » (régression vue sur FR1112012 en production).
+        DB::table('inpn_natura_especes')->insert([
+            ['sitecode' => 'FR8212001', 'code_n2000' => 'A229', 'nom_scientifique' => 'Alcedo atthis', 'nom_vernaculaire' => "Martin-pêcheur d'Europe", 'annexe_1' => true, 'annexe_ii' => false, 'prioritaire' => false],
+        ]);
+
+        $chapeau = $this->getJson('/api/v1/patrimoine/natura/FR8212001')->json('data.chapeau');
+
+        $this->assertStringContainsString('dont 2 oiseaux', $chapeau);
+        $this->assertStringNotContainsString('oiseaus', $chapeau);
+    }
+
     public function test_fiche_natura_eligible(): void
     {
         $this->get('/patrimoine/natura/FR8212001')->assertOk()->assertInertia(

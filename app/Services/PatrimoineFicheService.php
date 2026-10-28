@@ -134,12 +134,16 @@ class PatrimoineFicheService
 
         $nbEspeces = array_sum(array_column($groupes, 'n'));
         if ($nbEspeces > 0) {
-            $groupeTxt = [];
-            foreach ($groupes as $g) {
-                if ($g['groupe'] !== 'Autres') {
-                    $groupeTxt[] = $g['groupe'];
-                }
-            }
+            // Groupes mis en avant par effectif décroissant (et non dans
+            // l'ordre alphabétique d'affichage du tableau).
+            $groupeTxt = array_column(
+                collect($groupes)
+                    ->filter(fn (array $g) => $g['groupe'] !== 'Autres')
+                    ->sortByDesc('n')
+                    ->values()
+                    ->all(),
+                'groupe'
+            );
             $phrase = 'L\'inventaire national justifie ce classement par '.$this->nb($nbEspeces)
                 .' espèce'.$this->pl($nbEspeces).' déterminante'.$this->pl($nbEspeces);
             if ($groupeTxt !== []) {
@@ -198,7 +202,8 @@ class PatrimoineFicheService
             $phrase = 'Il mentionne également '.$this->nb(count($especes)).' espèce'.$this->pl(count($especes))
                 .' des directives';
             if ($nbOiseaux > 0) {
-                $phrase .= ', dont '.$this->nb($nbOiseaux).' oiseau'.$this->pl($nbOiseaux);
+                // Pluriel irrégulier : « oiseaux », pas « oiseaus ».
+                $phrase .= ', dont '.$this->nb($nbOiseaux).($nbOiseaux > 1 ? ' oiseaux' : ' oiseau');
             }
             if ($nbPrioritaires > 0) {
                 $phrase .= ($nbOiseaux > 0 ? ' et ' : ', dont ').$this->nb($nbPrioritaires)
