@@ -72,6 +72,13 @@ class SsrWatchdogCommand extends Command
         exec('command -v nohup 2>/dev/null', $nohupPath);
         $nohup = trim((string) ($nohupPath[0] ?? '')) !== '' ? 'nohup ' : '';
 
+        // Le port du bundle SSR suit INERTIA_SSR_URL : le défaut Inertia
+        // (13714) est partagé par toutes les applications de la machine et
+        // deux vhosts Inertia sur le même serveur se renvoient leurs rendus
+        // (« Page not found » croisés dans ssr.log). putenv transmet la
+        // variable au processus node fils, portable Unix comme Windows.
+        putenv('SSR_PORT='.$this->ssrPort());
+
         $cmd = sprintf(
             'cd %s && %s%s %s >> %s 2>&1 < /dev/null & echo $!',
             escapeshellarg(base_path()),
@@ -129,6 +136,16 @@ class SsrWatchdogCommand extends Command
         }
 
         @unlink($pidFile);
+    }
+
+    /**
+     * Port du serveur SSR, tiré de l'URL configurée (INERTIA_SSR_URL).
+     */
+    private function ssrPort(): int
+    {
+        $parts = parse_url((string) config('inertia.ssr.url'));
+
+        return (int) ($parts['port'] ?? 13714);
     }
 
     /**

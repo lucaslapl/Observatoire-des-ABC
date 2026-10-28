@@ -20,6 +20,7 @@ class SsrWatchdogTest extends TestCase
     {
         @unlink(storage_path('app/ssr.pid'));
         @unlink(storage_path('logs/ssr.log'));
+        putenv('SSR_PORT');
 
         parent::tearDown();
     }
@@ -57,5 +58,27 @@ class SsrWatchdogTest extends TestCase
         $this->artisan('ssr:watchdog --restart')
             ->expectsOutput('SSR : aucun fichier PID, rien à arrêter.')
             ->assertExitCode(0);
+    }
+
+    public function test_le_port_de_inertia_ssr_url_est_transmis_au_processus_node(): void
+    {
+        config(['inertia.ssr.url' => 'http://127.0.0.1:15000']);
+
+        $this->artisan('ssr:watchdog')
+            ->expectsOutput('SSR : serveur injoignable, relance en cours…')
+            ->assertExitCode(0);
+
+        $this->assertSame('15000', getenv('SSR_PORT'));
+    }
+
+    public function test_le_port_par_defaut_est_13714(): void
+    {
+        config(['inertia.ssr.url' => 'http://127.0.0.1:13714']);
+
+        $this->artisan('ssr:watchdog')
+            ->expectsOutput('SSR : serveur injoignable, relance en cours…')
+            ->assertExitCode(0);
+
+        $this->assertSame('13714', getenv('SSR_PORT'));
     }
 }
