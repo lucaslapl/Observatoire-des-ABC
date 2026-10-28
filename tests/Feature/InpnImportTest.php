@@ -103,7 +103,7 @@ class InpnImportTest extends TestCase
         $this->assertSame(2, $counts['sites']);
         $this->assertSame(2, $counts['communes']);
         $this->assertSame(1, $counts['habitats']);
-        $this->assertSame(1, $counts['especes']);
+        $this->assertSame(2, $counts['especes']);
 
         $zps = $this->dbRow('inpn_natura_sites', ['sitecode' => 'FR8212001']);
         $this->assertSame("DUNES DE L'AUTHIE", $zps->nom);
@@ -127,12 +127,19 @@ class InpnImportTest extends TestCase
         $this->assertSame('B', $hab->representativite);
         $this->assertSame('C', $hab->conservation);
 
-        // Espèce enrichie par le référentiel de la directive
-        $esp = $this->dbRow('inpn_natura_especes', ['sitecode' => 'FR8212001']);
-        $this->assertSame('A140', $esp->code_n2000);
-        $this->assertSame('Pluvier argenteus', $esp->nom_scientifique);
-        $this->assertSame('Pluvier doré', $esp->nom_vernaculaire);
-        $this->assertTrue((bool) $esp->annexe_ii);
+        // Oiseau (A###) : nom et annexe I venus du référentiel Oiseaux
+        $oiseau = $this->dbRow('inpn_natura_especes', ['sitecode' => 'FR8212001', 'code_n2000' => 'A061']);
+        $this->assertSame('Aythya fuligula', $oiseau->nom_scientifique);
+        $this->assertSame('Fuligule morillon', $oiseau->nom_vernaculaire);
+        $this->assertTrue((bool) $oiseau->annexe_1);
+        $this->assertFalse((bool) $oiseau->annexe_ii);
+        // Espèce Habitats : nom, annexe II et prioritaire venus du référentiel DHFF
+        $loutre = $this->dbRow('inpn_natura_especes', ['sitecode' => 'FR8212001', 'code_n2000' => '1355']);
+        $this->assertSame('Lutra lutra', $loutre->nom_scientifique);
+        $this->assertSame("Loutre d'Europe", $loutre->nom_vernaculaire);
+        $this->assertTrue((bool) $loutre->annexe_ii);
+        $this->assertTrue((bool) $loutre->prioritaire);
+        $this->assertFalse((bool) $loutre->annexe_1);
     }
 
     public function test_import_aires_protegees_convertit_cp1252(): void
@@ -264,13 +271,20 @@ class InpnImportTest extends TestCase
 
         file_put_contents($dir.'/species.csv.csv',
             '"id_species";"sitecode";"code_n2000";"cd_ref";"taxgroup";"annexe_ii";"date_supp"'."\n"
-            .'"95048";"FR8212001";"A140";"3161";"B";"Y";'."\n"
+            // A### = oiseaux (directive Oiseaux) ; 1355 = Lutra (directive Habitats).
+            .'"95048";"FR8212001";"A061";"1998";"B";"N";'."\n"
+            .'"95050";"FR8212001";"1355";"60758";"M";"Y";'."\n"
             .'"95049";"FR8212001";"A234";"100";"B";"N";"2021-05-05"'."\n");
+
+        file_put_contents($dir.'/code_do_oiseaux.csv.csv',
+            '"code_n2000";"cd_nom";"cd_ref";"nom_n2000";"lb_nom";"lb_auteur";"nom_vern";"annexe_i"'."\n"
+            .'"A061";"1998";"1998";"Aythya fuligula";"";"(Linnaeus, 1758)";"Fuligule morillon";"Y"'."\n");
 
         file_put_contents($dir.'/dhff_especes.csv.csv',
             '"code_n2000";"cd_nom";"cd_ref";"st_taxon";"nom_eval_2013";"lb_nom";"lb_auteur";"nom_vern";"niv_tax";"prioritaire";"annexe_ii"'."\n"
             .'"1001";"7445";"7445";"NV";"Corallium rubrum";"Corallium rubrum";"(Linnaeus, 1758)";"Corail rouge";"Invertébrés";"false";"N"'."\n"
-            .'"A140";"3161";"3161";"NV";"Pluvier argenté";"Pluvier argenteus";"(Linnaeus)";"Pluvier doré";"Oiseaux";"false";"Y"'."\n");
+            .'"1355";"60758";"60758";"NV";"Lutra lutra";"Lutra lutra";"(Linnaeus, 1758)";"Loutre d\'Europe";"Mammifères";"true";"Y"'."\n");
+
     }
 
     private function writeAires(): void

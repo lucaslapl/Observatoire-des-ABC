@@ -415,7 +415,9 @@ class InpnImportService
         $this->requireFile($file);
         DB::table('inpn_natura_especes')->delete();
 
-        $referentiel = $this->dhffEspeces($dir);
+        // Référentiels fusionnés : directive Habitats (codes numériques)
+        // et directive Oiseaux (codes A###, cf. code_do_oiseaux).
+        $referentiel = $this->dhffEspeces($dir) + $this->oiseauxEspeces($dir);
 
         $count = 0;
         $chunk = [];
@@ -439,6 +441,7 @@ class InpnImportService
                 'taxgroup' => $this->nullIfEmpty($rec['taxgroup'] ?? null),
                 'annexe_ii' => ($rec['annexe_ii'] ?? $ref['annexe_ii'] ?? '') === 'Y'
                     || ($rec['annexe_ii'] ?? $ref['annexe_ii'] ?? '') === 'true',
+                'annexe_1' => ($ref['annexe_1'] ?? '') === 'Y',
                 'prioritaire' => ($ref['prioritaire'] ?? '') === 'true',
             ];
             $count++;
@@ -476,6 +479,36 @@ class InpnImportService
                 'vern' => (string) ($rec['nom_vern'] ?? ''),
                 'annexe_ii' => (string) ($rec['annexe_ii'] ?? ''),
                 'prioritaire' => (string) ($rec['prioritaire'] ?? ''),
+            ];
+        }
+
+        return $ref;
+    }
+
+    /**
+     * Référentiel de la directive Oiseaux (code_do_oiseaux) : noms et
+     * annexe I. Les codes A### des formulaires (ZPS) n'existent pas dans
+     * le référentiel Habitats.
+     *
+     * @return array<string, array{nom: string, vern: string, annexe_1: string}>
+     */
+    private function oiseauxEspeces(string $dir): array
+    {
+        $file = $dir.'/NATURA_BDD_122024/code_do_oiseaux.csv.csv';
+        if (! is_file($file)) {
+            return []; // fichier absent des extractions plus anciennes
+        }
+        $ref = [];
+        foreach ($this->csv->iterate($file) as $rec) {
+            $rec = $this->lower($rec);
+            $code = $rec['code_n2000'] ?? '';
+            if ($code === '') {
+                continue;
+            }
+            $ref[$code] = [
+                'nom' => (string) ($rec['nom_n2000'] ?? $rec['lb_nom'] ?? ''),
+                'vern' => (string) ($rec['nom_vern'] ?? ''),
+                'annexe_1' => (string) ($rec['annexe_i'] ?? ''),
             ];
         }
 

@@ -66,7 +66,10 @@ class PatrimoineFichesTest extends TestCase
             ['sitecode' => 'FR8212001', 'cd_ue' => '2110', 'representativite' => 'B', 'conservation' => 'C'],
         ]);
         DB::table('inpn_natura_especes')->insert([
-            ['sitecode' => 'FR8212001', 'code_n2000' => 'A140', 'nom_scientifique' => 'Pluvier argenteus', 'nom_vernaculaire' => 'Pluvier doré', 'annexe_ii' => true, 'prioritaire' => false],
+            // A### = oiseau (directive Oiseaux, annexe I)
+            ['sitecode' => 'FR8212001', 'code_n2000' => 'A140', 'nom_scientifique' => 'Pluvier argenteus', 'nom_vernaculaire' => 'Pluvier doré', 'annexe_1' => true, 'annexe_ii' => false, 'prioritaire' => false],
+            // code numérique = espèce Habitats (annexe II, prioritaire)
+            ['sitecode' => 'FR8212001', 'code_n2000' => '1355', 'nom_scientifique' => 'Lutra lutra', 'nom_vernaculaire' => "Loutre d'Europe", 'annexe_1' => false, 'annexe_ii' => true, 'prioritaire' => true],
         ]);
         DB::table('inpn_natura_docob')->insert([
             ['sitecode' => 'FR8212001', 'titre' => 'DOCOB 2012', 'lien' => 'http://natura2000.mnhn.fr/uploads/doc/PRODBIOTOP/1382_DOCOB.pdf'],
@@ -108,7 +111,13 @@ class PatrimoineFichesTest extends TestCase
                 ->where('site.type_site', 'ZPS')
                 ->where('site.communes.0.libelle', 'Rives-du-Couesnon')
                 ->has('site.habitats', 1)
-                ->has('site.especes', 1)
+                ->has('site.especes', 2)
+                ->where('site.especes.0.nom_scientifique', 'Lutra lutra')
+                ->where('site.especes.0.annexe_ii', true)
+                ->where('site.especes.0.prioritaire', true)
+                ->where('site.especes.1.nom_scientifique', 'Pluvier argenteus')
+                ->where('site.especes.1.annexe_1', true)
+                ->where('site.especes.1.annexe_ii', false)
                 ->where('site.docob.0.titre', 'DOCOB 2012')
                 // pas de PDF local en test : on retombe sur le lien INPN
                 ->where('site.pdf_local', null)

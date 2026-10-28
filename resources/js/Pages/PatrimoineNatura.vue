@@ -111,19 +111,32 @@ const jsonLd = computed(() => [
             </div>
 
             <div v-if="s.especes.length" class="my-3">
-                <h2 class="h6">Espèces de la directive</h2>
-                <p class="small text-muted">Espèces inscrites aux annexes de la directive Habitats et recensées sur le site.</p>
+                <h2 class="h6">Espèces des directives</h2>
+                <p class="small text-muted">
+                    Espèces recensées sur le site : oiseaux (directive « Oiseaux », annexe I) et autres
+                    espèces (directive « Habitats », annexe II, éventuellement prioritaires).
+                </p>
                 <div class="table-responsive">
                     <table class="table table-sm table-striped align-middle small">
                         <thead>
-                            <tr><th>Espèce</th><th>Nom vernaculaire</th><th>Annexe II</th><th>Prioritaire</th></tr>
+                            <tr><th>Espèce</th><th>Nom vernaculaire</th><th>Directive</th><th>Annexe</th></tr>
                         </thead>
                         <tbody>
                             <tr v-for="(e, i) in s.especes" :key="i">
                                 <td><em>{{ e.nom_scientifique || '—' }}</em></td>
                                 <td>{{ e.nom_vernaculaire || '—' }}</td>
-                                <td><span v-if="e.annexe_ii" class="badge text-bg-success">Oui</span><span v-else class="text-muted">—</span></td>
-                                <td><span v-if="e.prioritaire" class="badge text-bg-warning">Prioritaire</span><span v-else class="text-muted">—</span></td>
+                                <td><span class="badge text-bg-light">{{ e.code_n2000.startsWith('A') ? 'Oiseaux' : 'Habitats' }}</span></td>
+                                <td>
+                                    <template v-if="e.code_n2000.startsWith('A')">
+                                        <span v-if="e.annexe_1" class="badge text-bg-success">I</span>
+                                        <span v-else class="text-muted">—</span>
+                                    </template>
+                                    <template v-else>
+                                        <span v-if="e.annexe_ii" class="badge text-bg-success">II</span>
+                                        <span v-if="e.prioritaire" class="badge text-bg-warning">Prioritaire</span>
+                                        <span v-if="!e.annexe_ii && !e.prioritaire" class="text-muted">—</span>
+                                    </template>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
