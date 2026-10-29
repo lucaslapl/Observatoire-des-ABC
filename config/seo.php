@@ -43,7 +43,7 @@ return [
         'registre_ofb' => 'https://data.gouv.fr/reuses/les-atlas-de-la-biodiversite-communale',
     ],
 
-    'license_note' => 'Données issues des registres publics (data.gouv.fr) — Atlas de la Biodiversité Communale et Fonds vert. Reuse des données telles que publiées par leurs producteurs.',
+    'license_note' => 'Données issues des registres publics (data.gouv.fr) — Atlas de la Biodiversité Communale et Fonds vert. Réutilisation des données telles que publiées par leurs producteurs.',
 
     /*
     |--------------------------------------------------------------------------
