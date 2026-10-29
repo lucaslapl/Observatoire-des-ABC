@@ -1,5 +1,12 @@
 # Observatoire des ABC
 
+[![CI](https://github.com/lucaslapl/Observatoire-des-ABC/actions/workflows/ci.yml/badge.svg)](https://github.com/lucaslapl/Observatoire-des-ABC/actions/workflows/ci.yml)
+![PHP](https://img.shields.io/badge/PHP-%E2%89%A58.3-777BB4?logo=php&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)
+![Vue 3](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2BPostGIS-4169E1?logo=postgresql&logoColor=white)
+![Licence](https://img.shields.io/badge/licence-AGPL--3.0-blue)
+
 Observatoire national des Atlas de la Biodiversité Communale (ABC) : suivi des
 projets ABC financés, vérifications manuelles, contributions du public et
 export cartographique. Site public : <https://observatoire-abc.fr/>
