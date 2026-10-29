@@ -88,4 +88,21 @@ watch(() => page.component, () => {
 
 <style>
 .navbar-abc { background: #14532d; }
+
+/* Liens en blanc pur : le rgba(255,255,255,.55) par défaut de
+   navbar-dark manque de contraste sur ce fond vert foncé. */
+.navbar-abc .nav-link {
+    color: #ffffff;
+}
+.navbar-abc .nav-link:hover,
+.navbar-abc .nav-link:focus {
+    color: #d1fae5;
+}
+/* Style actif distinct : pastille semi-transparente + gras. */
+.navbar-abc .nav-link.active {
+    color: #ffffff;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 0.375rem;
+}
 </style>
