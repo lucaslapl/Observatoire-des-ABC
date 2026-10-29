@@ -6,6 +6,11 @@ use App\Mail\ContactMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Symfony\Component\Mailer\Envelope;
+use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Mailer\SentMessage;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\RawMessage;
 use Tests\TestCase;
 
 class ContactFormTest extends TestCase
@@ -99,5 +104,32 @@ class ContactFormTest extends TestCase
 
         $this->post('/contact', $payload)->assertStatus(429);
         Mail::assertSent(ContactMessage::class, 3);
+    }
+
+    public function test_contact_form_survives_smtp_failure(): void
+    {
+        Mail::extend('failing', fn () => new class implements TransportInterface
+        {
+            public function send(RawMessage $message, ?Envelope $envelope = null): ?SentMessage
+            {
+                throw new TransportException('Connection refused (SMTP injoignable)');
+            }
+
+            public function __toString(): string
+            {
+                return 'failing';
+            }
+        });
+
+        config()->set('mail.mailers.contact.transport', 'failing');
+
+        $this->from('/contact')->post('/contact', [
+            'email' => 'visitor@example.com',
+            'message' => 'Un message suffisamment long pour passer la validation minimale.',
+        ])->assertRedirect('/contact')->assertSessionHas('error');
+
+        $this->get('/contact')->assertOk()->assertInertia(fn ($page) => $page
+            ->where('flash.success', null)
+            ->where('flash.error', "L'envoi a échoué pour un problème technique de notre côté. Merci de réessayer dans quelques minutes."));
     }
 }

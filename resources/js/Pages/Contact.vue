@@ -35,6 +35,7 @@ const submit = () => {
             </p>
 
             <div v-if="flash.success" class="alert alert-success">{{ flash.success }}</div>
+            <div v-if="flash.error" class="alert alert-danger">{{ flash.error }}</div>
 
             <form class="card card-body shadow-sm mt-3" @submit.prevent="submit">
                 <div class="row g-3">
