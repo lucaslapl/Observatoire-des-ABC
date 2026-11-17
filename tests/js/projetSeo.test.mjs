@@ -31,6 +31,9 @@ const smpmo = {
     statut: 'en_cours',
     statut_label: 'En cours',
     structure_porteuse: 'Syndicat Mixte Plaines Monts d’Or (SMPMO)',
+    source: 'data.gouv',
+    source_label: 'Registre OFB',
+    ami_ofb: false,
     annee_debut: 2023,
     departement: { code: '69', label: 'Rhône' },
     region_label: 'Auvergne-Rhône-Alpes',
@@ -183,7 +186,7 @@ test('badge département : « Maine-et-Loire (49) », null si inconnu', () => {
     assert.equal(badgeDepartement({ ...mursErigne, departement: { code: null, label: null } }), null);
 });
 
-test('JSON-LD Project enrichi : areaServed, location (FR-69), funder, temporalCoverage', () => {
+test('JSON-LD Project enrichi : areaServed, location (FR-69), contributor, temporalCoverage', () => {
     const blocks = jsonLdProjet(smpmo, 'https://observatoire-abc.fr');
     const project = blocks.find((b) => b['@type'] === 'Project');
     const breadcrumb = blocks.find((b) => b['@type'] === 'BreadcrumbList');
@@ -192,7 +195,9 @@ test('JSON-LD Project enrichi : areaServed, location (FR-69), funder, temporalCo
     assert.equal(project.location['@type'], 'Place');
     assert.equal(project.location.address.addressRegion, 'FR-69');
     assert.equal(project.location.address.addressCountry, 'FR');
-    assert.deepEqual(project.funder, { '@type': 'Organization', name: 'Syndicat Mixte Plaines Monts d’Or (SMPMO)' });
+    // Porteur : contributeur de la démarche, pas son financeur (audit C8).
+    assert.deepEqual(project.contributor, { '@type': 'Organization', name: 'Syndicat Mixte Plaines Monts d’Or (SMPMO)' });
+    assert.ok(!('funder' in project), 'sans financement avéré (Fonds vert, AMI OFB), pas de funder');
     assert.equal(project.temporalCoverage, '2023');
     assert.equal(project.startDate, '2023');
 
@@ -210,6 +215,24 @@ test('JSON-LD Project enrichi : areaServed, location (FR-69), funder, temporalCo
             'https://observatoire-abc.fr/abc/abc-454',
         ],
     );
+});
+
+test('JSON-LD : funder réservé au financement avéré (Fonds vert, AMI OFB)', () => {
+    // Projet figurant sur la liste Fonds vert des projets subventionnés :
+    // le libellé de la source est le financeur.
+    const fondsvert = jsonLdProjet(
+        { ...smpmo, source: 'fondsvert-p113-2024', source_label: 'Fonds vert 2024' },
+        'https://observatoire-abc.fr',
+    ).find((b) => b['@type'] === 'Project');
+    assert.deepEqual(fondsvert.funder, { '@type': 'Organization', name: 'Fonds vert 2024' });
+    assert.deepEqual(fondsvert.contributor, { '@type': 'Organization', name: 'Syndicat Mixte Plaines Monts d’Or (SMPMO)' });
+
+    // Sélection AMI OFB (archives 2022) : financeur exposé comme tel.
+    const ami = jsonLdProjet(
+        { ...smpmo, source: 'wayback', source_label: 'Registre OFB (archives 2022)', ami_ofb: true },
+        'https://observatoire-abc.fr',
+    ).find((b) => b['@type'] === 'Project');
+    assert.deepEqual(ami.funder, { '@type': 'Organization', name: 'AMI OFB' });
 });
 
 test('fil d’Ariane : le niveau département apparaît entre la région et le projet', () => {

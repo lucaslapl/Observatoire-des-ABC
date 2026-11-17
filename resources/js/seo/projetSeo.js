@@ -203,10 +203,25 @@ export function crumbsProjet(projet) {
     return list;
 }
 
+/* Financement avéré exposé par la payload : libellé Fonds vert (source
+   « fondsvert-* », liste des projets subventionnés) ou sélection AMI OFB.
+   Null sinon : le porteur n'est pas le financeur, on n'invente pas la
+   relation (audit C8). */
+const financementAvere = (projet) => {
+    if (typeof projet.source === 'string' && projet.source.startsWith('fondsvert')) {
+        return projet.source_label || 'Fonds vert';
+    }
+    if (projet.ami_ofb) {
+        return 'AMI OFB';
+    }
+    return null;
+};
+
 /**
  * JSON-LD de la fiche : BreadcrumbList (synchronisé avec le fil d'Ariane
  * affiché) et Project enrichi — aire couverte, localisation avec le code
- * département (ISO 3166-2), porteur comme financeur affilié, période.
+ * département (ISO 3166-2), porteur comme contributeur, financement
+ * avéré comme financeur, période.
  */
 export function jsonLdProjet(projet, baseUrl) {
     const base = baseUrl || '';
@@ -253,10 +268,18 @@ export function jsonLdProjet(projet, baseUrl) {
         };
     }
 
-    // Porteur : organisation affiliée (et financrice quand le Fonds vert
-    // ou l'AMI OFB finance la démarche — faits seulement).
+    // Porteur : contributeur de la démarche — l'organisation qui la porte
+    // n'en est pas nécessairement le financeur (honnêteté sémantique,
+    // audit C8 : « funder » était factuellement approximatif).
     if (p.structure_porteuse) {
-        project.funder = { '@type': 'Organization', name: p.structure_porteuse };
+        project.contributor = { '@type': 'Organization', name: p.structure_porteuse };
+    }
+
+    // Financement avéré porté par la payload (Fonds vert, AMI OFB) :
+    // financeur exposé comme tel ; sans fait de ce type, pas de funder.
+    const financement = financementAvere(p);
+    if (financement) {
+        project.funder = { '@type': 'Organization', name: financement };
     }
 
     if (p.annee_debut) {
