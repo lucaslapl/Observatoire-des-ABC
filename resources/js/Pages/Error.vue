@@ -112,7 +112,9 @@ const secondary = computed(() => {
     }
 });
 
-const seoTitle = computed(() => `${content.value.title} — Observatoire des ABC`);
+// Seo ajoute déjà le suffixe « — {site} » : le titre passé ici reste nu
+// ( « Page introuvable » → « Page introuvable — Observatoire des ABC » ).
+const seoTitle = computed(() => content.value.title);
 </script>
 
 <template>
