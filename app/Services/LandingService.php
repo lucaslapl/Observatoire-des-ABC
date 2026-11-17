@@ -67,6 +67,26 @@ class LandingService
             ->keys()
             ->first();
 
+        // Département majoritaire du périmètre (même logique que la région
+        // majoritaire) : badge d'entête de la fiche, fil d'Ariane (niveau
+        // département) et SEO. Deux champs seulement, la liste complète des
+        // communes porte déjà le détail par commune.
+        // Le décompte ne passe JAMAIS les codes par des clés de tableau :
+        // PHP y convertirait '49' en 49 et '01' en 1 — le code département
+        // doit rester une chaîne (routes /departement/{code}, '2a', '971'…).
+        $codesDept = $projet->communes
+            ->filter(fn (Commune $c) => ! $c->anomalie)
+            ->map(fn (Commune $c) => $this->departementOf($c))
+            ->filter()
+            ->values();
+        $deptCode = $codesDept
+            ->unique()
+            ->map(fn (string $code) => ['code' => $code, 'n' => $codesDept->filter(fn (string $c) => $c === $code)->count()])
+            ->sort(fn (array $a, array $b) => $b['n'] <=> $a['n'] ?: strcmp($a['code'], $b['code']))
+            ->first()['code'] ?? null;
+        $deptLabel = collect($communes)
+            ->firstWhere('departement_code', $deptCode)['departement_label'] ?? null;
+
         // PNR couvrant au moins une commune du périmètre (colonne libelle_pnr
         // de la source data.gouv, souvent vide). Le libellé est porté par
         // chaque ligne commune : on déduplique pour la fiche.
@@ -137,6 +157,7 @@ class LandingService
             'pnrs' => $pnrs,
             'region_label' => $regionLabel,
             'region_slug' => $regionLabel ? $this->regions->slug($regionLabel) : null,
+            'departement' => ['code' => $deptCode, 'label' => $deptLabel ?: $this->departements->label($deptCode)],
             // Historique public des modifications apportées à cette fiche
             // (vérifications, contributions validées, fusions…), le plus
             // récent en premier.

@@ -6,6 +6,7 @@ import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
 import Breadcrumbs from '../Components/Breadcrumbs.vue';
 import { COLOR, DEFAULT_PALETTE_KEY, applyPalette } from '../map/constants.js';
+import { badgeDepartement, descriptionProjet, jsonLdProjet, titleProjet } from '../seo/projetSeo.js';
 
 const props = defineProps({
     projet: { type: Object, required: true },
@@ -45,38 +46,14 @@ const crumbs = computed(() => {
 const statutClass = (s) =>
     ({ en_cours: 'badge-st-en_cours', a_venir: 'badge-st-a_venir', termine: 'badge-st-termine', inconnu: 'badge-st-inconnu' })[s] || 'badge-st-inconnu';
 
-const pageTitle = computed(() => props.projet.nom);
-const pageDescription = computed(() => {
-    const p = props.projet;
-    return `${p.nom} (${p.statut_label})${p.structure_porteuse ? ' — ' + p.structure_porteuse : ''}${p.annee_debut ? ' — depuis ' + p.annee_debut : ''}. ${p.communes.length} commune(s) concernée(s), source ${p.source_label}.`;
-});
+/* SEO de la fiche : title et description riches (commune principale,
+   département, statut, porteur, faits INPN/démographie) — module pur testé
+   dans tests/js/projetSeo.test.mjs. */
+const pageTitle = computed(() => titleProjet(props.projet));
+const pageDescription = computed(() => descriptionProjet(props.projet, props.patrimoine_resume));
+const deptBadge = computed(() => badgeDepartement(props.projet));
 
-const jsonLd = computed(() => {
-    const base = site.value.url || '';
-    const p = props.projet;
-    const items = [{ '@type': 'ListItem', position: 1, name: 'Accueil', item: base + '/' }];
-    if (p.region_slug) {
-        items.push({ '@type': 'ListItem', position: 2, name: p.region_label, item: `${base}/region/${p.region_slug}` });
-    }
-    items.push({ '@type': 'ListItem', position: items.length + 1, name: p.nom });
-
-    return [
-        {
-            '@context': 'https://schema.org',
-            '@type': 'BreadcrumbList',
-            itemListElement: items,
-        },
-        {
-            '@context': 'https://schema.org',
-            '@type': 'Project',
-            name: p.nom,
-            url: `${base}/abc/${p.slug}`,
-            description: `${p.nom} — Atlas de la Biodiversité Communale (${p.statut_label})`,
-            identifier: p.id,
-            ...(p.annee_debut ? { startDate: String(p.annee_debut) } : {}),
-        },
-    ];
-});
+const jsonLd = computed(() => jsonLdProjet(props.projet, site.value.url || ''));
 
 const annee = (p) => (p.annee_debut ? `${p.annee_debut}${p.annee_fin ? '–' + p.annee_fin : ''}` : '—');
 
@@ -182,6 +159,7 @@ onBeforeUnmount(() => {
             <Breadcrumbs :items="crumbs" />
             <div class="fiche-header d-flex flex-wrap align-items-baseline gap-2 mb-3">
                 <h1 class="h3 mb-0">{{ projet.nom }}</h1>
+                <small v-if="deptBadge" class="text-muted">{{ deptBadge }}</small>
                 <span class="badge" :class="statutClass(projet.statut)">{{ projet.statut_label }}</span>
                 <small v-if="!projet.statut_verifie" class="text-muted">d'après la source originale</small>
                 <small v-else class="text-muted">statut vérifié manuellement</small>
