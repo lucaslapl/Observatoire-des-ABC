@@ -361,6 +361,7 @@ class ModerateurAccessTest extends TestCase
     {
         $this->actingAs($this->moderateur)->postJson('/api/admin/collect')->assertForbidden();
         $this->actingAs($this->moderateur)->postJson('/api/admin/backup')->assertForbidden();
+        $this->actingAs($this->moderateur)->postJson('/api/admin/sitemap/flush')->assertForbidden();
         $this->actingAs($this->moderateur)->getJson('/api/admin/exclusions')->assertForbidden();
         $this->actingAs($this->moderateur)
             ->deleteJson('/api/admin/projets/'.urlencode($this->projetId))

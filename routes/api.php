@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\CollectController;
 use App\Http\Controllers\Admin\ContributionController as AdminContributionController;
 use App\Http\Controllers\Admin\ProjetController as AdminProjetController;
+use App\Http\Controllers\Admin\SitemapController as AdminSitemapController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\ContributionController;
 use App\Http\Controllers\Api\DiagController;
@@ -103,6 +104,8 @@ Route::middleware('web')->group(function () {
     Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::post('/admin/backup', [BackupController::class, 'store']);
         Route::post('/admin/collect', [CollectController::class, 'store']);
+        // Régénération du sitemap (équivalent HTTP de abc:sitemap:flush).
+        Route::post('/admin/sitemap/flush', [AdminSitemapController::class, 'store']);
 
         Route::delete('/admin/projets/{projet}', [AdminProjetController::class, 'destroy']);
         Route::post('/admin/projets/{projet}/fusion', [AdminProjetController::class, 'fusion']);

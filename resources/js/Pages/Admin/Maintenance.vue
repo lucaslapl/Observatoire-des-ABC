@@ -57,6 +57,22 @@ async function collect() {
         busy.value = false;
     }
 }
+
+async function flushSitemap() {
+    busy.value = true;
+    maintenanceMsg.value = '';
+    try {
+        const j = await axios.post('/api/admin/sitemap/flush');
+        const sections = Object.entries(j.data.sections || {}).map(([section, n]) => `${section} : ${n}`).join(', ');
+        maintenanceMsg.value = `Sitemap régénéré : ${j.data.total ?? 0} URL(s)${sections ? ' (' + sections + ')' : ''}.`;
+        maintenanceOk.value = true;
+    } catch (e) {
+        maintenanceMsg.value = 'Erreur : ' + errMsg(e);
+        maintenanceOk.value = false;
+    } finally {
+        busy.value = false;
+    }
+}
 </script>
 
 <template>
@@ -73,12 +89,15 @@ async function collect() {
                 <div class="d-flex gap-2 flex-wrap align-items-center">
                     <button class="btn btn-primary btn-sm" :disabled="busy" @click="collect"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>Collecter les données</button>
                     <button class="btn btn-secondary btn-sm" :disabled="busy" @click="backup"><i class="bi bi-save me-1" aria-hidden="true"></i>Sauvegarder la base</button>
+                    <button class="btn btn-secondary btn-sm" :disabled="busy" @click="flushSitemap"><i class="bi bi-list-check me-1" aria-hidden="true"></i>Régénérer le sitemap</button>
                     <span v-if="busy" class="spinner-border spinner-border-sm text-success" role="status"></span>
                 </div>
                 <div v-if="maintenanceMsg" class="small mt-2" :class="maintenanceOk ? 'text-success' : 'text-danger'">{{ maintenanceMsg }}</div>
                 <div class="small text-muted mt-2">
                     La collecte recharge les 4 sources (data.gouv, Wayback, Fonds vert) puis recalcule statuts,
                     géocodage et anomalies. Le travail humain (vérifications, contributions) est toujours préservé.
+                    La régénération du sitemap purge le cache du générateur (clé versionnée) puis reconstruit
+                    toutes les sections (fiches ABC, communes, départements, régions, patrimoine INPN).
                 </div>
             </div>
         </div>

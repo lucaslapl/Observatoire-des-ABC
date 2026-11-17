@@ -84,6 +84,27 @@ localement via `abc:import-inpn` puis exportés en SQL portable
 PostGIS : aucune géométrie n'est stockée en base, les croisements se
 font par code INSEE de commune.
 
+## Déploiement et maintenance
+
+Le site public tourne sur un hébergement mutualisé (MySQL, pas de PostGIS) ;
+la liste précise des étapes de mise à jour de production est reportée dans
+le message de commit de chaque push. Après chaque déploiement, la purge du
+sitemap est à jouer systématiquement :
+
+```bash
+php artisan abc:sitemap:flush
+```
+
+La commande oublie toutes les clés de cache `abc:sitemap*` (y compris les
+entrées héritées d'anciennes versions du générateur, de toute façon ignorées
+depuis le passage à la clé versionnée `abc:sitemap:v2`), régénère le sitemap
+complet et affiche le nombre total d'URLs et la répartition par section —
+pages statiques, actualités, fiches ABC, communes, départements, régions,
+patrimoine INPN (ZNIEFF, Natura 2000, pages de périmètre des fiches ABC).
+Sur un hébergement sans accès shell, le même traitement est disponible dans
+le panneau d'administration (Maintenance → « Régénérer le sitemap », route
+admin protégée `/api/admin/sitemap/flush`).
+
 ## Licence
 
 **AGPL-3.0** (GNU Affero General Public License v3) — voir `LICENSE`.
