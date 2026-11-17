@@ -33,6 +33,7 @@ class CollectService
         private GeocodeService $geocode,
         private AnomalyService $anomalies,
         private DoublonSuspectService $doublons,
+        private SlugHealthService $slugHealth,
     ) {}
 
     public function collectAll(bool $init = false, bool $force = false): array
@@ -50,6 +51,11 @@ class CollectService
         // Bloqué AVANT la suppression ciblée et les recalculs : rien ne doit
         // être détruit sur la foi d'un collect suspect.
         $this->verifierCoherence($projetsAvant, ProjetRepository::createdIds());
+
+        // Contrôle C2 (audit SEO du 2026-11-17) : après les upserts, aucun
+        // projet avec communes ne doit rester sans slug (fiche inaccessible,
+        // /abc/null). Signale l'anomalie au lieu de passer silencieusement.
+        $this->verifierFichesAccessibles();
 
         $stale = $this->deleteStaleProjects(ProjetRepository::ingestedIds(), $force);
 
@@ -226,5 +232,40 @@ class CollectService
             implode("\n- ", $alertes).
             "\nLes projets listés sont en base : examiner, puis restaurer depuis la sauvegarde, fusionner, exclure ou corriger la source."
         );
+    }
+
+    /**
+     * Contrôle post-collect C2 (audit SEO du 2026-11-17) : après les
+     * upserts, un projet avec communes doit avoir une fiche accessible.
+     * Un slug vide la fait disparaître (/abc/null) alors que le projet
+     * reste visible dans les listes, le sitemap et la carte : le collect
+     * journalise l'alerte (audit_log, action alerte_collect) et
+     * s'interrompt au lieu de passer silencieusement — réparer par
+     * abc:fix:slugs --apply puis relancer le collect.
+     */
+    public function verifierFichesAccessibles(): void
+    {
+        $suspects = $this->slugHealth->sansSlugAvecCommunes();
+
+        if ($suspects->isEmpty()) {
+            return;
+        }
+
+        AuditLog::create([
+            'action' => 'alerte_collect',
+            'avant' => null,
+            'apres' => json_encode([
+                'projets_avec_communes_sans_slug' => $suspects->pluck('id')->all(),
+                'erreur' => 'fiche inaccessible (/abc/null)',
+                'reparation' => 'abc:fix:slugs --apply puis relancer le collect',
+            ], JSON_UNESCAPED_UNICODE),
+            'par_admin' => 'CollectService',
+        ]);
+
+        throw new RuntimeException(sprintf(
+            "COLLECT SUSPECT — %d projet(s) avec communes restent sans slug (fiche inaccessible) :\n- %s\nAucune donnée n'est supprimée : réparer par abc:fix:slugs --apply puis relancer le collect.",
+            $suspects->count(),
+            $suspects->map(fn (Projet $p) => "{$p->id} ({$p->nom})")->implode("\n- "),
+        ));
     }
 }
