@@ -215,6 +215,11 @@ class PageController extends Controller
         ]);
     }
 
+    public function faq(): Response
+    {
+        return Inertia::render('Faq');
+    }
+
     public function mentionsLegales(): Response
     {
         return Inertia::render('MentionsLegales');

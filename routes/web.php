@@ -79,6 +79,7 @@ Route::get('/region/{slug}', [PageController::class, 'region'])->where('slug', '
 
 Route::get('/methodologie', [PageController::class, 'methodologie'])->name('methodologie');
 Route::get('/a-propos', [PageController::class, 'aPropos'])->name('a-propos');
+Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 Route::get('/mentions-legales', [PageController::class, 'mentionsLegales'])->name('mentions-legales');
 Route::get('/confidentialite', [PageController::class, 'confidentialite'])->name('confidentialite');
 

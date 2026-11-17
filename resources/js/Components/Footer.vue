@@ -20,6 +20,7 @@ const colonnes = [
         liens: [
             { label: 'À propos', href: '/a-propos' },
             { label: 'Méthodologie des données', href: '/methodologie' },
+            { label: 'Questions fréquentes (FAQ)', href: '/faq' },
         ],
     },
     {

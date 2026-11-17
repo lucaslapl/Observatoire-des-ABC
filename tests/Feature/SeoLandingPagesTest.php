@@ -282,6 +282,10 @@ class SeoLandingPagesTest extends TestCase
             ->assertSee('chiffres')
             ->assertSee('doublons_fusionnes')
             ->assertSee('en_verification');
+
+        $this->get('/faq')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Faq'));
     }
 
     public function test_robots_txt_points_to_sitemap(): void
@@ -351,6 +355,7 @@ class SeoLandingPagesTest extends TestCase
             ->assertSee('/contact')
             ->assertSee('/a-propos')
             ->assertSee('/methodologie')
+            ->assertSee('/faq</loc>', false)
             ->assertSee('/mentions-legales')
             ->assertSee('/confidentialite');
     }

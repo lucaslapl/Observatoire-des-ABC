@@ -29,6 +29,7 @@ class SitemapController extends Controller
             $urls[] = $this->entry($base.'/contact', null, '0.5', 'monthly');
             $urls[] = $this->entry($base.'/a-propos', null, '0.3', 'yearly');
             $urls[] = $this->entry($base.'/methodologie', null, '0.5', 'yearly');
+            $urls[] = $this->entry($base.'/faq', null, '0.5', 'yearly');
             $urls[] = $this->entry($base.'/mentions-legales', null, '0.3', 'yearly');
             $urls[] = $this->entry($base.'/confidentialite', null, '0.3', 'yearly');
             // Page « API & réutilisation » et documentation publique.
