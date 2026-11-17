@@ -46,12 +46,36 @@ export function badgeDepartement(projet) {
 }
 
 /**
+ * Nom court du porteur : son sigle quand la structure porteuse en
+ * contient un entre parenthèses (« Syndicat Mixte Plaines Monts d'Or
+ * (SMPMO) » → « SMPMO »), sinon le nom complet. Une parenthèse qui n'est
+ * pas un sigle (« … (communes du Louet et du Loir) ») n'est pas retenue.
+ * C'est l'identité que les internautes cherchent : « smpmo » est la
+ * requête qui apporte le plus d'impressions à la fiche SMPMO (GSC).
+ */
+export function nomCourtPorteur(structurePorteuse) {
+    const nom = String(structurePorteuse ?? '').trim();
+    if (!nom) return null;
+    for (const groupe of nom.matchAll(/\(([^()]*)\)/g)) {
+        const sigle = groupe[1].trim();
+        if (/^[A-Z0-9]{2,12}$/.test(sigle)) return sigle;
+    }
+    return nom;
+}
+
+/**
  * Title de la fiche : nom explicite + département, sinon « ABC {commune
  * principale} [et N communes] » + département, puis porteur ou région en
  * suffixe si la longueur visible reste raisonnable (≤ ~65 caractères) —
  * finalité : « ABC de Mûrs-Erigné (49, Maine-et-Loire) — {porteur} ». Un
  * candidat trop long cède la place au suivant (nom verbeux de porteur →
  * formule courte sur la commune) ; à défaut le nom du projet est gardé.
+ *
+ * Le suffixe porteur privilégie le nom court (sigle) : le nom complet
+ * d'un porteur intercommunal dépassait souvent les ~65 caractères et
+ * l'identité disparaissait du title — le signal le plus fort (audit C7 :
+ * « ABC Albigny-sur-Saône et 14 communes (69, Rhône) » sans SMPMO, dont
+ * « smpmo » est pourtant la requête qui apporte le plus d'impressions).
  */
 export function titleProjet(projet) {
     const communes = communesRetenues(projet);
@@ -72,17 +96,24 @@ export function titleProjet(projet) {
     }
     candidats.push(projet.nom);
 
-    const cible = candidats
-        .map((c) => `${c}${parenthese}`)
-        .find((c) => c.length <= MAX_TITRE) || `${projet.nom}${parenthese}`;
+    // Suffixes par ordre de priorité : identité du porteur (sigle quand il
+    // existe, sinon nom complet), puis région en repli final.
+    const suffixes = [nomCourtPorteur(projet.structure_porteuse), projet.region_label]
+        .filter(Boolean);
 
-    for (const suffixe of [projet.structure_porteuse, projet.region_label]) {
-        if (suffixe && `${cible} — ${suffixe}`.length <= MAX_TITRE) {
-            return `${cible} — ${suffixe}`;
+    for (const candidat of candidats) {
+        const cible = `${candidat}${parenthese}`;
+        if (cible.length > MAX_TITRE) continue;
+        for (const suffixe of suffixes) {
+            const titre = `${cible} — ${suffixe}`;
+            if (titre.length <= MAX_TITRE) {
+                return titre;
+            }
         }
+        return cible;
     }
 
-    return cible;
+    return `${projet.nom}${parenthese}`;
 }
 
 /* Phrase de statut, en français courant : « en cours », « terminé »… */

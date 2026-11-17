@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { badgeDepartement, crumbsProjet, descriptionProjet, jsonLdProjet, MAX_TITRE, titleProjet } from '../../resources/js/seo/projetSeo.js';
+import { badgeDepartement, crumbsProjet, descriptionProjet, jsonLdProjet, MAX_TITRE, nomCourtPorteur, titleProjet } from '../../resources/js/seo/projetSeo.js';
 
 /* Cas mono-commune de l'acceptation de l'audit : ABC de Mûrs-Erigné (49). */
 const mursErigne = {
@@ -21,23 +21,36 @@ const mursErigne = {
     demographie: { population_totale: 5934, mono_commune: true },
 };
 
-/* Cas multi-communes (SMPMO, Rhône) : nom explicite, périmètre éclaté. */
-const smmpmo = {
+/* Cas multi-communes réel (SMPMO, Rhône) : 15 communes, porteur avec
+   sigle — « smpmo » est la requête qui apporte le plus d'impressions à
+   la fiche (GSC : 32 impressions, position 6,8). */
+const smpmo = {
     id: 'abc-smpmo-2023',
     nom: 'ABC du Syndicat Mixte Plaines Monts d’Or (SMPMO)',
     slug: 'abc-454',
-    statut: 'a_venir',
-    statut_label: 'Va débuter',
-    structure_porteuse: 'Syndicat Mixte Plaines Monts d’Or',
+    statut: 'en_cours',
+    statut_label: 'En cours',
+    structure_porteuse: 'Syndicat Mixte Plaines Monts d’Or (SMPMO)',
     annee_debut: 2023,
     departement: { code: '69', label: 'Rhône' },
     region_label: 'Auvergne-Rhône-Alpes',
     region_slug: 'auvergne-rhone-alpes',
     communes: [
-        { libelle: 'Charbonnières-les-Bains', code: '69047', anomalie: false },
-        { libelle: 'Chessy', code: '69056', anomalie: false },
-        { libelle: 'Couzon-au-Mont-d’Or', code: '69070', anomalie: false },
-        { libelle: 'Limonest', code: '69118', anomalie: false },
+        { libelle: 'Albigny-sur-Saône', code: '69003', anomalie: false },
+        { libelle: 'Champagne-au-Mont-d’Or', code: '69040', anomalie: false },
+        { libelle: 'Chasselay', code: '69049', anomalie: false },
+        { libelle: 'Les Chères', code: '69055', anomalie: false },
+        { libelle: 'Collonges-au-Mont-d’Or', code: '69063', anomalie: false },
+        { libelle: 'Couzon-au-Mont-d’Or', code: '69068', anomalie: false },
+        { libelle: 'Curis-au-Mont-d’Or', code: '69071', anomalie: false },
+        { libelle: 'Limonest', code: '69116', anomalie: false },
+        { libelle: 'Lissieu', code: '69117', anomalie: false },
+        { libelle: 'Poleymieux-au-Mont-d’Or', code: '69153', anomalie: false },
+        { libelle: 'Quincieux', code: '69163', anomalie: false },
+        { libelle: 'Saint-Cyr-au-Mont-d’Or', code: '69191', anomalie: false },
+        { libelle: 'Saint-Didier-au-Mont-d’Or', code: '69194', anomalie: false },
+        { libelle: 'Saint-Germain-au-Mont-d’Or', code: '69207', anomalie: false },
+        { libelle: 'Saint-Romain-au-Mont-d’Or', code: '69233', anomalie: false },
     ],
     demographie: { population_totale: 32100 },
 };
@@ -57,27 +70,50 @@ test('title mono-commune générique : « ABC {commune} (département) »', () =
     assert.equal(titleProjet(projet), 'ABC Mûrs-Erigné (49, Maine-et-Loire) — Pays de la Loire');
 });
 
-test('title multi-communes : nom explicite conservé, pluriel correct ailleurs', () => {
+test('title multi-communes : le sigle du porteur tient où son nom complet dépassait', () => {
     // Le nom SMPMO ne contient AUCUNE commune du périmètre : la formule
-    // multi-générique « ABC {commune principale} et N communes » s'applique
-    // (aucun suffixe : le nom du syndicat ferait dépasser ~65 caractères).
-    assert.equal(
-        titleProjet(smmpmo),
-        'ABC Charbonnières-les-Bains et 3 communes (69, Rhône)',
-    );
+    // « ABC {commune principale} et N communes » s'applique, et le sigle
+    // du porteur tient en suffixe (56 ≤ 65) là où son nom complet (92
+    // caractères) était écarté — l'identité cherchée (« smpmo », requête
+    // qui apporte le plus d'impressions à la fiche) revient dans le
+    // signal le plus fort (audit C7).
+    const titre = titleProjet(smpmo);
+    assert.equal(titre, 'ABC Albigny-sur-Saône et 14 communes (69, Rhône) — SMPMO');
+    assert.ok(titre.length <= MAX_TITRE, `titre trop long : ${titre.length} — ${titre}`);
+});
 
+test('title multi-communes sans sigle : comportement inchangé (pas de suffixe)', () => {
+    // Porteur sans sigle et trop long pour le suffixe : la formule courte
+    // sur la commune reste seule, comme avant l'audit C7.
+    const sansSigle = { ...smpmo, structure_porteuse: 'Syndicat Mixte Plaines Monts d’Or' };
+    assert.equal(titleProjet(sansSigle), 'ABC Albigny-sur-Saône et 14 communes (69, Rhône)');
+});
+
+test('nom court du porteur : sigle entre parenthèses, sinon nom complet', () => {
+    assert.equal(nomCourtPorteur('Syndicat Mixte Plaines Monts d’Or (SMPMO)'), 'SMPMO');
+    assert.equal(nomCourtPorteur('Commune de Mûrs-Erigné'), 'Commune de Mûrs-Erigné');
+    // Une parenthèse qui n'est pas un sigle n'est pas retenue.
+    assert.equal(
+        nomCourtPorteur('Communauté de communes Loire-Layon-Aubance (communes du Louet et du Loir)'),
+        'Communauté de communes Loire-Layon-Aubance (communes du Louet et du Loir)',
+    );
+    assert.equal(nomCourtPorteur(null), null);
+    assert.equal(nomCourtPorteur(''), null);
+});
+
+test('title multi-communes : nom contenant sa commune conservé, pluriel correct', () => {
     // Nom contenant sa commune principale : conservé tel quel.
     const nomPorteur = {
-        ...smmpmo,
+        ...smpmo,
         nom: 'ABC de Limonest (Plaines Monts d’Or)',
-        communes: [{ libelle: 'Limonest', code: '69118', anomalie: false }],
+        communes: [{ libelle: 'Limonest', code: '69116', anomalie: false }],
         region_label: null,
         structure_porteuse: null,
     };
     assert.equal(titleProjet(nomPorteur), 'ABC de Limonest (Plaines Monts d’Or) (69, Rhône)');
 
     const nomGenerique = {
-        ...smmpmo,
+        ...smpmo,
         nom: 'Atlas de la biodiversité communale',
         structure_porteuse: null,
         region_label: 'Auvergne-Rhône-Alpes',
@@ -86,17 +122,17 @@ test('title multi-communes : nom explicite conservé, pluriel correct ailleurs',
     // suffixe, le titre reste centré commune.
     assert.equal(
         titleProjet(nomGenerique),
-        'ABC Charbonnières-les-Bains et 3 communes (69, Rhône)',
+        'ABC Albigny-sur-Saône et 14 communes (69, Rhône)',
     );
 
     // Deux communes, région courte : « et 1 commune », jamais « et 1 communes ».
     const deux = {
         ...nomGenerique,
-        communes: [nomGenerique.communes[1], nomGenerique.communes[0]],
+        communes: [nomGenerique.communes[2], nomGenerique.communes[0]],
         region_label: 'Corse',
         departement: { code: '2a', label: 'Corse-du-Sud' },
     };
-    assert.equal(titleProjet(deux), 'ABC Chessy et 1 commune (2a, Corse-du-Sud) — Corse');
+    assert.equal(titleProjet(deux), 'ABC Chasselay et 1 commune (2a, Corse-du-Sud) — Corse');
 });
 
 test('title borné (~65 caractères visibles) : nom verbeux → formule courte', () => {
@@ -129,9 +165,9 @@ test('description mono-commune : pluriel correct et faits saillants', () => {
 });
 
 test('description multi-communes : périmètre et pluriel', () => {
-    const d = descriptionProjet(smmpmo, { present: false, nb_znieff: 0, nb_natura: 0, nb_aires: 0 });
-    assert.ok(d.includes('à Charbonnières-les-Bains et 3 autres communes (69, Rhône)'), d);
-    assert.ok(d.includes('4 communes'), d);
+    const d = descriptionProjet(smpmo, { present: false, nb_znieff: 0, nb_natura: 0, nb_aires: 0 });
+    assert.ok(d.includes('à Albigny-sur-Saône et 14 autres communes (69, Rhône)'), d);
+    assert.ok(d.includes('15 communes'), d);
     assert.ok(!d.includes('sur le périmètre'), 'aucun fait INPN : pas de clause patrimoine');
 });
 
@@ -148,22 +184,22 @@ test('badge département : « Maine-et-Loire (49) », null si inconnu', () => {
 });
 
 test('JSON-LD Project enrichi : areaServed, location (FR-69), funder, temporalCoverage', () => {
-    const blocks = jsonLdProjet(smmpmo, 'https://observatoire-abc.fr');
+    const blocks = jsonLdProjet(smpmo, 'https://observatoire-abc.fr');
     const project = blocks.find((b) => b['@type'] === 'Project');
     const breadcrumb = blocks.find((b) => b['@type'] === 'BreadcrumbList');
 
-    assert.deepEqual(project.areaServed, ['Charbonnières-les-Bains', 'Chessy', 'Couzon-au-Mont-d’Or', 'Limonest']);
+    assert.deepEqual(project.areaServed, ['Albigny-sur-Saône', 'Champagne-au-Mont-d’Or', 'Chasselay', 'Les Chères', 'Collonges-au-Mont-d’Or']);
     assert.equal(project.location['@type'], 'Place');
     assert.equal(project.location.address.addressRegion, 'FR-69');
     assert.equal(project.location.address.addressCountry, 'FR');
-    assert.deepEqual(project.funder, { '@type': 'Organization', name: 'Syndicat Mixte Plaines Monts d’Or' });
+    assert.deepEqual(project.funder, { '@type': 'Organization', name: 'Syndicat Mixte Plaines Monts d’Or (SMPMO)' });
     assert.equal(project.temporalCoverage, '2023');
     assert.equal(project.startDate, '2023');
 
     // Fil d'Ariane complet : Accueil → Région → Département → Projet.
     assert.deepEqual(
         breadcrumb.itemListElement.map((i) => i.name),
-        ['Accueil', 'Auvergne-Rhône-Alpes', 'Rhône', smmpmo.nom],
+        ['Accueil', 'Auvergne-Rhône-Alpes', 'Rhône', smpmo.nom],
     );
     assert.deepEqual(
         breadcrumb.itemListElement.map((i) => i.item),
@@ -177,10 +213,10 @@ test('JSON-LD Project enrichi : areaServed, location (FR-69), funder, temporalCo
 });
 
 test('fil d’Ariane : le niveau département apparaît entre la région et le projet', () => {
-    assert.deepEqual(crumbsProjet(smmpmo), [
+    assert.deepEqual(crumbsProjet(smpmo), [
         { label: 'Auvergne-Rhône-Alpes', url: '/region/auvergne-rhone-alpes' },
         { label: 'Rhône', url: '/departement/69' },
-        { label: smmpmo.nom, url: null },
+        { label: smpmo.nom, url: null },
     ]);
 
     // Sans département connu : le fil saute le niveau sans casse.
