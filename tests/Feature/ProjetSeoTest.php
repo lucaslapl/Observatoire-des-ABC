@@ -95,6 +95,10 @@ class ProjetSeoTest extends TestCase
                 ->where('projet.region_label', 'Auvergne-Rhône-Alpes')
                 ->has('projet.communes', 4)
         );
+
+        // Le fil d'Ariane de la fiche pointe le département majoritaire :
+        // la cible du lien doit exister (route /departement/{code}).
+        $this->get('/departement/69')->assertOk();
     }
 
     public function test_fiche_sans_commune_n_expose_pas_de_departement(): void

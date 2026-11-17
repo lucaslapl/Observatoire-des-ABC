@@ -6,7 +6,7 @@ import Layout from '../Components/Layout.vue';
 import Seo from '../Components/Seo.vue';
 import Breadcrumbs from '../Components/Breadcrumbs.vue';
 import { COLOR, DEFAULT_PALETTE_KEY, applyPalette } from '../map/constants.js';
-import { badgeDepartement, descriptionProjet, jsonLdProjet, titleProjet } from '../seo/projetSeo.js';
+import { badgeDepartement, crumbsProjet, descriptionProjet, jsonLdProjet, titleProjet } from '../seo/projetSeo.js';
 
 const props = defineProps({
     projet: { type: Object, required: true },
@@ -34,14 +34,10 @@ async function supprimerProjet() {
     }
 }
 
-const crumbs = computed(() => {
-    const list = [];
-    if (props.projet.region_slug) {
-        list.push({ label: props.projet.region_label, url: `/region/${props.projet.region_slug}` });
-    }
-    list.push({ label: props.projet.nom });
-    return list;
-});
+/* Fil d'Ariane de la fiche : Région → Département (majoritaire du
+   périmètre) → Projet. Le module fournit aussi le BreadcrumbList JSON-LD :
+   les deux restent identiques par construction. */
+const crumbs = computed(() => crumbsProjet(props.projet));
 
 const statutClass = (s) =>
     ({ en_cours: 'badge-st-en_cours', a_venir: 'badge-st-a_venir', termine: 'badge-st-termine', inconnu: 'badge-st-inconnu' })[s] || 'badge-st-inconnu';

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { badgeDepartement, descriptionProjet, jsonLdProjet, MAX_TITRE, titleProjet } from '../../resources/js/seo/projetSeo.js';
+import { badgeDepartement, crumbsProjet, descriptionProjet, jsonLdProjet, MAX_TITRE, titleProjet } from '../../resources/js/seo/projetSeo.js';
 
 /* Cas mono-commune de l'acceptation de l'audit : ABC de Mûrs-Erigné (49). */
 const mursErigne = {
@@ -160,22 +160,45 @@ test('JSON-LD Project enrichi : areaServed, location (FR-69), funder, temporalCo
     assert.equal(project.temporalCoverage, '2023');
     assert.equal(project.startDate, '2023');
 
-    // Fil d'Ariane (avant le niveau département de T4) : Accueil → Région → Projet.
+    // Fil d'Ariane complet : Accueil → Région → Département → Projet.
     assert.deepEqual(
         breadcrumb.itemListElement.map((i) => i.name),
-        ['Accueil', 'Auvergne-Rhône-Alpes', smmpmo.nom],
+        ['Accueil', 'Auvergne-Rhône-Alpes', 'Rhône', smmpmo.nom],
+    );
+    assert.deepEqual(
+        breadcrumb.itemListElement.map((i) => i.item),
+        [
+            'https://observatoire-abc.fr/',
+            'https://observatoire-abc.fr/region/auvergne-rhone-alpes',
+            'https://observatoire-abc.fr/departement/69',
+            'https://observatoire-abc.fr/abc/abc-454',
+        ],
     );
 });
 
-test('JSON-LD mono-commune : areaServed scalaire, BreadcrumbList sans région si absente', () => {
+test('fil d’Ariane : le niveau département apparaît entre la région et le projet', () => {
+    assert.deepEqual(crumbsProjet(smmpmo), [
+        { label: 'Auvergne-Rhône-Alpes', url: '/region/auvergne-rhone-alpes' },
+        { label: 'Rhône', url: '/departement/69' },
+        { label: smmpmo.nom, url: null },
+    ]);
+
+    // Sans département connu : le fil saute le niveau sans casse.
+    const sansDept = crumbsProjet({ ...mursErigne, departement: { code: null, label: null } });
+    assert.deepEqual(sansDept.map((c) => c.label), ['Pays de la Loire', mursErigne.nom]);
+});
+
+test('JSON-LD mono-commune : areaServed scalaire, fil d’Ariane sans région', () => {
     const blocks = jsonLdProjet({ ...mursErigne, region_slug: null, region_label: null, annee_fin: 2023 }, 'https://observatoire-abc.fr');
     const project = blocks.find((b) => b['@type'] === 'Project');
     const breadcrumb = blocks.find((b) => b['@type'] === 'BreadcrumbList');
 
     assert.equal(project.areaServed, 'Mûrs-Erigné');
     assert.equal(project.temporalCoverage, '2020/2023');
+    // Sans région : Accueil → Département → Projet.
     assert.deepEqual(
         breadcrumb.itemListElement.map((i) => i.name),
-        ['Accueil', 'ABC de Mûrs-Erigné'],
+        ['Accueil', 'Maine-et-Loire', 'ABC de Mûrs-Erigné'],
     );
+    assert.equal(breadcrumb.itemListElement[1].item, 'https://observatoire-abc.fr/departement/49');
 });

@@ -152,6 +152,27 @@ export function descriptionProjet(projet, patrimoineResume) {
 }
 
 /**
+ * Fil d'Ariane de la fiche (items du composant Breadcrumbs, « Accueil »
+ * y est préfixé par le composant) : Région → Département → Projet. Le
+ * niveau département est le département majoritaire du périmètre (payload
+ * LandingService). Réutilisé tel quel par le BreadcrumbList JSON-LD : le
+ * fil affiché et le JSON-LD ne peuvent pas diverger.
+ */
+export function crumbsProjet(projet) {
+    const list = [];
+    if (projet.region_slug) {
+        list.push({ label: projet.region_label, url: `/region/${projet.region_slug}` });
+    }
+    const d = projet.departement || {};
+    if (d.code) {
+        list.push({ label: d.label || d.code, url: `/departement/${d.code}` });
+    }
+    list.push({ label: projet.nom, url: null });
+
+    return list;
+}
+
+/**
  * JSON-LD de la fiche : BreadcrumbList (synchronisé avec le fil d'Ariane
  * affiché) et Project enrichi — aire couverte, localisation avec le code
  * département (ISO 3166-2), porteur comme financeur affilié, période.
@@ -164,10 +185,12 @@ export function jsonLdProjet(projet, baseUrl) {
     const principale = communes[0] || null;
 
     const items = [{ '@type': 'ListItem', position: 1, name: 'Accueil', item: `${base}/` }];
-    if (p.region_slug) {
-        items.push({ '@type': 'ListItem', position: items.length + 1, name: p.region_label, item: `${base}/region/${p.region_slug}` });
+    for (const crumb of crumbsProjet(p)) {
+        if (crumb.url) {
+            items.push({ '@type': 'ListItem', position: items.length + 1, name: crumb.label, item: `${base}${crumb.url}` });
+        }
     }
-    items.push({ '@type': 'ListItem', position: items.length + 1, name: p.nom });
+    items.push({ '@type': 'ListItem', position: items.length + 1, name: p.nom, item: `${base}/abc/${p.slug}` });
 
     const project = {
         '@context': 'https://schema.org',
