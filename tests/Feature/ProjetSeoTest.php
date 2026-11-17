@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Commune;
 use App\Models\Projet;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -19,7 +20,7 @@ class ProjetSeoTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_fiche_mono_commune_expose_tout_le_socle_seo(): void
+    private function seedMursErigne(): Projet
     {
         $projet = Projet::create([
             'id' => 'abc-de-murs-erigne-murs-erigne-2020',
@@ -41,6 +42,13 @@ class ProjetSeoTest extends TestCase
             'anomalie' => false,
         ]);
 
+        return $projet;
+    }
+
+    public function test_fiche_mono_commune_expose_tout_le_socle_seo(): void
+    {
+        $this->seedMursErigne();
+
         $this->get('/abc/abc-de-murs-erigne')->assertOk()->assertInertia(
             fn (Assert $page) => $page->component('Projet')
                 // Title/description du front : « ABC de Mûrs-Erigné (49,
@@ -56,6 +64,24 @@ class ProjetSeoTest extends TestCase
                 // patrimoine_resume : comptages INPN (page dédiée + description).
                 ->has('patrimoine_resume.present')
                 ->has('patrimoine_resume.nb_znieff')
+        );
+    }
+
+    /**
+     * Base https — le régime de production derrière le frontal TLS
+     * (APP_URL=https + TRUSTED_PROXIES) : la prop partagée site.url, racine
+     * des <link rel="canonical"> et og:url assemblés par le front, doit
+     * être servie en https (audit SEO du 2026-11-17, C6).
+     */
+    public function test_base_https_la_prop_site_url_racine_des_canonicals_est_en_https(): void
+    {
+        $this->seedMursErigne();
+
+        URL::forceRootUrl('https://observatoire-abc.fr');
+        URL::forceScheme('https');
+
+        $this->get('/abc/abc-de-murs-erigne')->assertOk()->assertInertia(
+            fn (Assert $page) => $page->where('site.url', 'https://observatoire-abc.fr')
         );
     }
 

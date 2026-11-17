@@ -11,6 +11,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 /**
@@ -97,6 +98,32 @@ class SitemapTest extends TestCase
             ->assertSee('/patrimoine/natura/FR8212001</loc>', false)
             // Pages « patrimoine du périmètre » des fiches ABC.
             ->assertSee('/abc/'.self::SLUG.'/patrimoine</loc>', false);
+    }
+
+    /**
+     * Base forcée en https — le régime de production derrière le frontal
+     * TLS (APP_URL=https + TRUSTED_PROXIES) : aucune URL du sitemap ne
+     * doit être générée en http://, chaque <loc> commence par https://
+     * (audit SEO du 2026-11-17, C6 : 13 531 <loc> en http://, zéro en
+     * https://, friction d'indexation sur la propriété GSC en https).
+     */
+    public function test_base_https_aucune_url_de_sitemap_en_http(): void
+    {
+        $this->seedData();
+
+        URL::forceRootUrl('https://observatoire-abc.fr');
+        URL::forceScheme('https');
+
+        $xml = $this->get('/sitemap.xml')->assertOk()->getContent();
+
+        preg_match_all('/<loc>(.*?)<\/loc>/', $xml, $locs);
+        $this->assertNotEmpty($locs[1], 'le sitemap doit contenir des URLs');
+
+        foreach ($locs[1] as $loc) {
+            $this->assertStringStartsWith('https://', $loc, "URL de sitemap en http:// : {$loc}");
+        }
+
+        $this->assertStringNotContainsString('<loc>http://', $xml);
     }
 
     /**

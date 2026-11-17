@@ -88,8 +88,37 @@ font par code INSEE de commune.
 
 Le site public tourne sur un hébergement mutualisé (MySQL, pas de PostGIS) ;
 la liste précise des étapes de mise à jour de production est reportée dans
-le message de commit de chaque push. Après chaque déploiement, la purge du
-sitemap est à jouer systématiquement :
+le message de commit de chaque push.
+
+### `.env` de production — schéma https (audit SEO du 2026-11-17, C6)
+
+Derrière le frontal TLS de l'hébergeur (nginx/Plesk), la requête arrive en
+`http://` au niveau de PHP-FPM : sans configuration, tout ce qui dérive de
+`url('/')` — sitemap, canonicals, flux Atom, doc Scribe — est généré en
+`http://` (constat : 13 531 `<loc>` de sitemap en `http://`, zéro en
+`https://`). Deux variables à poser dans le `.env` de production :
+
+```dotenv
+APP_URL=https://observatoire-abc.fr
+TRUSTED_PROXIES=*
+```
+
+- `APP_URL` fixe la racine des URLs en contexte console (artisan, cron,
+  `abc:sitemap:flush`) et la doc Scribe ;
+- `TRUSTED_PROXIES` (IPs/CIDRs du frontal, séparés par des virgules, ou
+  `*` quand l'hébergeur ne publie pas l'IP du frontal — compromis assumé)
+  fait confiance au `X-Forwarded-Proto` : `request()->getScheme()` vaut
+  `https` et `url('/')` rend `https://` même sans `APP_URL`.
+
+Après modification : `php artisan config:cache` si la config est cachée,
+puis `php artisan abc:sitemap:flush` (voir ci-dessous) et vérification
+`curl -s https://observatoire-abc.fr/sitemap.xml | head` — chaque `<loc>`
+doit commencer par `https://`.
+
+### Sitemap
+
+Après chaque déploiement, la purge du sitemap est à jouer
+systématiquement :
 
 ```bash
 php artisan abc:sitemap:flush

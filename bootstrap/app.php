@@ -22,10 +22,22 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Derrière un reverse proxy TLS (nginx, Plesk…) : TRUST_PROXY=1 pour
-        // que request()->ip() lise l'IP réelle dans X-Forwarded-For.
-        if (filter_var(env('TRUST_PROXY', false), FILTER_VALIDATE_BOOLEAN)) {
-            $middleware->trustProxies(at: '*');
+        // Derrière un reverse proxy TLS (nginx, Plesk…) : TRUSTED_PROXIES
+        // liste les adresses du frontal (IPs ou CIDRs, séparés par des
+        // virgules) ou « * » pour toutes. Sans confiance accordée,
+        // request()->getScheme() reste « http » et tout ce qui dérive de
+        // url('/') est généré en http:// — sitemap, canonicals, flux Atom
+        // (audit SEO du 2026-11-17, C6 : 13 531 <loc> en http://). L'IP du
+        // frontal n'étant pas publiée par l'hébergeur mutualisé, « * » y est
+        // le seul mode viable : compromis assumé, les en-têtes
+        // X-Forwarded-* ne sont pas plus suspects que l'IP qui les porte.
+        // TRUST_PROXY=1 (ancien booléen) équivaut à « * ».
+        $proxies = trim((string) env('TRUSTED_PROXIES', ''));
+        if ($proxies === '' && filter_var(env('TRUST_PROXY', false), FILTER_VALIDATE_BOOLEAN)) {
+            $proxies = '*';
+        }
+        if ($proxies !== '') {
+            $middleware->trustProxies(at: $proxies);
         }
 
         $middleware->web(append: [
