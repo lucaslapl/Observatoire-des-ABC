@@ -127,6 +127,25 @@ class SitemapTest extends TestCase
     }
 
     /**
+     * La réponse ne pose aucun cookie : un sitemap n'a besoin ni de
+     * session ni de cookies (audit SEO du 2026-11-17, C9 : la route
+     * passait par le groupe web et posait un cookie de session +
+     * XSRF-TOKEN). Cache-Control public conservé.
+     */
+    public function test_sitemap_sans_cookies_de_session(): void
+    {
+        $this->seedData();
+
+        $response = $this->get('/sitemap.xml')->assertOk();
+
+        // Cache-Control public conservé (Symfony réordonne les directives).
+        $this->assertStringContainsString('max-age=3600', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('public', (string) $response->headers->get('Cache-Control'));
+
+        $response->assertHeaderMissing('Set-Cookie');
+    }
+
+    /**
      * Une entrée de cache héritée d'une ancienne version du générateur
      * (l'ancienne clé non versionnée) ne doit jamais être servie : la clé
      * courante est indépendante.

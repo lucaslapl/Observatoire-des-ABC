@@ -14,7 +14,12 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PatrimoineController;
 use App\Http\Controllers\ProjetsListeController;
 use App\Http\Controllers\SitemapController;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,7 +54,19 @@ Route::get('/robots.txt', fn () => response(
 )->header('Content-Type', 'text/plain; charset=UTF-8')
     ->header('Cache-Control', 'public, max-age=3600'))->name('robots');
 
-Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+// Sitemap : réponse XML publique — ni session ni cookies (audit C9 : la
+// réponse posait un cookie de session + XSRF-TOKEN via le groupe web).
+// La pile session/cookies du groupe est écartée ; Cache-Control et le
+// rendu du SitemapController (cache applicatif, aucune session) restent.
+Route::get('/sitemap.xml', SitemapController::class)
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        ValidateCsrfToken::class,
+    ])
+    ->name('sitemap');
 Route::get('/feed.xml', FeedController::class)->name('feed');
 
 Route::get('/verify', [PageController::class, 'verify'])->name('verify');
